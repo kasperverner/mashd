@@ -6,20 +6,9 @@ Smashd is a DSL for complex join and unions of datasources.
 
 ```
 // importing artifacts from another .sm file
-// TBD
-
 import "another_file.sm";
-include "another_file.sm";
 
 // defining schemas for data sets as a dictionary of field names, their types and corresponding column names
-// TBD
-
-schema s1 = {
-  int id = "patient_id";
-  string name = "patient_name";
-  ...
-};
-
 schema patient = {
   id: {
     type: int,
