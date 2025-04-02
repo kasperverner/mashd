@@ -31,7 +31,7 @@ Schema schemaTwo = {
 // a csv dataset can be defined with a file name, delimiter
 Dataset datasetOne = {
   adapter: "csv",
-  schema: patient,
+  schema: schemaOne,
   file: "patients.csv",
   delimiter: ",",
   take: 1,
@@ -41,7 +41,7 @@ Dataset datasetOne = {
 // a database dataset can be defined with a connection string and either a query
 Dataset datasetTwo = {
   adapter: "postgresql",
-  schema: operation,
+  schema: schemaTwo,
   connectionString: "connection_string",
   query: "SELECT * FROM operations",
 };
