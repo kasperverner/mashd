@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smashd.Application", "Smashd.Application\Smashd.Application.csproj", "{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smashd.Test", "Smashd.Test\Smashd.Test.csproj", "{5940622D-54F2-4FD7-A471-9056B71CE5AD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hosts", "Hosts", "{098B2DF9-433A-427E-ACFD-AF0CAA36DEC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Smashd.Antlr", "Smashd.Antlr\Smashd.Antlr.csproj", "{27842B1D-7E35-46F0-8862-1748BC87B89D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5940622D-54F2-4FD7-A471-9056B71CE5AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5940622D-54F2-4FD7-A471-9056B71CE5AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5940622D-54F2-4FD7-A471-9056B71CE5AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5940622D-54F2-4FD7-A471-9056B71CE5AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27842B1D-7E35-46F0-8862-1748BC87B89D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27842B1D-7E35-46F0-8862-1748BC87B89D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27842B1D-7E35-46F0-8862-1748BC87B89D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27842B1D-7E35-46F0-8862-1748BC87B89D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{388B54F8-180F-4E5C-98DD-AD4AD1A8A123} = {098B2DF9-433A-427E-ACFD-AF0CAA36DEC7}
+		{5940622D-54F2-4FD7-A471-9056B71CE5AD} = {098B2DF9-433A-427E-ACFD-AF0CAA36DEC7}
+	EndGlobalSection
+EndGlobal
