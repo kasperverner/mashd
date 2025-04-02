@@ -9,17 +9,17 @@ Smashd is a DSL for complex join and unions of datasources.
 import "another_file.sm";
 
 // defining schemas for data sets as a dictionary of field names, their types and corresponding column names
-Schema patient = {
+Schema schemaOne = {
   id: {
-    type: Number,
+    type: Interger,
     name: "patient_id"
   },
   ...
 };
 
-Schema operation = {
+Schema schemaTwo = {
   id: {
-    type: Number,
+    type: Integer,
     name: "operation_id"
   },
   ...
@@ -29,7 +29,7 @@ Schema operation = {
 // we will have 3 options for datasets - csv, sql query or sql table.
 
 // a csv dataset can be defined with a file name, delimiter
-DataSet patients = {
+Dataset datasetOne = {
   adapter: "csv",
   schema: patient,
   file: "patients.csv",
@@ -39,7 +39,7 @@ DataSet patients = {
 };
 
 // a database dataset can be defined with a connection string and either a query
-DataSet operations = {
+Dataset datasetTwo = {
   adapter: "postgresql",
   schema: operation,
   connectionString: "connection_string",
@@ -79,7 +79,7 @@ Date toDate(string date) {
 
 // transform requires a function that takes 2 parameters of the schemas being joined and returns a new schema
 // the transform method can be used to transform the data sets before matching or on the strategy to define the output schema
-schemaY transformMethod(patient p, operation o) {
+outputSchema transformMethod(patient p, operation o) {
   return {
     id: p.id * 2,
     name: p.name,
@@ -89,12 +89,11 @@ schemaY transformMethod(patient p, operation o) {
   };
 }
 
-// defining a smashd for joining data sets
-// smashd can be used to join or concatenate 2 data sets
+// defining a Smashd for joining data sets
+// Smashd can be used to join or concatenate 2 data sets
 // operations can be chained using dot-notation.
 
-Smashd smash = patients
-  .smash(operations)
+Smashd smash = patients.smash(operations)
   // the match methods can be chained together and executed in order
   .match(patient.patientId, operation.patient_id)
   .fuzzyMatch(patient.patientId, operation.patient_id, 0.8)
@@ -104,7 +103,7 @@ Smashd smash = patients
 
 // smash.join() for joining data sets horizontally
 // smash.union() for concatenating data sets vertically (requires the same schema)
-DataSet s3 = smash.join()
+Dataset s3 = smash.join()
 
 // after .join() or .union() another smash can be performed for further 
 
