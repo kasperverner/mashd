@@ -1,8 +1,8 @@
-# smashd
+# mashd
 
-Smashd is a DSL for complex join and unions of datasources.
+Mashd is a DSL for complex join and unions of datasources.
 
-## Smashd sample
+## Mashd sample
 
 ```
 // importing artifacts from another .sm file
@@ -89,26 +89,25 @@ outputSchema transformMethod(patient p, operation o) {
   };
 }
 
-// defining a Smashd for joining data sets
-// Smashd can be used to join or concatenate 2 data sets
+// defining a Mashd for joining data sets
+// Mashd can be used to join or concatenate 2 data sets
 // operations can be chained using dot-notation.
 
-Smashd smash = patients.smash(operations)
-  // the match methods can be chained together and executed in order
-  .match(patient.patientId, operation.patient_id)
-  .fuzzyMatch(patient.patientId, operation.patient_id, 0.8)
+Mashd mash = datasetOne & datasetTwo;
+
+// the match methods can be chained together and executed in order
+Dataset s3 = mash
+  .match(schemaOne.patientId, schemaTwo.patient_id)
+  .fuzzyMatch(schemaOne.patientId, schemaTwo.patient_id, 0.8)
   .functionMatch(customMatchFunction)
   // transform defines the output scheme of the smashd
-  .transform(transformMethod);
+  .transform(transformMethod)
+  // smash.join() for joining data sets horizontally
+  // smash.union() for concatenating data sets vertically (requires the same schema)
+  // joining without match rules or transforms should return the cartesian product
+  .join();
 
-// smash.join() for joining data sets horizontally
-// smash.union() for concatenating data sets vertically (requires the same schema)
-
-// Join without match rules or transforms should return the cartesian product
-
-Dataset s3 = smash.join();
-
-// after .join() or .union() another smash can be performed for further 
+// after .join() or .union() another mash can be performed for further 
 
 // a dataSet can be exported to a csv file using the toFile method
 s3.toFile("output.csv");
@@ -137,7 +136,7 @@ Never push directly to the main branch.
 
 ```bash
 cd <path-to-your-projects-folder>
-git clone https://github.com/kasperverner/smashd.git
+git clone https://github.com/kasperverner/mashd.git
 ```
 
 ### Create a new branch
