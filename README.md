@@ -72,9 +72,9 @@ Boolean customMatchFunction(patient p, operation o) {
   return b;
 }
 
-// utility function to convert a string to a dateTime object
+// utility function to convert a iso 8601 string to a Date object
 Date toDate(string date) {
-  return dateTime.Parse(date);
+  return Date.parse(date);
 }
 
 // transform requires a function that takes 2 parameters of the schemas being joined and returns a new schema
