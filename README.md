@@ -9,17 +9,17 @@ Smashd is a DSL for complex join and unions of datasources.
 import "another_file.sm";
 
 // defining schemas for data sets as a dictionary of field names, their types and corresponding column names
-schema patient = {
+Schema patient = {
   id: {
-    type: int,
+    type: Number,
     name: "patient_id"
   },
   ...
 };
 
-schema operation = {
+Schema operation = {
   id: {
-    type: int,
+    type: Number,
     name: "operation_id"
   },
   ...
@@ -29,7 +29,7 @@ schema operation = {
 // we will have 3 options for datasets - csv, sql query or sql table.
 
 // a csv dataset can be defined with a file name, delimiter
-dataSet patients = {
+DataSet patients = {
   adapter: "csv",
   schema: patient,
   file: "patients.csv",
@@ -39,7 +39,7 @@ dataSet patients = {
 };
 
 // a database dataset can be defined with a connection string and either a query
-dataSet operations = {
+DataSet operations = {
   adapter: "postgresql",
   schema: operation,
   connectionString: "connection_string",
@@ -48,14 +48,32 @@ dataSet operations = {
 
 // custom match function for matching data sets
 // the function should take 2 objects of the schemas being matched and return a boolean
-bool customMatchFunction(patient p, operation o) {
-  bool match = p.patientName == o.patientName;
+Boolean customMatchFunction(patient p, operation o) {
+  Integer i = 0;
+  Decimal d = 0.0;
+  Boolean b = false;
+  Date da = Date.parse("2020-07-10 15:00:00.000z");
+  Text t = "Hello World!";
 
-  return match;
+  while(true)
+  {
+    if (p.patientName == o.patientName)
+    {
+      continue;
+    } else if (p.age == o.age)
+    {
+      break;
+    } else
+    {
+      // Fallback
+    }
+  }
+
+  return b;
 }
 
 // utility function to convert a string to a dateTime object
-dateTime toDate(string date) {
+Date toDate(string date) {
   return dateTime.Parse(date);
 }
 
@@ -75,7 +93,7 @@ schemaY transformMethod(patient p, operation o) {
 // smashd can be used to join or concatenate 2 data sets
 // operations can be chained using dot-notation.
 
-smashd smash = patients
+Smashd smash = patients
   .smash(operations)
   // the match methods can be chained together and executed in order
   .match(patient.patientId, operation.patient_id)
@@ -86,7 +104,7 @@ smashd smash = patients
 
 // smash.join() for joining data sets horizontally
 // smash.union() for concatenating data sets vertically (requires the same schema)
-dataSet s3 = smash.join()
+DataSet s3 = smash.join()
 
 // after .join() or .union() another smash can be performed for further 
 
