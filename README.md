@@ -103,7 +103,10 @@ Smashd smash = patients.smash(operations)
 
 // smash.join() for joining data sets horizontally
 // smash.union() for concatenating data sets vertically (requires the same schema)
-Dataset s3 = smash.join()
+
+// Join without match rules or transforms should return the cartesian product
+
+Dataset s3 = smash.join();
 
 // after .join() or .union() another smash can be performed for further 
 
