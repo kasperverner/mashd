@@ -98,9 +98,12 @@ s3.toTable("connection_string", "table_name | query");
 ```
 
 ## Git
-Branch naming: feature/<feature-name>, fix/<bug-name>
-Commit message: feature: <feature-name> added, fix: <bug-name>
-Pull request title: Feature: <feature-name>, Fix: <bug-name>
+Branch naming: `feature/<feature-name>`, `fix/<bug-name>`
+
+Commit message: `feature: <feature-name> added`, `fix: <bug-name>`
+
+Pull request title: `Feature: <feature-name>`, `Fix: <bug-name>`
+
 Pull request description: Describe the changes made in the pull request
 
 ***IMPORTANT***
@@ -114,7 +117,7 @@ Never push directly to the main branch.
 
 ```bash
 cd <path-to-your-projects-folder>
-git clone https://github.com/kasperverner/e-vote.git
+git clone https://github.com/kasperverner/smashd.git
 ```
 
 ### Create a new branch
