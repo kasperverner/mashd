@@ -1,5 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# 
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mashd.Application", "Mashd.Application\Mashd.Application.csproj", "{388B54F8-180F-4E5C-98DD-AD4AD1A8A123}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mashd.Test", "Mashd.Test\Mashd.Test.csproj", "{5940622D-54F2-4FD7-A471-9056B71CE5AD}"
@@ -9,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mashd.Processor", "Mashd.Processor\Mashd.Processor.csproj", "{27842B1D-7E35-46F0-8862-1748BC87B89D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mashd.Interpreter", "Mashd.Interpreter\Mashd.Interpreter.csproj", "{3D2C4E37-4D92-4D17-BC34-06B8AC7057C5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mashd.Data", "Mashd.Data\Mashd.Data.csproj", "{8940E0D0-4974-4551-B094-F1E37175C2C8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +35,10 @@ Global
 		{3D2C4E37-4D92-4D17-BC34-06B8AC7057C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3D2C4E37-4D92-4D17-BC34-06B8AC7057C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3D2C4E37-4D92-4D17-BC34-06B8AC7057C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8940E0D0-4974-4551-B094-F1E37175C2C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8940E0D0-4974-4551-B094-F1E37175C2C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8940E0D0-4974-4551-B094-F1E37175C2C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8940E0D0-4974-4551-B094-F1E37175C2C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
