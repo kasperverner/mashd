@@ -1,6 +1,13 @@
-# mashd
+# Mashd
 
 Mashd is a DSL for complex join and unions of datasources.
+
+## Structure
+
+- Mashd.Application: The executable entry point
+- Mashd.Test: The test entry point
+- Mashd.Interpretor: DSL interpretation logic
+- Mashd.Processor: DSL lexer and processor (Antlr generated)
 
 ## Mashd sample
 
@@ -48,7 +55,7 @@ Dataset datasetTwo = {
 
 // custom match function for matching data sets
 // the function should take 2 objects of the schemas being matched and return a boolean
-Boolean customMatchFunction(patient p, operation o) {
+Boolean customMatchFunction(datasetOne p, datasetTwo o) {
   Integer i = 0;
   Decimal d = 0.0;
   Boolean b = false;
@@ -79,7 +86,7 @@ Date toDate(string date) {
 
 // transform requires a function that takes 2 parameters of the schemas being joined and returns a new schema
 // the transform method can be used to transform the data sets before matching or on the strategy to define the output schema
-outputSchema transformMethod(patient p, operation o) {
+outputSchema transformMethod(datasetOne p, datasetTwo o) {
   return {
     id: p.id * 2,
     name: p.name,
@@ -102,8 +109,8 @@ Dataset s3 = mash
   .functionMatch(customMatchFunction)
   // transform defines the output scheme of the smashd
   .transform(transformMethod)
-  // smash.join() for joining data sets horizontally
-  // smash.union() for concatenating data sets vertically (requires the same schema)
+  // mash.join() for joining data sets horizontally
+  // mash.union() for concatenating data sets vertically (requires the same schema)
   // joining without match rules or transforms should return the cartesian product
   .join();
 
