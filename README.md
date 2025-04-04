@@ -8,6 +8,7 @@ Mashd is a DSL for complex join and unions of datasources.
 - Mashd.Test: The test entry point
 - Mashd.Interpretor: DSL interpretation logic
 - Mashd.Processor: DSL lexer and processor (Antlr generated)
+- Mashd.Data: Library for CSV and DB data processing logic
 
 ## Mashd sample
 
