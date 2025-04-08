@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Mashd.Processor/Mashd.Processor.csproj" />
+    <ProjectReference Include="../Mashd.Frontend/Mashd.Frontend.csproj" />
+    <ProjectReference Include="../Mashd.Data/Mashd.Data.csproj" />
   </ItemGroup>
 </Project>

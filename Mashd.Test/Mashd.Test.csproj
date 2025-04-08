@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Mashd.Interpreter\Mashd.Interpreter.csproj" />
+      <ProjectReference Include="..\Mashd.Backend\Mashd.Backend.csproj" />
     </ItemGroup>
 
 </Project>
