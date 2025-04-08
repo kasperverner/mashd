@@ -6,8 +6,8 @@ Mashd is a DSL for complex join and unions of datasources.
 
 - Mashd.Application: The executable entry point
 - Mashd.Test: The test entry point
-- Mashd.Interpretor: DSL interpretation logic
-- Mashd.Processor: DSL lexer and processor (Antlr generated)
+- Mashd.Frontend: DSL interpretation logic
+- Mashd.Backend: DSL lexer and processor (Antlr generated)
 - Mashd.Data: Library for CSV and DB data processing logic
 
 ## Mashd sample
@@ -115,7 +115,7 @@ Dataset s3 = mash
   // joining without match rules or transforms should return the cartesian product
   .join();
 
-// after .join() or .union() another mash can be performed for further 
+// after .join() or .union() another mash can be performed for further
 
 // a dataSet can be exported to a csv file using the toFile method
 s3.toFile("output.csv");
