@@ -1,28 +1,35 @@
 grammar Mashd;
 
 // Parser Rules
-program         : 'import' STRING program 
-                | definition program 
-                | statement program 
-                | EOF 
+program         : (importStatement | definition | statement)* EOF 
                 ;
 
-definition      : type identifier '(' parameters ')' | type identifier '=' expression ;
-
-statement       : statement statement                          // Sequence
-                | '{' (type identifier ';')* statement '}'     // BlockStatement
-                | identifier '=' expression                    // Assignment
-                | identifier '+=' expression                   // Add assignment
-                | identifier '-=' expression                   // Subtract assignment
-                | identifier '*=' expression                   // Multiply assignment
-                | identifier '/=' expression                   // Divide assignment
-                | identifier '??=' expression                  // Null coalescing assignment
-                | 'if' '(' expression ')' statement            // If statement
-                | 'if' '(' expression ')' statement 'else' statement  // If-else statement
-                | expression '?' statement ':' statement       // Ternary statement
-                | 'return' expression                          // Return statement
+importStatement : 'import' STRING                                         # ImportDeclaration
                 ;
 
+definition      : type identifier '(' parameters ')' block                # FunctionDeclaration
+                ;
+
+statement       : block
+                | type identifier ';'                                     # VariableDeclaration
+                | type identifier '=' expression ';'                      # VariableDeclarationWithAssignment
+                | identifier '=' expression ';'                           # Assignment
+                | identifier '+=' expression ';'                          # AddAssignment
+                | identifier '-=' expression ';'                          # SubtractAssignment
+                | identifier '*=' expression ';'                          # MultiplyAssignment
+                | identifier '/=' expression ';'                          # DivideAssignment
+                | identifier '??=' expression ';'                         # NullCoalescingAssignment
+                | 'if' '(' expression ')' statement ('else' statement)?   # IfElseStatement
+                | expression '?' statement ':' statement ';'              # TernaryStatement
+                | 'return' expression ';'                                 # ReturnStatement
+                ;
+
+block           : '{' statements '}'                                      # BlockStatement
+
+statements      : statement*                                              # SequentialStatements
+                ;
+
+// TODO flatten expressions
 
 expression      : logicalExpression
                 ;
@@ -58,8 +65,8 @@ postfixExpression
                 ;
 
 primaryExpression
-                : identifier
-                | Boolean
+                : ID
+                | 'true' | 'false'
                 | Integer
                 | Date
                 | Decimal
@@ -83,7 +90,6 @@ type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema'
 
 
 // Lexer Rules
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
 STRING          : '"' (~["\r\n\\] | '\\' .)* '"' ;
@@ -111,13 +117,15 @@ fragment MILLISECOND
                 : [0-9]+ ;
 fragment TZ     : ('+' | '-') HOUR ':' MINUTE ;
 
+// TODO make rules from parameters of the following tokens (Allan)
+
 SCHEMA          : 'Schema' '{' .*? '}' ;  
 DATASET         : 'Dataset' '{' .*? '}' ;  
 MASHD           : 'Mashd' '{' .*? '}' ;   
 
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
+
 // Terminal definitions
-identifier      : ID ;
-Boolean         : 'true' | 'false' ;
 Integer         : INTEGER ;
 Date            : DATE ;
 Decimal         : DECIMAL ;
@@ -129,3 +137,5 @@ Mashd           : MASHD ;
 // Whitespace and comments
 WS              : [ \t\r\n]+ -> skip ;
 COMMENT         : '//' ~[\r\n]* -> skip ;
+MULTILINECOMMENT
+                : '/*' .*? '*/' -> skip ;
