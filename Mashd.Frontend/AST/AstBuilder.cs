@@ -52,7 +52,18 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new ProgramNode(imports, definitions, statements, line, column, text);
     }
 
-    // Import Nodes
+    // Import Node
+    
+    public override AstNode VisitImportDeclaration(MashdParser.ImportDeclarationContext context)
+    {
+        var (line, column, text) = ExtractNodeInfo(context);
+        
+        // Remove surrounding quotes
+        string rawText = context.TEXT().GetText();
+        string importPath = rawText.Trim('"');
+        
+        return new ImportNode(importPath, line, column, text);
+    }
 
     // Definition Nodes
 
@@ -65,6 +76,21 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         return new VariableDefinitionNode(name, type, line, column, text);
+    }
+
+    public override AstNode VisitFunctionDefinition(MashdParser.FunctionDefinitionContext context)
+    {
+        
+        var (line, column, text) = ExtractNodeInfo(context);
+        
+        VarType returnType = ParseVariableType(context.type().GetText());
+        string functionName = context.ID().GetText();
+        
+        var parameters = Visit (context.formalParameters()) as FormalParameterListNode;
+        
+        var body = Visit (context.block()) as BlockNode;
+        
+        return new FunctionDefinitionNode(functionName, returnType, parameters, body, line, column, text);
     }
 
 
@@ -86,6 +112,24 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         return new ParenNode(innerExpression, line, column, text);
+    }
+
+    public override AstNode VisitFunctionCallExpression(MashdParser.FunctionCallExpressionContext context)
+    {
+        string functionName = context.functionCall().ID().GetText();
+        
+        var arguments = new List<ExpressionNode>();
+        
+        if (context.functionCall().actualParameters() != null)
+        {
+            foreach (var argCtx in context.functionCall().actualParameters().expression())
+            {
+                var arg = Visit(argCtx) as ExpressionNode;
+                arguments.Add(arg);
+            }
+        }
+        var (line, column, text) = ExtractNodeInfo(context);
+        return new FunctionCallNode(functionName, arguments, line, column, text);
     }
 
     // Unary Operation Nodes
@@ -282,9 +326,44 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         // If there is an initialization expression visit it
         var expression = hasInitialization ? Visit(context.expression()) as ExpressionNode : null;
 
-        return new VariableDeclarationNode(type, identifier, expression, hasInitialization, context.Start.Line, context.Start.Column, context.GetText());
+        return new VariableDeclarationNode(type, identifier, expression, hasInitialization, context.Start.Line,
+            context.Start.Column, context.GetText());
     }
-    
+
+    public override AstNode VisitIfElseStatement(MashdParser.IfElseStatementContext context)
+    {
+        var (line, column, text) = ExtractNodeInfo(context);
+        var condition = Visit(context.expression()) as ExpressionNode;
+        var ifBlock = Visit(context.block(0)) as BlockNode;
+        BlockNode elseBlock = null;
+        bool hasElse = false;
+        if (context.block().Length > 1)
+        {
+            elseBlock = Visit(context.block(1)) as BlockNode;
+            hasElse = true;
+        }
+
+        return new IfElseNode(condition, ifBlock, elseBlock, hasElse, line, column, text);
+    }
+
+    public override AstNode VisitTernaryStatement(MashdParser.TernaryStatementContext context)
+    {
+        var (line, column, text) = ExtractNodeInfo(context);
+        var condition = Visit(context.expression(0)) as ExpressionNode;
+        var ifBlock = Visit(context.expression(1)) as ExpressionNode;
+        var elseBlock = Visit(context.expression(2)) as ExpressionNode;
+
+        return new TernaryNode(condition, ifBlock, elseBlock, line, column, text);
+    }
+
+    public override AstNode VisitReturnStatement(MashdParser.ReturnStatementContext context)
+    {
+        var expr = (ExpressionNode)Visit(context.expression());
+        var (line, column, text) = ExtractNodeInfo(context);
+        return new ReturnNode(expr, line, column, text);
+    }
+
+
     public override AstNode VisitAssignment(MashdParser.AssignmentContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
@@ -294,7 +373,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new AssignmentNode(name, expression, line, column, text);
     }
-    
+
     // Coalescing Assignment Nodes
     public override AstNode VisitAddAssignment(MashdParser.AddAssignmentContext context)
     {
@@ -336,6 +415,54 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new CompoundAssignmentNode(identifier, OpType.NullishCoalescing, expression, line, column, text);
     }
 
+    // Other Nodes
+
+    public override AstNode VisitBlockDefinition(MashdParser.BlockDefinitionContext context)
+    {
+        var statements = new List<StatementNode>();
+        var (line, column, text) = ExtractNodeInfo(context);
+
+        foreach (var stmtCtx in context.statement())
+        {
+            var stmt = (StatementNode)Visit(stmtCtx);
+            if (stmt != null)
+            {
+                statements.Add(stmt);
+            }
+        }
+
+        return new BlockNode(statements, line, column, text);
+    }
+
+    public override AstNode VisitBlockStatement(MashdParser.BlockStatementContext context)
+    {
+        return Visit(context.block());
+    }
+
+    public override AstNode VisitParameterList(MashdParser.ParameterListContext context)
+    {
+        // List to hold individual parameter nodes.
+        var paramNodes = new List<FormalParameterNode>();
+        var (line, column, text) = ExtractNodeInfo(context);
+
+        if (context != null)
+        {
+            var types = context.type();
+            var ids = context.ID();
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                VarType type = ParseVariableType(types[i].GetText());
+                string name = ids[i].GetText();
+                var (lineChild, columnChild, textChild) = ExtractNodeInfo(types[i]);
+
+                var paramNode = new FormalParameterNode(type, name, lineChild, columnChild, textChild);
+                paramNodes.Add(paramNode);
+            }
+        }
+
+        return new FormalParameterListNode(paramNodes, line, column, text);
+    }
 
     // Helper Methods
     private (int line, int column, string text) ExtractNodeInfo(ParserRuleContext context)
@@ -364,20 +491,16 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         var expression = Visit(expressionContext) as ExpressionNode;
 
-        // Create and return a UnaryOperationNode
         return new UnaryNode(expression, operatorType, context.Start.Line, context.Start.Column, context.GetText());
     }
 
     private AstNode CreateBinaryOperationNode(ParserRuleContext leftContext, ParserRuleContext rightContext, OpType op,
         ParserRuleContext context)
     {
-        // Visit the left operand
         var left = Visit(leftContext) as ExpressionNode;
 
-        // Visit the right operand
         var right = Visit(rightContext) as ExpressionNode;
 
-        // Create and return the BinaryOperationNode
         return new BinaryNode(left, right, op, context.Start.Line, context.Start.Column, context.GetText());
     }
 }

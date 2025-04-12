@@ -221,17 +221,6 @@ public partial class MashdBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context) { return VisitChildren(context); }
-	/// <summary>
 	/// Visit a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// <para>

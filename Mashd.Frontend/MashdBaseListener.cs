@@ -272,20 +272,6 @@ public partial class MashdBaseListener : IMashdListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>

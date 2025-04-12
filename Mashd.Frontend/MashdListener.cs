@@ -233,18 +233,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>

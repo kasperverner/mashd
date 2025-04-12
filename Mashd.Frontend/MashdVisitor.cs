@@ -150,13 +150,6 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>

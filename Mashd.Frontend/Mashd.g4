@@ -22,15 +22,12 @@ statement       : block                                                     # Bl
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
                 | ID '??=' expression ';'                                   # NullCoalescingAssignment 
-                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement
-                | expression '?' statement ':' statement ';'                # TernaryStatement
+                | 'if' '(' expression ')' block ('else' block)?             # IfElseStatement
+                | expression '?' expression ':' expression ';'              # TernaryStatement
                 | 'return' expression ';'                                   # ReturnStatement
                 ;
 
-block           : '{' statements '}'                                        # BlockDefinition
-                ;
-
-statements      : statement*                                                # SequentialStatements
+block           : '{' statement* '}'                                        # BlockDefinition
                 ;
 
 expression      : ID                                                        # IdentifierExpression
@@ -40,7 +37,7 @@ expression      : ID                                                        # Id
                 | expression '.' ID                                         # PropertyAccessExpression
                 | expression '.' methodChain                                # MethodChainExpression
                 | functionCall                                              # FunctionCallExpression
-                | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
+                | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression
                 | expression '==' expression                                # EqualityExpression
                 | expression '!=' expression                                # InequalityExpression
                 | expression '<' expression                                 # LessThanExpression
