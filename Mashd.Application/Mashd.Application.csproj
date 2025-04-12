@@ -11,4 +11,10 @@
       <ProjectReference Include="..\Mashd.Backend\Mashd.Backend.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="code.mashd">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>

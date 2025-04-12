@@ -1,0 +1,15 @@
+﻿Text myVar = "Hello, World!";
+myVar = "Hello, Universe!";
+Boolean isActive = true;
+isActive = false;
+myVar = isActive;
+
+Integer count = 10;
+count += 5;
+count -= 2;
+count *= 3;
+count /= 4;
+count = count ?? 0;
+Decimal price;
+
+price = 19.99;
