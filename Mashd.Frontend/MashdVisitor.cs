@@ -73,6 +73,13 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitBlockStatement([NotNull] MashdParser.BlockStatementContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>IfStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIfStatement([NotNull] MashdParser.IfStatementContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>VariableDeclaration</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// </summary>
@@ -122,26 +129,19 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitNullCoalescingAssignment([NotNull] MashdParser.NullCoalescingAssignmentContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>IfElseStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitIfElseStatement([NotNull] MashdParser.IfElseStatementContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>TernaryStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitTernaryStatement([NotNull] MashdParser.TernaryStatementContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>ReturnStatement</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitReturnStatement([NotNull] MashdParser.ReturnStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>IfDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.if"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIfDefinition([NotNull] MashdParser.IfDefinitionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>BlockDefinition</c>
 	/// labeled alternative in <see cref="MashdParser.block"/>.
@@ -150,12 +150,12 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
+	/// Visit a parse tree produced by the <c>TernaryExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
+	Result VisitTernaryExpression([NotNull] MashdParser.TernaryExpressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
@@ -439,6 +439,86 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitFunctionCall([NotNull] MashdParser.FunctionCallContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schemaObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchemaObject([NotNull] MashdParser.SchemaObjectContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schemaProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchemaProperties([NotNull] MashdParser.SchemaPropertiesContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schemaProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchemaProperty([NotNull] MashdParser.SchemaPropertyContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schemaFieldProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchemaFieldProperty([NotNull] MashdParser.SchemaFieldPropertyContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetObjectExpression</c>
+	/// labeled alternative in <see cref="MashdParser.datasetObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetObjectExpression([NotNull] MashdParser.DatasetObjectExpressionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetPropertyList</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetPropertyList([NotNull] MashdParser.DatasetPropertyListContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetAdapter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetAdapter([NotNull] MashdParser.DatasetAdapterContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetSource</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetSource([NotNull] MashdParser.DatasetSourceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetSchema</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetSchema([NotNull] MashdParser.DatasetSchemaContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>CsvDelimiter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCsvDelimiter([NotNull] MashdParser.CsvDelimiterContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatabaseQuery</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatabaseQuery([NotNull] MashdParser.DatabaseQueryContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetSkip</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetSkip([NotNull] MashdParser.DatasetSkipContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MashdParser.type"/>.
 	/// </summary>

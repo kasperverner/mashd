@@ -1,0 +1,124 @@
+
+                
+literal
+                | MASHD                                                     # MashdLiteral
+                ;
+
+
+keyValuePair    : ID ':' expression
+                ;
+
+
+methodChain     : functionCall ('.' methodChain)?
+                ;
+                
+// Lexer Rules
+INTEGER         : [0-9]+ ;
+DECIMAL         : [0-9]+ '.' [0-9]+ ;
+TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
+
+BOOLEAN         : 'true' | 'false' ;
+NULL            : 'null' ;
+
+DATE            : '\'' ISO8601Date '\'' 
+                | '"' ISO8601Date '"'
+                ;
+
+// What is the purpose of these lexer rules??
+
+SCHEMA          : 'Schema' '{' SCHEMA_CONTENT '}' ;  
+DATASET         : 'Dataset' '{' DATASET_CONTENT '}' ;  
+MASHD           : 'Mashd' '{' MATCHD_CONTENT '}' ;   
+
+SCHEMA_CONTENT  : SCHEMA_PROPERTY+
+                ;
+
+SCHEMA_PROPERTY
+                : ID ':' '{' SCHEMA_COLUMN_PROPERTY+ '}'                
+                ;
+                
+SCHEMA_COLUMN_PROPERTY
+                : 'type' ':' COLUMN_DATA_TYPE
+                | 'name' ':' TEXT 
+                ;
+
+COLUMN_DATA_TYPE
+                : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text'
+                ;
+
+DATASET_CONTENT  : DATASET_PROPERTY+
+                ;
+
+DATASET_PROPERTY
+                : SHARED_DATASET_PROPERTY
+                | CSV_SHARED_DATASET_PROPERTY
+                | DATABASE_DATASET_PROPERTY
+                ;
+
+SHARED_DATASET_PROPERTY
+                : ('adapter' | 'source' ) ':' TEXT
+                | 'schema' ':' ID
+                ;
+
+CSV_SHARED_DATASET_PROPERTY
+                : 'delimiter' ':' TEXT
+                ;
+                
+DATABASE_DATASET_PROPERTY
+                : 'query' ':' TEXT
+                ;
+
+MATCHD_CONTENT  : 'left' ':' DATASET
+                | 'right' ':' DATASET
+                | 'strategies' ':' '['  (MATCHD_STRATEGY (',' MATCHD_STRATEGY)*)? ']'
+//                | 'join' ':' '{' JOIN_PROPERTY+ '}'
+//                | 'union' ':' '{' UNION_PROPERTY+ '}'
+                ;
+                
+MATCHD_STRATEGY : EXACT_MATCH
+                | FUZZY_MATCH
+//                | FUNCTION_MATCH                
+                ;
+
+EXACT_MATCH     : '{' 'type' ':' '"match"' ',' 'left' ':' DATASET ',' 'right' ':' DATASET '}'
+                ;
+
+FUZZY_MATCH     : '{' 'type' ':' '"fuzzyMatch"' ',' 'left' ':' DATASET ',' 'right' ':' DATASET ',' 'threshold' ':' DECIMAL '}'
+                ;
+
+//FUNCTION_MATCH  : '{' 'type' ':' '"functionMatch"' ',' 'function' ':' expression '}'
+//                ;
+               
+
+// Whitespace and comments
+WS              : [ \t\r\n]+ -> skip
+                ;
+
+COMMENT         : '//' ~[\r\n]* -> skip
+                ;
+
+MULTILINE_COMMENT
+                : '/*' .*? '*/' -> skip
+                ;
+
+// Fragmented rules
+fragment ISO8601Date
+                : YEAR '-' MONTH '-' DAY                                                    // YYYY-MM-DD
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND                     // YYYY-MM-DDThh:mm:ss
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND '.' MILLISECOND     // YYYY-MM-DDThh:mm:ss.sss
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND 'Z'                 // YYYY-MM-DDThh:mm:ssZ
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND '.' MILLISECOND 'Z' // YYYY-MM-DDThh:mm:ss.sssZ
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND TZ                  // YYYY-MM-DDThh:mm:ss±hh:mm
+                | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND '.' MILLISECOND TZ  // YYYY-MM-DDThh:mm:ss.sss±hh:mm
+                ;
+
+fragment YEAR   : [0-9][0-9][0-9][0-9] ;
+fragment MONTH  : [0-1][0-9] ;
+fragment DAY    : [0-3][0-9] ;
+fragment HOUR   : [0-2][0-9] ;
+fragment MINUTE : [0-5][0-9] ;
+fragment SECOND : [0-5][0-9] ;
+fragment MILLISECOND 
+                : [0-9]+ ;
+fragment TZ     : ('+' | '-') HOUR ':' MINUTE ;

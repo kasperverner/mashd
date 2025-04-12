@@ -101,6 +101,18 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitBlockStatement([NotNull] MashdParser.BlockStatementContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>IfStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterIfStatement([NotNull] MashdParser.IfStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IfStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitIfStatement([NotNull] MashdParser.IfStatementContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>VariableDeclaration</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// </summary>
@@ -185,30 +197,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitNullCoalescingAssignment([NotNull] MashdParser.NullCoalescingAssignmentContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>IfElseStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterIfElseStatement([NotNull] MashdParser.IfElseStatementContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>IfElseStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitIfElseStatement([NotNull] MashdParser.IfElseStatementContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>TernaryStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterTernaryStatement([NotNull] MashdParser.TernaryStatementContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>TernaryStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitTernaryStatement([NotNull] MashdParser.TernaryStatementContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>ReturnStatement</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// </summary>
@@ -220,6 +208,18 @@ public interface IMashdListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitReturnStatement([NotNull] MashdParser.ReturnStatementContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>IfDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.if"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterIfDefinition([NotNull] MashdParser.IfDefinitionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IfDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.if"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitIfDefinition([NotNull] MashdParser.IfDefinitionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>BlockDefinition</c>
 	/// labeled alternative in <see cref="MashdParser.block"/>.
@@ -233,17 +233,17 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitBlockDefinition([NotNull] MashdParser.BlockDefinitionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
+	/// Enter a parse tree produced by the <c>TernaryExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void EnterSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
+	void EnterTernaryExpression([NotNull] MashdParser.TernaryExpressionContext context);
 	/// <summary>
-	/// Exit a parse tree produced by the <c>SequentialStatements</c>
-	/// labeled alternative in <see cref="MashdParser.statements"/>.
+	/// Exit a parse tree produced by the <c>TernaryExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	void ExitSequentialStatements([NotNull] MashdParser.SequentialStatementsContext context);
+	void ExitTernaryExpression([NotNull] MashdParser.TernaryExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>LogicalAndExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
@@ -728,6 +728,142 @@ public interface IMashdListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitFunctionCall([NotNull] MashdParser.FunctionCallContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MashdParser.schemaObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSchemaObject([NotNull] MashdParser.SchemaObjectContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MashdParser.schemaObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSchemaObject([NotNull] MashdParser.SchemaObjectContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MashdParser.schemaProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSchemaProperties([NotNull] MashdParser.SchemaPropertiesContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MashdParser.schemaProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSchemaProperties([NotNull] MashdParser.SchemaPropertiesContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MashdParser.schemaProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSchemaProperty([NotNull] MashdParser.SchemaPropertyContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MashdParser.schemaProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSchemaProperty([NotNull] MashdParser.SchemaPropertyContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MashdParser.schemaFieldProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSchemaFieldProperty([NotNull] MashdParser.SchemaFieldPropertyContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MashdParser.schemaFieldProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSchemaFieldProperty([NotNull] MashdParser.SchemaFieldPropertyContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetObjectExpression</c>
+	/// labeled alternative in <see cref="MashdParser.datasetObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetObjectExpression([NotNull] MashdParser.DatasetObjectExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetObjectExpression</c>
+	/// labeled alternative in <see cref="MashdParser.datasetObject"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetObjectExpression([NotNull] MashdParser.DatasetObjectExpressionContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetPropertyList</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetPropertyList([NotNull] MashdParser.DatasetPropertyListContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetPropertyList</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperties"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetPropertyList([NotNull] MashdParser.DatasetPropertyListContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetAdapter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetAdapter([NotNull] MashdParser.DatasetAdapterContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetAdapter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetAdapter([NotNull] MashdParser.DatasetAdapterContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetSource</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetSource([NotNull] MashdParser.DatasetSourceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetSource</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetSource([NotNull] MashdParser.DatasetSourceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetSchema</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetSchema([NotNull] MashdParser.DatasetSchemaContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetSchema</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetSchema([NotNull] MashdParser.DatasetSchemaContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>CsvDelimiter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterCsvDelimiter([NotNull] MashdParser.CsvDelimiterContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>CsvDelimiter</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitCsvDelimiter([NotNull] MashdParser.CsvDelimiterContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatabaseQuery</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatabaseQuery([NotNull] MashdParser.DatabaseQueryContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatabaseQuery</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatabaseQuery([NotNull] MashdParser.DatabaseQueryContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DatasetSkip</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterDatasetSkip([NotNull] MashdParser.DatasetSkipContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DatasetSkip</c>
+	/// labeled alternative in <see cref="MashdParser.datasetProperty"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitDatasetSkip([NotNull] MashdParser.DatasetSkipContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MashdParser.type"/>.
 	/// </summary>

@@ -7,14 +7,15 @@ importStatement : 'import' TEXT ';'                                         # Im
                 ;
 
 definition      : type ID '(' formalParameters ')' block                    # FunctionDefinition
-                | type ID '=' expression ';'                                # VariableDefinition 
+                | type ID '=' expression ';'                                # VariableDefinition
                 ;
 
 formalParameters 
                 : (type ID (',' type ID)*)?                                 # ParameterList
                 ;
                
-statement       : block                                                     # BlockStatement                            
+statement       : block                                                     # BlockStatement
+                | if                                                        # IfStatement
                 | type ID ('=' expression)? ';'                             # VariableDeclaration                
                 | ID '=' expression ';'                                     # Assignment
                 | ID '+=' expression ';'                                    # AddAssignment
@@ -22,20 +23,19 @@ statement       : block                                                     # Bl
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
                 | ID '??=' expression ';'                                   # NullCoalescingAssignment 
-                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement
-                | expression '?' statement ':' statement ';'                # TernaryStatement
                 | 'return' expression ';'                                   # ReturnStatement
                 ;
 
-block           : '{' statements '}'                                        # BlockDefinition
+if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfDefinition
                 ;
 
-statements      : statement*                                                # SequentialStatements
+block           : '{' statement* '}'                                        # BlockDefinition
                 ;
 
 expression      : ID                                                        # IdentifierExpression
-                | literal                                                   # LiteralExpression                                               
-                | DATASET '&' DATASET                                       # DatasetCombineExpression
+                | literal                                                   # LiteralExpression                                 
+                | expression '?' expression ':' expression ';'              # TernaryExpression
+                | datasetObject '&' datasetObject                           # DatasetCombineExpression
                 | '(' expression ')'                                        # ParenExpression
                 | expression '.' ID                                         # PropertyAccessExpression
                 | expression '.' methodChain                                # MethodChainExpression
@@ -62,6 +62,7 @@ expression      : ID                                                        # Id
                 | '++' expression                                           # PreIncrementExpression
                 | '--' expression                                           # PreDecrementExpression
                 ;
+
 literal
                 : BOOLEAN                                                   # BooleanLiteral
                 | INTEGER                                                   # IntegerLiteral
@@ -73,7 +74,6 @@ literal
                 | MASHD                                                     # MashdLiteral
                 | NULL                                                      # NullLiteral
                 ;
-
 
 keyValuePair    : ID ':' expression
                 ;
@@ -87,6 +87,42 @@ methodChain     : functionCall ('.' methodChain)?
                 
 functionCall    : ID '(' actualParameters? ')'
                 ;
+//Schema                
+schemaObject
+                : 'Schema' '{' schemaProperties? '}'               
+                ;       
+
+schemaProperties
+                : schemaProperty (',' schemaProperty)*            
+                ;
+
+schemaProperty
+                : ID ':' '{' schemaFieldProperty (',' schemaFieldProperty)* '}'  
+                ;    
+schemaFieldProperty
+                : 'type' ':' type
+                | 'name' ':' TEXT
+                ;
+                
+//Dataset
+datasetObject
+    : 'Dataset' '{' datasetProperties? '}'   # DatasetObjectExpression
+    ;
+
+datasetProperties
+    : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
+    ;
+
+datasetProperty
+    : 'adapter' ':' TEXT                      # DatasetAdapter
+    | 'source' ':' TEXT                       # DatasetSource
+    | 'schema' ':' ID                         # DatasetSchema
+    | 'delimiter' ':' TEXT                    # CsvDelimiter
+    | 'query' ':' TEXT                        # DatabaseQuery
+    | 'skip' ':' INTEGER                      # DatasetSkip
+    ;
+
+
 
 type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema' | 'Dataset' | 'Mashd' 
                 ;
@@ -103,72 +139,6 @@ NULL            : 'null' ;
 DATE            : '\'' ISO8601Date '\'' 
                 | '"' ISO8601Date '"'
                 ;
-
-// What is the purpose of these lexer rules??
-
-SCHEMA          : 'Schema' '{' SCHEMA_CONTENT '}' ;  
-DATASET         : 'Dataset' '{' DATASET_CONTENT '}' ;  
-MASHD           : 'Mashd' '{' MATCHD_CONTENT '}' ;   
-
-SCHEMA_CONTENT  : SCHEMA_PROPERTY+
-                ;
-
-SCHEMA_PROPERTY
-                : ID ':' '{' SCHEMA_COLUMN_PROPERTY+ '}'                
-                ;
-                
-SCHEMA_COLUMN_PROPERTY
-                : 'type' ':' COLUMN_DATA_TYPE
-                | 'name' ':' TEXT 
-                ;
-
-COLUMN_DATA_TYPE
-                : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text'
-                ;
-
-DATASET_CONTENT  : DATASET_PROPERTY+
-                ;
-
-DATASET_PROPERTY
-                : SHARED_DATASET_PROPERTY
-                | CSV_SHARED_DATASET_PROPERTY
-                | DATABASE_DATASET_PROPERTY
-                ;
-
-SHARED_DATASET_PROPERTY
-                : ('adapter' | 'source' ) ':' TEXT
-                | 'schema' ':' ID
-                ;
-
-CSV_SHARED_DATASET_PROPERTY
-                : 'delimiter' ':' TEXT
-                ;
-                
-DATABASE_DATASET_PROPERTY
-                : 'query' ':' TEXT
-                ;
-
-MATCHD_CONTENT  : 'left' ':' DATASET
-                | 'right' ':' DATASET
-                | 'strategies' ':' '['  (MATCHD_STRATEGY (',' MATCHD_STRATEGY)*)? ']'
-//                | 'join' ':' '{' JOIN_PROPERTY+ '}'
-//                | 'union' ':' '{' UNION_PROPERTY+ '}'
-                ;
-                
-MATCHD_STRATEGY : EXACT_MATCH
-                | FUZZY_MATCH
-//                | FUNCTION_MATCH                
-                ;
-
-EXACT_MATCH     : '{' 'type' ':' '"match"' ',' 'left' ':' DATASET ',' 'right' ':' DATASET '}'
-                ;
-
-FUZZY_MATCH     : '{' 'type' ':' '"fuzzyMatch"' ',' 'left' ':' DATASET ',' 'right' ':' DATASET ',' 'threshold' ':' DECIMAL '}'
-                ;
-
-//FUNCTION_MATCH  : '{' 'type' ':' '"functionMatch"' ',' 'function' ':' expression '}'
-//                ;
-               
 
 // Whitespace and comments
 WS              : [ \t\r\n]+ -> skip
