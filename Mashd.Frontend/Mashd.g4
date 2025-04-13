@@ -1,102 +1,153 @@
 grammar Mashd;
 
-// Parser Rules
 program         : (importStatement | definition | statement)* EOF 
                 ;
 
-importStatement : 'import' STRING                                         # ImportDeclaration
+importStatement : 'import' TEXT ';'                                         # ImportDeclaration
                 ;
 
-definition      : type identifier '(' parameters ')' block                # FunctionDeclaration
+definition      : type ID '(' formalParameters ')' block                    # FunctionDefinition
+                | type ID '=' expression ';'                                # VariableDefinition
                 ;
 
-statement       : block
-                | type identifier ';'                                     # VariableDeclaration
-                | type identifier '=' expression ';'                      # VariableDeclarationWithAssignment
-                | identifier '=' expression ';'                           # Assignment
-                | identifier '+=' expression ';'                          # AddAssignment
-                | identifier '-=' expression ';'                          # SubtractAssignment
-                | identifier '*=' expression ';'                          # MultiplyAssignment
-                | identifier '/=' expression ';'                          # DivideAssignment
-                | identifier '??=' expression ';'                         # NullCoalescingAssignment
-                | 'if' '(' expression ')' statement ('else' statement)?   # IfElseStatement
-                | expression '?' statement ':' statement ';'              # TernaryStatement
-                | 'return' expression ';'                                 # ReturnStatement
+formalParameters 
+                : (type ID (',' type ID)*)?                                 # ParameterList
+                ;
+               
+statement       : block                                                     # BlockStatement                            
+                | type ID ('=' expression)? ';'                             # VariableDeclaration                
+                | ID '=' expression ';'                                     # Assignment
+                | ID '+=' expression ';'                                    # AddAssignment
+                | ID '-=' expression ';'                                    # SubtractAssignment
+                | ID '*=' expression ';'                                    # MultiplyAssignment
+                | ID '/=' expression ';'                                    # DivisionAssignment
+                | ID '??=' expression ';'                                   # NullCoalescingAssignment 
+                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement
+                | expression '?' statement ':' statement ';'                # TernaryStatement
+                | 'return' expression ';'                                   # ReturnStatement
                 ;
 
-block           : '{' statements '}'                                      # BlockStatement
-
-statements      : statement*                                              # SequentialStatements
+block           : '{' statements '}'                                        # BlockDefinition
                 ;
 
-// TODO flatten expressions
-
-expression      : logicalExpression
+statements      : statement*                                                # SequentialStatements
                 ;
 
-logicalExpression
-                : equalityExpression ('||' equalityExpression)*
-                | equalityExpression ('&&' equalityExpression)*
-                | equalityExpression ('??' equalityExpression)*
+expression      : ID                                                        # IdentifierExpression
+                | BOOLEAN                                                   # BooleanExpression
+                | INTEGER                                                   # IntegerExpression
+                | DATE                                                      # DateExpression
+                | DECIMAL                                                   # DecimalExpression
+                | TEXT                                                      # TextExpression
+                | schemaObject                                              # SchemaExpression
+                | datasetObject                                             # DatasetExpression
+                | MASHD                                                     # MashdExpression
+                | NULL                                                      # NullExpression
+                | datasetObject '&' datasetObject                           # DatasetCombineExpression
+                | '(' expression ')'                                        # ParenExpression
+                | expression '.' ID                                         # PropertyAccessExpression
+                | expression '.' methodChain                                # MethodChainExpression
+                | functionCall                                              # FunctionCallExpression
+                | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
+                | expression '==' expression                                # EqualityExpression
+                | expression '!=' expression                                # InequalityExpression
+                | expression '<' expression                                 # LessThanExpression
+                | expression '<=' expression                                # LessThanEqualExpression
+                | expression '>' expression                                 # GreaterThanExpression
+                | expression '>=' expression                                # GreaterThanEqualExpression
+                | expression '+' expression                                 # AdditionExpression
+                | expression '-' expression                                 # SubtractionExpression
+                | expression '*' expression                                 # MultiplicationExpression
+                | expression '/' expression                                 # DivisionExpression
+                | expression '%' expression                                 # ModuloExpression
+                | expression '||' expression                                # LogicalOrExpression
+                | expression '&&' expression                                # LogicalAndExpression
+                | expression '??' expression                                # NullishCoalescingExpression
+                | '-' expression                                            # NegationExpression
+                | '!' expression                                            # NotExpression
+                | expression '++'                                           # PostIncrementExpression
+                | expression '--'                                           # PostDecrementExpression
+                | '++' expression                                           # PreIncrementExpression
+                | '--' expression                                           # PreDecrementExpression
                 ;
 
-equalityExpression
-                : relationExpression ('==' relationExpression | '!=' relationExpression)*
+keyValuePair    : ID ':' expression
                 ;
 
-relationExpression
-                : binaryExpression ('<' binaryExpression | '<=' binaryExpression | '>' binaryExpression | '>=' binaryExpression)*
+actualParameters
+                : expression (',' expression)*
                 ;
 
-binaryExpression
-                : multiplyExpression ('+' multiplyExpression | '-' multiplyExpression)*
+methodChain     : functionCall ('.' methodChain)?
+                ;
+                
+functionCall    : ID '(' actualParameters? ')'
+                ;
+//Schema                
+schemaObject
+                : 'Schema' '{' schemaProperties? '}'               
+                ;       
+
+schemaProperties
+                : schemaProperty (',' schemaProperty)*            
                 ;
 
-multiplyExpression
-                : unaryExpression ('*' unaryExpression | '/' unaryExpression | '%' unaryExpression)*
+schemaProperty
+                : ID ':' '{' schemaFieldProperty (',' schemaFieldProperty)* '}'  
+                ;    
+schemaFieldProperty
+                : 'type' ':' type
+                | 'name' ':' TEXT
                 ;
+                
+//Dataset
+datasetObject
+    : 'Dataset' '{' datasetProperties? '}'   # DatasetObjectExpression
+    ;
 
-unaryExpression : ('-' | '!') unaryExpression
-                | postfixExpression
+datasetProperties
+    : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
+    ;
+
+datasetProperty
+    : 'adapter' ':' TEXT                      # DatasetAdapter
+    | 'source' ':' TEXT                       # DatasetSource
+    | 'schema' ':' ID                         # DatasetSchema
+    | 'delimiter' ':' TEXT                    # CsvDelimiter
+    | 'query' ':' TEXT                        # DatabaseQuery
+    | 'skip' ':' INTEGER                      # DatasetSkip
+    ;
+
+
+
+type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema' | 'Dataset' | 'Mashd' 
                 ;
-
-postfixExpression
-                : primaryExpression ('++' | '--')?
-                ;
-
-primaryExpression
-                : ID
-                | 'true' | 'false'
-                | Integer
-                | Date
-                | Decimal
-                | Text
-                | Schema
-                | Dataset
-                | Mashd
-                | 'null'
-                | '{' (keyValuePair (',' keyValuePair)*)? '}' 
-                | '(' expression ')'
-                ;
-
-keyValuePair    : identifier ':' expression
-                ;
-    
-parameters      : (type identifier (',' type identifier)*)? ;
-
-expressionList  : (expression (',' expression)*)? ;
-
-type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema' | 'Dataset' | 'Mashd' ;
-
 
 // Lexer Rules
 INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
-STRING          : '"' (~["\r\n\\] | '\\' .)* '"' ;
+TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
+
+BOOLEAN         : 'true' | 'false' ;
+NULL            : 'null' ;
+
 DATE            : '\'' ISO8601Date '\'' 
                 | '"' ISO8601Date '"'
                 ;
 
+// Whitespace and comments
+WS              : [ \t\r\n]+ -> skip
+                ;
+
+COMMENT         : '//' ~[\r\n]* -> skip
+                ;
+
+MULTILINE_COMMENT
+                : '/*' .*? '*/' -> skip
+                ;
+
+// Fragmented rules
 fragment ISO8601Date
                 : YEAR '-' MONTH '-' DAY                                                    // YYYY-MM-DD
                 | YEAR '-' MONTH '-' DAY 'T' HOUR ':' MINUTE ':' SECOND                     // YYYY-MM-DDThh:mm:ss
@@ -116,26 +167,3 @@ fragment SECOND : [0-5][0-9] ;
 fragment MILLISECOND 
                 : [0-9]+ ;
 fragment TZ     : ('+' | '-') HOUR ':' MINUTE ;
-
-// TODO make rules from parameters of the following tokens (Allan)
-
-SCHEMA          : 'Schema' '{' .*? '}' ;  
-DATASET         : 'Dataset' '{' .*? '}' ;  
-MASHD           : 'Mashd' '{' .*? '}' ;   
-
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
-
-// Terminal definitions
-Integer         : INTEGER ;
-Date            : DATE ;
-Decimal         : DECIMAL ;
-Text            : STRING ;
-Schema          : SCHEMA ;
-Dataset         : DATASET ;
-Mashd           : MASHD ;
-
-// Whitespace and comments
-WS              : [ \t\r\n]+ -> skip ;
-COMMENT         : '//' ~[\r\n]* -> skip ;
-MULTILINECOMMENT
-                : '/*' .*? '*/' -> skip ;
