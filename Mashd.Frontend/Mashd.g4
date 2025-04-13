@@ -22,8 +22,7 @@ statement       : block                                                     # Bl
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
                 | ID '??=' expression ';'                                   # NullCoalescingAssignment 
-                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement
-                | expression '?' statement ':' statement ';'                # TernaryStatement
+                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement                
                 | 'return' expression ';'                                   # ReturnStatement
                 ;
 
@@ -43,6 +42,7 @@ expression      : ID                                                        # Id
                 | datasetObject                                             # DatasetExpression
                 | MASHD                                                     # MashdExpression
                 | NULL                                                      # NullExpression
+                | expression '?' expression ':' expression ';'              # TernaryExpression
                 | datasetObject '&' datasetObject                           # DatasetCombineExpression
                 | '(' expression ')'                                        # ParenExpression
                 | expression '.' ID                                         # PropertyAccessExpression
