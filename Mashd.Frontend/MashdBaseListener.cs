@@ -748,48 +748,6 @@ public partial class MashdBaseListener : IMashdListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitTextLiteral([NotNull] MashdParser.TextLiteralContext context) { }
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SchemaLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterSchemaLiteral([NotNull] MashdParser.SchemaLiteralContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>SchemaLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitSchemaLiteral([NotNull] MashdParser.SchemaLiteralContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>DatasetLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDatasetLiteral([NotNull] MashdParser.DatasetLiteralContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>DatasetLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDatasetLiteral([NotNull] MashdParser.DatasetLiteralContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>MashdLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterMashdLiteral([NotNull] MashdParser.MashdLiteralContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>MashdLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitMashdLiteral([NotNull] MashdParser.MashdLiteralContext context) { }
-	/// <summary>
 	/// Enter a parse tree produced by the <c>NullLiteral</c>
 	/// labeled alternative in <see cref="MashdParser.literal"/>.
 	/// <para>The default implementation does nothing.</para>

@@ -388,27 +388,6 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitTextLiteral([NotNull] MashdParser.TextLiteralContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>SchemaLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitSchemaLiteral([NotNull] MashdParser.SchemaLiteralContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>DatasetLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDatasetLiteral([NotNull] MashdParser.DatasetLiteralContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>MashdLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitMashdLiteral([NotNull] MashdParser.MashdLiteralContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>NullLiteral</c>
 	/// labeled alternative in <see cref="MashdParser.literal"/>.
 	/// </summary>

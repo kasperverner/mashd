@@ -1,5 +1,6 @@
 ﻿using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Statements;
+using Mashd.Frontend.AST.Expressions;
 
 namespace Mashd.Frontend.AST;
 
@@ -126,7 +127,8 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
                 }
                 else if (child is MashdParser.DatasetSkipContext skipCtx)
                 {
-                    properties["skip"] = new DatasetLiteralNode.DatasetProperty("skip", skipCtx.INTEGER().GetText());
+                    int skipValue = int.Parse(skipCtx.INTEGER().GetText());
+                    properties["skip"] = new DatasetLiteralNode.DatasetProperty("skip", skipValue);
                 }
             }
         }
@@ -373,7 +375,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
 
     // Literal Nodes
-    
+    /*
     public override AstNode VisitDatasetLiteral(MashdParser.DatasetLiteralContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
@@ -405,7 +407,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new DatasetLiteralNode(line, column, text, properties);
     }
-
+    */
 
 
 
@@ -495,7 +497,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             context.Start.Column, context.GetText());
     }
 
-    public override AstNode VisitIfElseStatement(MashdParser.IfElseStatementContext context)
+    public override AstNode VisitIfDefinition(MashdParser.IfDefinitionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
         var condition = Visit(context.expression()) as ExpressionNode;
@@ -508,10 +510,10 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             hasElse = true;
         }
 
-        return new IfElseNode(condition, ifBlock, elseBlock, hasElse, line, column, text);
+        return new IfNode(condition, ifBlock, elseBlock, hasElse, line, column, text);
     }
 
-    public override AstNode VisitTernaryStatement(MashdParser.TernaryStatementContext context)
+    public override AstNode VisitTernaryExpression(MashdParser.TernaryExpressionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
         var condition = Visit(context.expression(0)) as ExpressionNode;

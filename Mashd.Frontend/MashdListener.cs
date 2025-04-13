@@ -641,42 +641,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitTextLiteral([NotNull] MashdParser.TextLiteralContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SchemaLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterSchemaLiteral([NotNull] MashdParser.SchemaLiteralContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>SchemaLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitSchemaLiteral([NotNull] MashdParser.SchemaLiteralContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>DatasetLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterDatasetLiteral([NotNull] MashdParser.DatasetLiteralContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>DatasetLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitDatasetLiteral([NotNull] MashdParser.DatasetLiteralContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>MashdLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterMashdLiteral([NotNull] MashdParser.MashdLiteralContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>MashdLiteral</c>
-	/// labeled alternative in <see cref="MashdParser.literal"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitMashdLiteral([NotNull] MashdParser.MashdLiteralContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>NullLiteral</c>
 	/// labeled alternative in <see cref="MashdParser.literal"/>.
 	/// </summary>

@@ -5,9 +5,9 @@ public class DatasetLiteralNode : ExpressionNode
     public class DatasetProperty
     {
         public string Key { get; }
-        public string Value { get; }
+        public object Value { get; }
 
-        public DatasetProperty(string key, string value)
+        public DatasetProperty(string key, object value)
         {
             Key = key;
             Value = value;

@@ -13,12 +13,3 @@ count = count ?? 0;
 Decimal price;
 
 price = 19.99;
-
-Dataset datasetOne = {
-  adapter: "csv",
-  schema: schemaOne,
-  file: "patients.csv",
-  delimiter: ",",
-  take: 1,
-  skip: 100,
-};

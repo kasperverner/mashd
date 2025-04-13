@@ -69,9 +69,6 @@ literal
                 | DATE                                                      # DateLiteral
                 | DECIMAL                                                   # DecimalLiteral
                 | TEXT                                                      # TextLiteral
-                | SCHEMA                                                    # SchemaLiteral
-                | DATASET                                                   # DatasetLiteral
-                | MASHD                                                     # MashdLiteral
                 | NULL                                                      # NullLiteral
                 ;
 

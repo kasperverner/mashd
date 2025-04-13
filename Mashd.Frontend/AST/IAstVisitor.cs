@@ -27,7 +27,7 @@ public interface IAstVisitor<T>
     T VisitAssignmentNode(AssignmentNode node);
     T VisitCompoundAssignmentNode(CompoundAssignmentNode node);
     
-    T VisitIfElseNode(IfElseNode node);
+    T VisitIfNode(IfNode node);
     
     T VisitTernaryNode(TernaryNode node);
     
