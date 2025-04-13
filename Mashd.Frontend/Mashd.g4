@@ -14,7 +14,8 @@ formalParameters
                 : (type ID (',' type ID)*)?                                 # ParameterList
                 ;
                
-statement       : block                                                     # BlockStatement                            
+statement       : block                                                     # BlockStatement
+                | if                                                        # IfElseStatement
                 | type ID ('=' expression)? ';'                             # VariableDeclaration                
                 | ID '=' expression ';'                                     # Assignment
                 | ID '+=' expression ';'                                    # AddAssignment
@@ -22,9 +23,10 @@ statement       : block                                                     # Bl
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
                 | ID '??=' expression ';'                                   # NullCoalescingAssignment 
-                | 'if' '(' expression ')' statement ('else' statement)?     # IfElseStatement                
                 | 'return' expression ';'                                   # ReturnStatement
                 ;
+
+if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfElseDefinition
 
 block           : '{' statements '}'                                        # BlockDefinition
                 ;
