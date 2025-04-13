@@ -33,15 +33,7 @@ statements      : statement*                                                # Se
                 ;
 
 expression      : ID                                                        # IdentifierExpression
-                | BOOLEAN                                                   # BooleanExpression
-                | INTEGER                                                   # IntegerExpression
-                | DATE                                                      # DateExpression
-                | DECIMAL                                                   # DecimalExpression
-                | TEXT                                                      # TextExpression
-                | schemaObject                                              # SchemaExpression
-                | datasetObject                                             # DatasetExpression
-                | MASHD                                                     # MashdExpression
-                | NULL                                                      # NullExpression
+                | literal                                                   # LiteralExpression                                 
                 | expression '?' expression ':' expression ';'              # TernaryExpression
                 | datasetObject '&' datasetObject                           # DatasetCombineExpression
                 | '(' expression ')'                                        # ParenExpression
@@ -69,6 +61,18 @@ expression      : ID                                                        # Id
                 | expression '--'                                           # PostDecrementExpression
                 | '++' expression                                           # PreIncrementExpression
                 | '--' expression                                           # PreDecrementExpression
+                ;
+
+literal
+                : BOOLEAN                                                   # BooleanLiteral
+                | INTEGER                                                   # IntegerLiteral
+                | DATE                                                      # DateLiteral
+                | DECIMAL                                                   # DecimalLiteral
+                | TEXT                                                      # TextLiteral
+                | SCHEMA                                                    # SchemaLiteral
+                | DATASET                                                   # DatasetLiteral
+                | MASHD                                                     # MashdLiteral
+                | NULL                                                      # NullLiteral
                 ;
 
 keyValuePair    : ID ':' expression
