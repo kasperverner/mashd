@@ -15,7 +15,7 @@ formalParameters
                 ;
                
 statement       : block                                                     # BlockStatement
-                | if                                                        # IfElseStatement
+                | if                                                        # IfStatement
                 | type ID ('=' expression)? ';'                             # VariableDeclaration                
                 | ID '=' expression ';'                                     # Assignment
                 | ID '+=' expression ';'                                    # AddAssignment
@@ -26,13 +26,10 @@ statement       : block                                                     # Bl
                 | 'return' expression ';'                                   # ReturnStatement
                 ;
 
-if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfElseDefinition
+if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfDefinition
                 ;
 
-block           : '{' statements '}'                                        # BlockDefinition
-                ;
-
-statements      : statement*                                                # SequentialStatements
+block           : '{' statement* '}'                                        # BlockDefinition
                 ;
 
 expression      : ID                                                        # IdentifierExpression
