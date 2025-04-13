@@ -27,6 +27,7 @@ statement       : block                                                     # Bl
                 ;
 
 if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfElseDefinition
+                ;
 
 block           : '{' statements '}'                                        # BlockDefinition
                 ;
