@@ -1,15 +1,83 @@
-﻿Text myVar = "Hello, World!";
-myVar = "Hello, Universe!";
-Boolean isActive = true;
-isActive = false;
-myVar = isActive;
+﻿Schema operationSchema = Schema {
+  operationId: {
+    type: Integer,
+    name: "Operation-ID"
+  },
+  patientName: {
+    type: Text,
+    name: "Patient-Name"
+  },
+  operationType: {
+    type: Text,
+    name: "Operation-Name"
+  },
+  date: {
+    type: Text,
+    name: "Date"
+  },
+  age: {
+    type: Integer,
+    name: "Age"
+  },
+  vaccinated: {
+    type: Boolean,
+    name: "Confirmed-Vaccine"
+  }
+};
 
-Integer count = 10;
-count += 5;
-count -= 2;
-count *= 3;
-count /= 4;
-count = count ?? 0;
-Decimal price;
+Dataset operationData = Dataset {
+  adapter: "csv",
+  schema: operationSchema,
+  file: "../patientdata/operations.csv",
+  delimiter: ","
+};
 
-price = 19.99;
+Dataset patientData = Dataset {
+  adapter: "postgresql",
+  schema: patientSchema,
+  connectionString: "postgresql://supervisor1:secretpassword123@localhost:5432/patientdata",
+  query: "SELECT * FROM patients"
+};
+
+Text combinedFullname(Text firstName, Text lastName) {
+  return firstName + " " + lastName;
+}
+
+Date toISODate(Text date) {
+  return Date.parse(date, "MM-dd-yyyy");
+}
+
+Boolean ageBirthYearMatch(Integer birthYear, Integer age) {
+  Integer estimatedBirthYear = 2023 - age;
+  Integer tolerance = 1;
+  Boolean match = false;
+
+  if (birthYear == estimatedBirthYear) {
+    match = true;
+  } else if (birthYear == estimatedBirthYear - tolerance) {
+    match = true;
+  } else if (birthYear == estimatedBirthYear + tolerance) {
+    match = true;
+  }
+
+  return match;
+}
+
+Mashd mash = patientData & operationData;
+
+Decimal threshold = 0.85;
+
+mash
+  .match(patientData.vaccinated, operationData.vaccinated)
+  .fuzzyMatch(combinedFullname(patientData.firstName, patientData.lastName), operationData.patientName, threshold)
+  .functionMatch(ageBirthYearMatch, patientData.birthYear, operationData.age)
+  .transform({
+    id: patientData.patientId,
+    name: combinedFullname(patientData.firstName, patientData.lastName),
+    operationId: operationData.operationId,
+    operationType: operationData.operationType,
+    operationDate: toISODate(operationData.date)
+  });
+
+Dataset mergedDataSet = mash.join();
+mergedDataSet.toFile("merged_output.csv");

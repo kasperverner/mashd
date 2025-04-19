@@ -1,13 +1,13 @@
-﻿namespace Mashd.Frontend.AST;
-
-using Mashd.Frontend.AST.Expressions;
+﻿using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Definitions;
+
+namespace Mashd.Frontend.AST;
+
 public interface IAstVisitor<T>
 {
     T VisitProgramNode(ProgramNode node);
     T VisitImportNode(ImportNode node);
-    T VisitVariableDefinitionNode(VariableDefinitionNode node);
     T VisitBlockNode(BlockNode node);
     T VisitFormalParameterNode(FormalParameterNode node);
     T VisitFormalParameterListNode(FormalParameterListNode node);

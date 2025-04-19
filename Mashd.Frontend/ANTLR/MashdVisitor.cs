@@ -52,26 +52,12 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFunctionDefinition([NotNull] MashdParser.FunctionDefinitionContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>VariableDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitVariableDefinition([NotNull] MashdParser.VariableDefinitionContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>ParameterList</c>
 	/// labeled alternative in <see cref="MashdParser.formalParameters"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitParameterList([NotNull] MashdParser.ParameterListContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>BlockStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitBlockStatement([NotNull] MashdParser.BlockStatementContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>IfStatement</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.

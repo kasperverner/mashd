@@ -10,4 +10,10 @@
     <ProjectReference Include="../Mashd.Frontend/Mashd.Frontend.csproj" />
     <ProjectReference Include="../Mashd.Data/Mashd.Data.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+  </ItemGroup>
 </Project>
