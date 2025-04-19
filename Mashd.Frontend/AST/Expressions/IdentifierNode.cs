@@ -1,8 +1,12 @@
-﻿namespace Mashd.Frontend.AST.Expressions;
+﻿using Mashd.Frontend.AST.Definitions;
+using Mashd.Frontend.TypeChecking;
+
+namespace Mashd.Frontend.AST.Expressions;
 
 public class IdentifierNode : ExpressionNode
 {
     public string Name { get; }
+    public IDeclaration Definition {get; set; }
 
     public IdentifierNode(string name, int line, int column, string text)
         : base(line, column, text)

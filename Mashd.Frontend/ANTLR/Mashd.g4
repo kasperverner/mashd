@@ -7,15 +7,13 @@ importStatement : 'import' TEXT ';'                                         # Im
                 ;
 
 definition      : type ID '(' formalParameters ')' block                    # FunctionDefinition
-                | type ID '=' expression ';'                                # VariableDefinition
                 ;
 
 formalParameters 
                 : (type ID (',' type ID)*)?                                 # ParameterList
                 ;
-               
-statement       : block                                                     # BlockStatement
-                | if                                                        # IfStatement
+
+statement       : if                                                        # IfStatement
                 | type ID ('=' expression)? ';'                             # VariableDeclaration                
                 | ID '=' expression ';'                                     # Assignment
                 | ID '+=' expression ';'                                    # AddAssignment
@@ -32,35 +30,35 @@ if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfD
 block           : '{' statement* '}'                                        # BlockDefinition
                 ;
 
-expression      : ID                                                        # IdentifierExpression
-                | literal                                                   # LiteralExpression                                 
-                | expression '?' expression ':' expression ';'              # TernaryExpression
-                | datasetObject '&' datasetObject                           # DatasetCombineExpression
+expression      : literal                                                   # LiteralExpression                                 
+                | ID                                                        # IdentifierExpression
                 | '(' expression ')'                                        # ParenExpression
+                | functionCall                                              # FunctionCallExpression
                 | expression '.' ID                                         # PropertyAccessExpression
                 | expression '.' methodChain                                # MethodChainExpression
-                | functionCall                                              # FunctionCallExpression
-                | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
-                | expression '==' expression                                # EqualityExpression
-                | expression '!=' expression                                # InequalityExpression
-                | expression '<' expression                                 # LessThanExpression
-                | expression '<=' expression                                # LessThanEqualExpression
-                | expression '>' expression                                 # GreaterThanExpression
-                | expression '>=' expression                                # GreaterThanEqualExpression
-                | expression '+' expression                                 # AdditionExpression
-                | expression '-' expression                                 # SubtractionExpression
-                | expression '*' expression                                 # MultiplicationExpression
-                | expression '/' expression                                 # DivisionExpression
-                | expression '%' expression                                 # ModuloExpression
-                | expression '||' expression                                # LogicalOrExpression
-                | expression '&&' expression                                # LogicalAndExpression
-                | expression '??' expression                                # NullishCoalescingExpression
-                | '-' expression                                            # NegationExpression
-                | '!' expression                                            # NotExpression
                 | expression '++'                                           # PostIncrementExpression
                 | expression '--'                                           # PostDecrementExpression
                 | '++' expression                                           # PreIncrementExpression
                 | '--' expression                                           # PreDecrementExpression
+                | '-' expression                                            # NegationExpression
+                | '!' expression                                            # NotExpression
+                | expression '*' expression                                 # MultiplicationExpression
+                | expression '/' expression                                 # DivisionExpression
+                | expression '%' expression                                 # ModuloExpression
+                | expression '+' expression                                 # AdditionExpression
+                | expression '-' expression                                 # SubtractionExpression
+                | expression '<' expression                                 # LessThanExpression
+                | expression '<=' expression                                # LessThanEqualExpression
+                | expression '>' expression                                 # GreaterThanExpression
+                | expression '>=' expression                                # GreaterThanEqualExpression
+                | expression '==' expression                                # EqualityExpression
+                | expression '!=' expression                                # InequalityExpression
+                | expression '??' expression                                # NullishCoalescingExpression
+                | expression '&&' expression                                # LogicalAndExpression
+                | expression '||' expression                                # LogicalOrExpression
+                | expression '?' expression ':' expression                  # TernaryExpression
+                | datasetObject '&' datasetObject                           # DatasetCombineExpression
+                | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
                 ;
 
 literal
@@ -123,6 +121,7 @@ datasetProperty
 
 type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema' | 'Dataset' | 'Mashd' 
                 ;
+
 
 // Lexer Rules
 INTEGER         : [0-9]+ ;

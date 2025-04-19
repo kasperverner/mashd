@@ -1,19 +1,20 @@
 ﻿using Mashd.Frontend.AST.Expressions;
+using Mashd.Frontend.TypeChecking;
 
 namespace Mashd.Frontend.AST.Statements;
 
-public class VariableDeclarationNode : StatementNode
+public class VariableDeclarationNode : StatementNode, IDeclaration
 {
-    public VarType Type { get; }
+    public SymbolType DeclaredType { get; }
     public string Identifier { get; }
     public AstNode Expression { get; }
     
     public bool HasInitialization { get; }
 
-    public VariableDeclarationNode(VarType type, string identifier, ExpressionNode expression, bool hasInitialization, int line, int column, string text)
+    public VariableDeclarationNode(SymbolType type, string identifier, ExpressionNode expression, bool hasInitialization, int line, int column, string text)
         : base(line, column, text)
     {
-        Type = type;
+        DeclaredType = type;
         Identifier = identifier;
         Expression = expression;
         HasInitialization = hasInitialization;

@@ -1,16 +1,20 @@
-﻿using Mashd.Frontend.AST.Definitions;
-using Mashd.Frontend.AST.Statements;
-using Mashd.Frontend.AST.Expressions;
-
-namespace Mashd.Frontend.AST;
-
-using Antlr4.Runtime;
+﻿using Antlr4.Runtime;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Definitions;
 
+namespace Mashd.Frontend.AST;
+
+
 public class AstBuilder : MashdBaseVisitor<AstNode>
 {
+    private readonly ErrorReporter errorReporter;
+    
+    public AstBuilder(ErrorReporter errorReporter)
+    {
+        this.errorReporter = errorReporter;
+    }
+    
     // Program Node
     public override AstNode VisitProgram(MashdParser.ProgramContext context)
     {
@@ -67,24 +71,13 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     }
 
     // Definition Nodes
-
-    public override AstNode VisitVariableDefinition(MashdParser.VariableDefinitionContext context)
-    {
-        string name = context.ID().GetText();
-        string typeText = context.type().GetText();
-        VarType type = ParseVariableType(typeText);
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        return new VariableDefinitionNode(name, type, line, column, text);
-    }
-
+    
     public override AstNode VisitFunctionDefinition(MashdParser.FunctionDefinitionContext context)
     {
         
         var (line, column, text) = ExtractNodeInfo(context);
         
-        VarType returnType = ParseVariableType(context.type().GetText());
+        SymbolType returnType = ParseVariableType(context.type().GetText());
         string functionName = context.ID().GetText();
         
         var parameters = Visit (context.formalParameters()) as FormalParameterListNode;
@@ -167,7 +160,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
                 if (fieldType == null)
                 {
-                    throw new Exception($"Schema field '{fieldName}' is missing a type.");
+                    errorReporter.Report.AstBuilder(property, $"Schema field '{fieldName}' is missing a type.");
                 }
 
                 fields[fieldName] = new MashdSchemaField(fieldType, fieldDisplayName);
@@ -421,9 +414,9 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         string intText = context.INTEGER().GetText();
-
+        
         int value = int.Parse(intText);
-        return new LiteralNode(value, line, column, text);
+        return new LiteralNode(value, line, column, text, SymbolType.Integer);
     }
 
 
@@ -434,7 +427,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string decText = context.DECIMAL().GetText();
 
         decimal value = decimal.Parse(decText);
-        return new LiteralNode(value, line, column, text);
+        return new LiteralNode(value, line, column, text, SymbolType.Decimal);
     }
 
 
@@ -445,7 +438,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string value = rawText.Trim('"');
         var (line, column, text) = ExtractNodeInfo(context);
 
-        return new LiteralNode(value, line, column, text);
+        return new LiteralNode(value, line, column, text, SymbolType.Text);
     }
 
     public override AstNode VisitBooleanLiteral(MashdParser.BooleanLiteralContext context)
@@ -455,7 +448,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string boolText = context.BOOLEAN().GetText();
 
         bool value = boolText.Equals("true", StringComparison.OrdinalIgnoreCase);
-        return new LiteralNode(value, line, column, text);
+        return new LiteralNode(value, line, column, text, SymbolType.Boolean);
     }
 
     public override AstNode VisitDateLiteral(MashdParser.DateLiteralContext context)
@@ -465,14 +458,14 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string dateText = context.DATE().GetText();
 
         DateTime value = DateTime.Parse(dateText);
-        return new LiteralNode(value, line, column, text);
+        return new LiteralNode(value, line, column, text, SymbolType.Date);
     }
 
     public override AstNode VisitNullLiteral(MashdParser.NullLiteralContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-
-        return new LiteralNode(null, line, column, text);
+        
+        return new LiteralNode(null, line, column, text, SymbolType.Void);
     }
 
     //public override AstNode VisitMashdLiteral(MashdParser.MashdLiteralContext context)
@@ -483,7 +476,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitVariableDeclaration(MashdParser.VariableDeclarationContext context)
     {
         string typeText = context.type().GetText();
-        VarType type = ParseVariableType(typeText);
+        SymbolType type = ParseVariableType(typeText);
 
         var identifier = context.ID().GetText();
 
@@ -600,12 +593,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new BlockNode(statements, line, column, text);
     }
-
-    public override AstNode VisitBlockStatement(MashdParser.BlockStatementContext context)
-    {
-        return Visit(context.block());
-    }
-
+    
     public override AstNode VisitParameterList(MashdParser.ParameterListContext context)
     {
         // List to hold individual parameter nodes.
@@ -619,7 +607,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
             for (int i = 0; i < types.Length; i++)
             {
-                VarType type = ParseVariableType(types[i].GetText());
+                SymbolType type = ParseVariableType(types[i].GetText());
                 string name = ids[i].GetText();
                 var (lineChild, columnChild, textChild) = ExtractNodeInfo(types[i]);
 
@@ -637,19 +625,19 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return (context.Start.Line, context.Start.Column, context.GetText());
     }
 
-    private VarType ParseVariableType(string typeText)
+    private SymbolType ParseVariableType(string typeText)
     {
         return typeText switch
         {
-            "Boolean" => VarType.Boolean,
-            "Integer" => VarType.Integer,
-            "Decimal" => VarType.Decimal,
-            "Text" => VarType.Text,
-            "Mashd" => VarType.Mashd,
-            "Date" => VarType.Date,
-            "Dataset" => VarType.Dataset,
-            "Schema" => VarType.Schema,
-            _ => VarType.Unknown
+            "Boolean" => SymbolType.Boolean,
+            "Integer" => SymbolType.Integer,
+            "Decimal" => SymbolType.Decimal,
+            "Text" => SymbolType.Text,
+            "Mashd" => SymbolType.Mashd,
+            "Date" => SymbolType.Date,
+            "Dataset" => SymbolType.Dataset,
+            "Schema" => SymbolType.Schema,
+            _ => SymbolType.Unknown
         };
     }
 

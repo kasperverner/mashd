@@ -1,8 +1,10 @@
-﻿namespace Mashd.Frontend.AST.Definitions;
-
+﻿using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Statements;
 
-public class BlockNode : AstNode
+namespace Mashd.Frontend.AST;
+
+
+public class BlockNode : ScopeNode
 {
     public List<StatementNode> Statements { get; }
     

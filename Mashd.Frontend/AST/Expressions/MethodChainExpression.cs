@@ -2,10 +2,10 @@ namespace Mashd.Frontend.AST.Expressions
 {
     public class MethodChainExpressionNode : ExpressionNode
     {
-        public ExpressionNode left { get; } 
-        public string MethodName { get; } 
-        public List<ExpressionNode> Arguments { get; } 
-        public MethodChainExpressionNode? Next { get; } 
+        public ExpressionNode Left { get; }
+        public string MethodName { get; }
+        public List<ExpressionNode> Arguments { get; }
+        public MethodChainExpressionNode? Next { get; }
 
         public MethodChainExpressionNode(
             ExpressionNode left,
@@ -17,7 +17,7 @@ namespace Mashd.Frontend.AST.Expressions
             string text
         ) : base(line, column, text)
         {
-            left = left;
+            Left = left;
             MethodName = methodName;
             Arguments = arguments;
             Next = next;

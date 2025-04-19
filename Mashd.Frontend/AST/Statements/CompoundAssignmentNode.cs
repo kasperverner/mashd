@@ -1,4 +1,6 @@
-﻿namespace Mashd.Frontend.AST.Statements;
+﻿using Mashd.Frontend.TypeChecking;
+
+namespace Mashd.Frontend.AST.Statements;
 
 using Mashd.Frontend.AST.Expressions;
 public class CompoundAssignmentNode : StatementNode
@@ -7,6 +9,8 @@ public class CompoundAssignmentNode : StatementNode
     
     public OpType OperatorType { get; }
     public ExpressionNode Expression { get; }
+    
+    public IDeclaration Definition {get; set; }
 
     public CompoundAssignmentNode(string identifier, OpType op, ExpressionNode expression, int line, int column, string text)
         : base(line, column, text)
