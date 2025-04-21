@@ -33,7 +33,9 @@ block           : '{' statement* '}'                                        # Bl
                 ;
 
 expression      : ID                                                        # IdentifierExpression
-                | literal                                                   # LiteralExpression                                 
+                | literal                                                   # LiteralExpression         
+                | schemaObject                                              # SchemaExpression 
+                | datasetObject                                             # DatasetExpression
                 | expression '?' expression ':' expression ';'              # TernaryExpression
                 | datasetObject '&' datasetObject                           # DatasetCombineExpression
                 | '(' expression ')'                                        # ParenExpression

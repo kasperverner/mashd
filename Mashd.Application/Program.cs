@@ -1,10 +1,8 @@
-﻿namespace Smashd.Application;
-
-using System;
-using System.IO;
-using Antlr4.Runtime;
+﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Mashd.Frontend.AST;
+
+namespace Mashd.Application;
 
 public static class Program
 {
