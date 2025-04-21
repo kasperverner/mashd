@@ -3,7 +3,7 @@ using Mashd.Backend;
 
 namespace TestProject1;
 
-public class UnitTests
+public class ExpressionUnitTests
 {
     [Fact]
     public void CanParseSimpleNumber()
@@ -16,7 +16,7 @@ public class UnitTests
             
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("42", GetTerminalText(result));
+        Assert.Equal(input, TestHelper.GetTerminalText(result));
     }
     
     [Fact]
@@ -30,21 +30,6 @@ public class UnitTests
             
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("40 + 2", GetTerminalText(result));
-    }
-    
-    /** 
-     * This method retrieves the text of a terminal node from the parse tree.
-     * It checks if the node is a TerminalNodeImpl and returns its text.
-     * If not, it returns the text of the entire tree.
-     */
-    private string GetTerminalText(IParseTree tree)
-    {
-        if (tree is TerminalNodeImpl terminal)
-        {
-            return terminal.Symbol.Text;
-        }
-            
-        return tree.GetText();
+        Assert.Equal(input, TestHelper.GetTerminalText(result));
     }
 }
