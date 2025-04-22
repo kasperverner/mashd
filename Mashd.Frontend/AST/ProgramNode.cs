@@ -1,9 +1,9 @@
-
-namespace Mashd.Frontend.AST;
-
 using System.Collections.Generic;
 using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Statements;
+
+namespace Mashd.Frontend.AST;
+
 
 public class ProgramNode : AstNode
 {

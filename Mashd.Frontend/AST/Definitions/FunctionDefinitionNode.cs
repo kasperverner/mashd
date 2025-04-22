@@ -1,21 +1,23 @@
-﻿namespace Mashd.Frontend.AST.Definitions;
+﻿using Mashd.Frontend.TypeChecking;
 
-public class FunctionDefinitionNode : DefinitionNode
+namespace Mashd.Frontend.AST.Definitions;
+
+public class FunctionDefinitionNode : DefinitionNode, IDeclaration
 {
-    public VarType ReturnType { get; }
-    public string FunctionName { get; }
+    public SymbolType DeclaredType { get; }
+    public string Identifier { get; }
     
     public FormalParameterListNode ParameterList { get; }
     
-    public BlockNode BlockNode { get; }
+    public BlockNode Body { get; }
     
-    public FunctionDefinitionNode(string functionName, VarType returnType, FormalParameterListNode parameterList, BlockNode blockNode, int line, int column, string text)
+    public FunctionDefinitionNode(string functionName, SymbolType returnType, FormalParameterListNode parameterList, BlockNode body, int line, int column, string text)
         : base(line, column, text)
     {
-        ReturnType = returnType;
-        FunctionName = functionName;
+        DeclaredType = returnType;
+        Identifier = functionName;
         ParameterList = parameterList;
-        BlockNode = blockNode;
+        Body = body;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor)

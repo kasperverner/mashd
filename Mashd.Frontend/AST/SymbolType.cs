@@ -1,14 +1,15 @@
 ﻿namespace Mashd.Frontend.AST;
 
-public enum VarType
+public enum SymbolType
 {
     Integer,
     Decimal,
     Text,
     Boolean,
-    Mashd,
     Date,
+    Mashd,
     Dataset,
     Schema,
+    Void,
     Unknown
 }
