@@ -1,0 +1,16 @@
+[Theory]
+[InlineData("2+3", 5)]
+[InlineData("2*3", 6)]
+[InlineData("2*(3+4)", 14)]
+[InlineData("10/2+3", 8)]
+[InlineData("(5-2)*4", 12)]
+public void CanEvaluateExpression(string input, int expected)
+{
+    // Arrange & Act
+    var parseTree = ExpressionParser.Parse(input);
+    var evaluator = new ExpressionEvaluator();
+    int result = evaluator.Visit(parseTree);
+    
+    // Assert
+    Assert.Equal(expected, result);
+}
