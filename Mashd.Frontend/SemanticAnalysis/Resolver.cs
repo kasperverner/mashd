@@ -77,7 +77,22 @@ public class Resolver : IAstVisitor<DummyVoid>
 
         return DummyVoid.Null;
     }
-    
+
+    public DummyVoid VisitSchemaDefinitionNode(SchemaDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public DummyVoid VisitDatasetDefinitionNode(DatasetDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public DummyVoid VisitMashdDefinitionNode(MashdDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
     public DummyVoid VisitBlockNode(BlockNode node)
     {
         // Enter a new scope for the block
@@ -213,7 +228,7 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
-    public DummyVoid VisitDatasetCombineExpressionNode(DatasetCombineExpressionNode node)
+    public DummyVoid VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
     {
         Resolve(node.Left);
         Resolve(node.Right);
@@ -247,12 +262,12 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
-    public DummyVoid VisitMashdSchemaNode(MashdSchemaNode node)
+    public DummyVoid VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
         throw new NotImplementedException();
     }
 
-    public DummyVoid VisitDatasetLiteralNode(DatasetLiteralNode node)
+    public DummyVoid VisitDatasetObjectNode(DatasetObjectNode node)
     {
         throw new NotImplementedException();
     }

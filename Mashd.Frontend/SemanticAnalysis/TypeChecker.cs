@@ -60,6 +60,21 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return node.DeclaredType;
     }
 
+    public SymbolType VisitSchemaDefinitionNode(SchemaDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public SymbolType VisitDatasetDefinitionNode(DatasetDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
+    public SymbolType VisitMashdDefinitionNode(MashdDefinitionNode node)
+    {
+        throw new NotImplementedException();
+    }
+
     public SymbolType VisitReturnNode(ReturnNode node)
     {
         if (_returnTypeStack.Count == 0)
@@ -356,7 +371,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         throw new NotImplementedException($"Line {node.Line}:{node.Column}: Method chain expression not implemented");
     }
 
-    public SymbolType VisitDatasetCombineExpressionNode(DatasetCombineExpressionNode node)
+    public SymbolType VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
     {
         throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset combination not implemented");
     }
@@ -372,12 +387,12 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return SymbolType.Date;
     }
 
-    public SymbolType VisitMashdSchemaNode(MashdSchemaNode node)
+    public SymbolType VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Schema not implemented");
+        throw new NotImplementedException($"Line {objectNode.Line}:{objectNode.Column}: Schema not implemented");
     }
 
-    public SymbolType VisitDatasetLiteralNode(DatasetLiteralNode node)
+    public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
     {
         throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset not implemented");
     }
