@@ -1,6 +1,8 @@
-namespace Mashd.Frontend.AST.Expressions;
+using Mashd.Frontend.AST.Expressions;
 
-public class DatasetLiteralNode : ExpressionNode
+namespace Mashd.Frontend.AST.Definitions;
+
+public class DatasetObjectNode : ExpressionNode
 {
     public class DatasetProperty
     {
@@ -16,7 +18,7 @@ public class DatasetLiteralNode : ExpressionNode
 
     public Dictionary<string, DatasetProperty> Properties { get; }
 
-    public DatasetLiteralNode(int line, int column, string text, Dictionary<string, DatasetProperty> properties)
+    public DatasetObjectNode(int line, int column, string text, Dictionary<string, DatasetProperty> properties)
         : base(line, column, text)
     {
         Properties = properties;
@@ -24,6 +26,6 @@ public class DatasetLiteralNode : ExpressionNode
 
     public override T Accept<T>(IAstVisitor<T> visitor)
     {
-        return visitor.VisitDatasetLiteralNode(this);
+        return visitor.VisitDatasetObjectNode(this);
     }
 }

@@ -52,6 +52,27 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitFunctionDefinition([NotNull] MashdParser.FunctionDefinitionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>SchemaDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchemaDefinition([NotNull] MashdParser.SchemaDefinitionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDatasetDefinition([NotNull] MashdParser.DatasetDefinitionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>MashdDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMashdDefinition([NotNull] MashdParser.MashdDefinitionContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>ParameterList</c>
 	/// labeled alternative in <see cref="MashdParser.formalParameters"/>.
 	/// </summary>
@@ -191,13 +212,6 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitInequalityExpression([NotNull] MashdParser.InequalityExpressionContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>DatasetCombineExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDatasetCombineExpression([NotNull] MashdParser.DatasetCombineExpressionContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>DivisionExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
@@ -490,4 +504,22 @@ public interface IMashdVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitType([NotNull] MashdParser.TypeContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schema"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSchema([NotNull] MashdParser.SchemaContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.dataset"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDataset([NotNull] MashdParser.DatasetContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.mashd"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitMashd([NotNull] MashdParser.MashdContext context);
 }

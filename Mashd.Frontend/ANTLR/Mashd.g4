@@ -7,6 +7,9 @@ importStatement : 'import' TEXT ';'                                         # Im
                 ;
 
 definition      : type ID '(' formalParameters ')' block                    # FunctionDefinition
+                | schema ID '=' schemaObject ';'                            # SchemaDefinition
+                | dataset ID '=' datasetObject ';'                          # DatasetDefinition
+                | mashd ID '=' datasetObject '&' datasetObject ';'          # MashdDefinition
                 ;
 
 formalParameters 
@@ -57,7 +60,6 @@ expression      : literal                                                   # Li
                 | expression '&&' expression                                # LogicalAndExpression
                 | expression '||' expression                                # LogicalOrExpression
                 | expression '?' expression ':' expression                  # TernaryExpression
-                | datasetObject '&' datasetObject                           # DatasetCombineExpression
                 | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
                 ;
 
@@ -82,9 +84,10 @@ methodChain     : functionCall ('.' methodChain)?
                 
 functionCall    : ID '(' actualParameters? ')'
                 ;
+
 //Schema                
 schemaObject
-                : 'Schema' '{' schemaProperties? '}'               
+                : '{' schemaProperties? '}'               
                 ;       
 
 schemaProperties
@@ -101,27 +104,34 @@ schemaFieldProperty
                 
 //Dataset
 datasetObject
-    : 'Dataset' '{' datasetProperties? '}'   # DatasetObjectExpression
-    ;
-
-datasetProperties
-    : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
-    ;
-
-datasetProperty
-    : 'adapter' ':' TEXT                      # DatasetAdapter
-    | 'source' ':' TEXT                       # DatasetSource
-    | 'schema' ':' ID                         # DatasetSchema
-    | 'delimiter' ':' TEXT                    # CsvDelimiter
-    | 'query' ':' TEXT                        # DatabaseQuery
-    | 'skip' ':' INTEGER                      # DatasetSkip
-    ;
-
-
-
-type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | 'Schema' | 'Dataset' | 'Mashd' 
+                : '{' datasetProperties? '}'   # DatasetObjectExpression
                 ;
 
+datasetProperties
+                : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
+                ;
+
+datasetProperty
+                : 'adapter' ':' TEXT                      # DatasetAdapter
+                | 'source' ':' TEXT                       # DatasetSource
+                | 'schema' ':' ID                         # DatasetSchema
+                | 'delimiter' ':' TEXT                    # CsvDelimiter
+                | 'query' ':' TEXT                        # DatabaseQuery
+                | 'skip' ':' INTEGER                      # DatasetSkip
+                ;
+
+
+type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | schema | dataset | mashd
+                ;
+
+schema          : 'Schema'                
+                ;
+                
+dataset         : 'Dataset' 
+                ;
+                
+mashd           : 'Mashd' 
+                ;
 
 // Lexer Rules
 INTEGER         : [0-9]+ ;
