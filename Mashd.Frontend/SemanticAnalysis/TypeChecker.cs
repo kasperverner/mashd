@@ -11,9 +11,12 @@ public class TypeChecker : IAstVisitor<SymbolType>
     private readonly Stack<SymbolType> _returnTypeStack = new Stack<SymbolType>();
     private readonly List<int> _returnCounts = new List<int>();
 
-    public TypeChecker(ErrorReporter errorReporter)
+    private readonly SymbolTable symbolTable;
+
+    public TypeChecker(ErrorReporter errorReporter, SymbolTable symbolTable)
     {
         this.errorReporter = errorReporter;
+        this.symbolTable = symbolTable;
     }
     public SymbolType VisitProgramNode(ProgramNode node)
     {
@@ -62,7 +65,23 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check each field's type declaration
+        foreach (var field in node.ObjectNode.Fields)
+        {
+            string typeName = field.Value.Type;
+            SymbolType fieldType = TryResolveType(typeName);
+        
+            if (!IsBasicType(fieldType))
+            {
+                errorReporter.Report.TypeCheck(
+                    node, $"Field '{field.Key}' has unknown type '{typeName}'"
+                );
+            }
+        }
+    
+        // Record this as a valid schema type
+        node.InferredType = SymbolType.Schema;
+        return SymbolType.Schema;
     }
 
     public SymbolType VisitDatasetDefinitionNode(DatasetDefinitionNode node)
@@ -373,8 +392,32 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset combination not implemented");
+        // Visit and type check the left and right sides
+        var leftType = node.Left.Accept(this);
+        var rightType = node.Right.Accept(this);
+
+        // Check that both sides are datasets
+        if (leftType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
+            );
+        }
+
+        if (rightType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
+            );
+        }
+
+        // The result of combining datasets is a Mashd type
+        node.InferredType = SymbolType.Mashd;
+        return SymbolType.Mashd;
     }
+
 
     public SymbolType VisitObjectExpressionNode(ObjectExpressionNode node)
     {
@@ -413,7 +456,7 @@ public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
     // Define valid property names
     var validPropertyNames = new HashSet<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
     
-    // Define required properties (if any)
+    // Define required properties
     var requiredPropertyNames = new HashSet<string> { "adapter", "source", "schema" };
     
     // Check for unknown properties
@@ -442,16 +485,26 @@ public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
         
         // Specific validations for particular properties
         switch (propertyKey.ToLower())
-        {
-            case "schema":
-                // Validation from the schema table...
+        {case "schema":
+                if (property.Value is string schemaName)
+                {
+                    if (!symbolTable.TryLookup(schemaName, out var declaration) || 
+                        !(declaration is SchemaDefinitionNode))
+                    {
+                        errorReporter.Report.TypeCheck(
+                            node,
+                            $"Referenced schema '{schemaName}' is not defined"
+                        );
+                    }
+                }
                 break;
             case "skip":
                 // Verify it's an integer
                 if (propertyType != SymbolType.Integer)
                 {
                     errorReporter.Report.TypeCheck(
-                        node,$"Property 'skip' must be an Integer"
+                        node,
+                        $"Property 'skip' must be an Integer"
                     );
                 }
                 break;
@@ -465,7 +518,8 @@ public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
          if (!node.Properties.ContainsKey(required))
          {
              errorReporter.Report.TypeCheck(
-                 node,$"Required property '{required}' missing in dataset"
+                 node,
+                 $"Required property '{required}' missing in dataset"
              );
          }
     }
