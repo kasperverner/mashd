@@ -1,4 +1,5 @@
 using Npgsql;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -11,8 +12,28 @@ public class PostgreSqlAdapter : IDataAdapter
 
     public PostgreSqlAdapter(string connectionString, string query)
     {
-        _connectionString = connectionString;
+        _connectionString = NormalizeConnectionString(connectionString);
         _query = query;
+    }
+
+    private static string NormalizeConnectionString(string connectionString)
+    {
+        if (connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        {
+            var uri = new Uri(connectionString);
+
+            var userInfo = uri.UserInfo.Split(':');
+            var username = userInfo[0];
+            var password = userInfo.Length > 1 ? userInfo[1] : "";
+
+            var host = uri.Host;
+            var port = uri.Port;
+            var database = uri.AbsolutePath.TrimStart('/');
+
+            return $"Host={host};Port={port};Username={username};Password={password};Database={database}";
+        }
+        
+        return connectionString;
     }
 
     public async Task<IEnumerable<Dictionary<string, object>>> ReadAsync()
