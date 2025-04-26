@@ -389,13 +389,91 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
-        throw new NotImplementedException($"Line {objectNode.Line}:{objectNode.Column}: Schema not implemented");
+        foreach (var (fieldKey, field) in objectNode.Fields)
+        {
+            SymbolType resolvedType = TryResolveType(field.Type);
+            if (!IsBasicType(resolvedType))
+            {
+                errorReporter.Report.TypeCheck(
+                    objectNode,
+                    $"Unknown type '{field.Type}' in field '{fieldKey}'"
+                );
+            }
+        }
+
+        objectNode.InferredType = SymbolType.Schema;
+        return SymbolType.Schema;
     }
 
-    public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
+
+
+
+public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
+{
+    // Define valid property names
+    var validPropertyNames = new HashSet<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
+    
+    // Define required properties (if any)
+    var requiredPropertyNames = new HashSet<string> { "adapter", "source", "schema" };
+    
+    // Check for unknown properties
+    foreach (var (propertyKey, property) in node.Properties)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset not implemented");
+        if (!validPropertyNames.Contains(propertyKey.ToLower()))
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Unknown property '{propertyKey}' in dataset"
+            );
+            continue;
+        }
+        
+        // Infer the type of the property value
+        SymbolType propertyType = InferPropertyType(property.Value);
+        
+        // Check if the property has a valid type
+        if (!IsBasicType(propertyType))
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Invalid type for property '{propertyKey}' in dataset"
+            );
+        }
+        
+        // Specific validations for particular properties
+        switch (propertyKey.ToLower())
+        {
+            case "schema":
+                // Validation from the schema table...
+                break;
+            case "skip":
+                // Verify it's an integer
+                if (propertyType != SymbolType.Integer)
+                {
+                    errorReporter.Report.TypeCheck(
+                        node,$"Property 'skip' must be an Integer"
+                    );
+                }
+                break;
+            // Add other property-specific validations as needed
+        }
     }
+    
+    // Check for missing required properties 
+    foreach (var required in requiredPropertyNames)
+    {
+         if (!node.Properties.ContainsKey(required))
+         {
+             errorReporter.Report.TypeCheck(
+                 node,$"Required property '{required}' missing in dataset"
+             );
+         }
+    }
+    
+    // Set and return the inferred type
+    node.InferredType = SymbolType.Dataset;
+    return SymbolType.Dataset;
+}
 
     // Helper methods
     private bool IsNumeric(SymbolType type)
@@ -412,5 +490,32 @@ public class TypeChecker : IAstVisitor<SymbolType>
     public void Check(AstNode node)
     {
         node.Accept(this);
+    }
+    private SymbolType TryResolveType(string typeName)
+    {
+        return typeName.ToLower() switch
+        {
+            "integer" => SymbolType.Integer,
+            "decimal" => SymbolType.Decimal,
+            "text" => SymbolType.Text,
+            "boolean" => SymbolType.Boolean,
+            "date" => SymbolType.Date,
+            _ => SymbolType.Unknown
+        };
+    }
+
+    private SymbolType InferPropertyType(object value)
+    {
+        return value switch
+        {
+            int => SymbolType.Integer,
+            decimal => SymbolType.Decimal,
+            double => SymbolType.Decimal,
+            float => SymbolType.Decimal,
+            string => SymbolType.Text,
+            bool => SymbolType.Boolean,
+            DateTime => SymbolType.Date,
+            _ => SymbolType.Unknown
+        };
     }
 }
