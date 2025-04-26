@@ -15,7 +15,7 @@ public static class AdapterFactory
                 query: config["query"]
             ),
             "csv" => new CsvAdapter(
-                config["file"], config.ContainsKey("delimiter") ? config["delimiter"] : ","
+                config["file"], config.GetValueOrDefault("delimiter")
             ),
             "postgresql" => new PostgreSqlAdapter(
                 config["connectionString"],

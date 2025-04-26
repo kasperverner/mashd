@@ -11,7 +11,7 @@ public class CsvAdapter : IDataAdapter
     private readonly string _filePath;
     private readonly char _delimiter;
 
-    public CsvAdapter(string filePath, string delimiter = ",")
+    public CsvAdapter(string filePath, string? delimiter = null)
     {
         _filePath = filePath;
         _delimiter = string.IsNullOrEmpty(delimiter) ? ',' : delimiter[0];

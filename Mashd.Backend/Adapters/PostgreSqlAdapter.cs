@@ -18,22 +18,42 @@ public class PostgreSqlAdapter : IDataAdapter
 
     private static string NormalizeConnectionString(string connectionString)
     {
-        if (connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+        if (!connectionString.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+            return connectionString;
+        try
         {
             var uri = new Uri(connectionString);
 
             var userInfo = uri.UserInfo.Split(':');
-            var username = userInfo[0];
-            var password = userInfo.Length > 1 ? userInfo[1] : "";
+            var username = userInfo.Length > 0 ? userInfo[0] : string.Empty;
+            var password = userInfo.Length > 1 ? userInfo[1] : string.Empty;
 
-            var host = uri.Host;
-            var port = uri.Port;
-            var database = uri.AbsolutePath.TrimStart('/');
-
-            return $"Host={host};Port={port};Username={username};Password={password};Database={database}";
-        }
+            var connStrBuilder = new List<string>
+            {
+                $"Host={uri.Host}",
+                $"Port={(uri.Port > 0 ? uri.Port : 5432)}",
+                $"Database={uri.AbsolutePath.TrimStart('/')}"
+            };
+            
+            if (!string.IsNullOrEmpty(username))
+                connStrBuilder.Add($"Username={username}");
         
-        return connectionString;
+            if (!string.IsNullOrEmpty(password))
+                connStrBuilder.Add($"Password={password}");
+            
+            var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        
+            foreach (string key in queryParams.AllKeys)
+            {
+                if (!string.IsNullOrEmpty(key))
+                    connStrBuilder.Add($"{key}={queryParams[key]}");
+            }
+        
+            return string.Join(";", connStrBuilder);
+        }
+        catch(Exception ex){
+            throw new FormatException($"Invalid PostgreSQL URL format: {ex.Message}", ex);
+        }
     }
 
     public async Task<IEnumerable<Dictionary<string, object>>> ReadAsync()
