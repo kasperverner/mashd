@@ -67,6 +67,39 @@ public partial class MashdBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitFunctionDefinition([NotNull] MashdParser.FunctionDefinitionContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by the <c>SchemaDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitSchemaDefinition([NotNull] MashdParser.SchemaDefinitionContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DatasetDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitDatasetDefinition([NotNull] MashdParser.DatasetDefinitionContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>MashdDefinition</c>
+	/// labeled alternative in <see cref="MashdParser.definition"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitMashdDefinition([NotNull] MashdParser.MashdDefinitionContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>ParameterList</c>
 	/// labeled alternative in <see cref="MashdParser.formalParameters"/>.
 	/// <para>
@@ -286,17 +319,6 @@ public partial class MashdBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitInequalityExpression([NotNull] MashdParser.InequalityExpressionContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>DatasetCombineExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitDatasetCombineExpression([NotNull] MashdParser.DatasetCombineExpressionContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>DivisionExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
@@ -761,4 +783,34 @@ public partial class MashdBaseVisitor<Result> : AbstractParseTreeVisitor<Result>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitType([NotNull] MashdParser.TypeContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.schema"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitSchema([NotNull] MashdParser.SchemaContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.dataset"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitDataset([NotNull] MashdParser.DatasetContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MashdParser.mashd"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitMashd([NotNull] MashdParser.MashdContext context) { return VisitChildren(context); }
 }
