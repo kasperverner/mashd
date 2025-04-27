@@ -1,8 +1,8 @@
 ﻿namespace Mashd.Backend.BuiltInMethods;
 
-public class FuzzyMatch
+public static class FuzzyMatchMethod
 {
-    public static bool FuzzyMatchMethod(string str1, string str2, double threshold)
+    public static bool FuzzyMatch(string str1, string str2, double threshold)
     {
         if (threshold < 0 || threshold > 1)
         {
