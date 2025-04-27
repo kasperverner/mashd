@@ -14,6 +14,7 @@ public class Resolver : IAstVisitor<DummyVoid>
 {
     private readonly ErrorReporter errorReporter;
     private SymbolTable currentScope; // global scope
+    public SymbolTable GlobalScope => currentScope;
 
     public Resolver(ErrorReporter errorReporter)
     {
@@ -80,17 +81,42 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the schema definition in the current scope
+        currentScope.Add(node.Identifier, node);
+    
+        // Visit the schema object to handle any nested expressions or field references
+        if (node.ObjectNode != null)
+        {
+            Resolve(node.ObjectNode);
+        }
+    
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the dataset definition in the current scope
+        currentScope.Add(node.Identifier, node);
+    
+        // Visit the dataset object to handle any nested expressions
+        if (node.ObjectNode != null)
+        {
+            Resolve(node.ObjectNode);
+        }
+    
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitMashdDefinitionNode(MashdDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the mashd definition in the current scope
+        currentScope.Add(node.Identifier, node);
+    
+        // Visit left and right expressions to resolve any identifiers
+        Resolve(node.Left);
+        Resolve(node.Right);
+    
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitBlockNode(BlockNode node)
@@ -264,12 +290,34 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
-        throw new NotImplementedException();
+        // No need to resolve further for simple schema objects
+        // If there were expressions in field values, we would resolve them here
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        throw new NotImplementedException();
+        // Check if any property values need resolution (could be identifiers or expressions)
+        foreach (var property in node.Properties.Values)
+        {
+            // If property contains expressions, resolve them
+            // For example, if a property value could be an ExpressionNode:
+            if (property.Value is ExpressionNode expr)
+            {
+                Resolve(expr);
+            }
+            else if (property.Value is string identifier && property.Key.ToLower() == "schema")
+            {
+                // Check if referenced schema exists in scope
+                if (!currentScope.TryLookup(identifier, out var decl))
+                {
+                    errorReporter.Report.NameResolution(node, $"Undefined schema '{identifier}'");
+                }
+                // Could store the resolved declaration if needed
+            }
+        }
+    
+        return DummyVoid.Null;
     }
 
 

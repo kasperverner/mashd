@@ -65,33 +65,48 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
-        // Check each field's type declaration
-        foreach (var field in node.ObjectNode.Fields)
-        {
-            string typeName = field.Value.Type;
-            SymbolType fieldType = TryResolveType(typeName);
-        
-            if (!IsBasicType(fieldType))
-            {
-                errorReporter.Report.TypeCheck(
-                    node, $"Field '{field.Key}' has unknown type '{typeName}'"
-                );
-            }
-        }
-    
-        // Record this as a valid schema type
+        // Check the schemas object node's properties and structure
+        node.ObjectNode.Accept(this);
+
         node.InferredType = SymbolType.Schema;
         return SymbolType.Schema;
     }
 
     public SymbolType VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check the dataset object node's properties and structure
+        node.ObjectNode.Accept(this);
+        
+        node.InferredType = SymbolType.Dataset;
+        return SymbolType.Dataset;
     }
 
     public SymbolType VisitMashdDefinitionNode(MashdDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check the left and right expressions
+        var leftType = node.Left.Accept(this);
+        var rightType = node.Right.Accept(this);
+    
+        // Both sides should be datasets for a valid mashd operation
+        if (leftType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
+            );
+        }
+    
+        if (rightType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
+            );
+        }
+    
+        // The result of a mashd operation is a Mashd type
+        node.InferredType = SymbolType.Mashd;
+        return SymbolType.Mashd;
     }
 
     public SymbolType VisitReturnNode(ReturnNode node)
@@ -400,20 +415,17 @@ public class TypeChecker : IAstVisitor<SymbolType>
         if (leftType != SymbolType.Dataset)
         {
             errorReporter.Report.TypeCheck(
-                node,
-                $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
+                node, $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
             );
         }
 
         if (rightType != SymbolType.Dataset)
         {
             errorReporter.Report.TypeCheck(
-                node,
-                $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
+                node, $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
             );
         }
-
-        // The result of combining datasets is a Mashd type
+        
         node.InferredType = SymbolType.Mashd;
         return SymbolType.Mashd;
     }
@@ -432,6 +444,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
+        // Check for invalid field types
         foreach (var (fieldKey, field) in objectNode.Fields)
         {
             SymbolType resolvedType = TryResolveType(field.Type);
@@ -443,7 +456,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 );
             }
         }
-
+        
         objectNode.InferredType = SymbolType.Schema;
         return SymbolType.Schema;
     }
@@ -453,81 +466,72 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
 public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
 {
-    // Define valid property names
-    var validPropertyNames = new HashSet<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
+    var validPropertyNames = new List<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
+    var requiredPropertyNames = new List<string> { "adapter", "source", "schema" };
     
-    // Define required properties
-    var requiredPropertyNames = new HashSet<string> { "adapter", "source", "schema" };
-    
+    // Check for missing required properties first
+    foreach (var required in requiredPropertyNames)
+    {
+        if (!node.Properties.ContainsKey(required))
+        {
+            errorReporter.Report.TypeCheck(
+                node, $"Required property '{required}' missing in dataset"
+            );
+        }
+    }
+
     // Check for unknown properties
     foreach (var (propertyKey, property) in node.Properties)
     {
         if (!validPropertyNames.Contains(propertyKey.ToLower()))
         {
             errorReporter.Report.TypeCheck(
-                node,
-                $"Unknown property '{propertyKey}' in dataset"
+                node, $"Unknown property '{propertyKey}' in dataset"
             );
-            continue;
+            continue; // Skip further checks for this property
         }
         
-        // Infer the type of the property value
+        // Special handling for the 'schema' property (reference to schema)
+        if (propertyKey.ToLower() == "schema")
+        {
+            if (property.Value is string schemaName)
+            {
+                // Look up schema in the symbol table to make sure it's defined
+                if (!symbolTable.TryLookup(schemaName, out var declaration) || !(declaration is SchemaDefinitionNode))
+                {
+                    errorReporter.Report.TypeCheck(
+                        node, $"Referenced schema '{schemaName}' is not defined"
+                    );
+                }
+            }
+            continue; // Skip further type checks for 'schema' 
+        }
+
+        // For other properties, infer and check types
         SymbolType propertyType = InferPropertyType(property.Value);
         
-        // Check if the property has a valid type
         if (!IsBasicType(propertyType))
         {
             errorReporter.Report.TypeCheck(
-                node,
-                $"Invalid type for property '{propertyKey}' in dataset"
+                node, $"Invalid type for property '{propertyKey}' in dataset"
             );
         }
         
-        // Specific validations for particular properties
-        switch (propertyKey.ToLower())
-        {case "schema":
-                if (property.Value is string schemaName)
-                {
-                    if (!symbolTable.TryLookup(schemaName, out var declaration) || 
-                        !(declaration is SchemaDefinitionNode))
-                    {
-                        errorReporter.Report.TypeCheck(
-                            node,
-                            $"Referenced schema '{schemaName}' is not defined"
-                        );
-                    }
-                }
-                break;
-            case "skip":
-                // Verify it's an integer
-                if (propertyType != SymbolType.Integer)
-                {
-                    errorReporter.Report.TypeCheck(
-                        node,
-                        $"Property 'skip' must be an Integer"
-                    );
-                }
-                break;
-            // Add other property-specific validations as needed
+        // Specific validation for 'skip' 
+        if (propertyKey.ToLower() == "skip" && propertyType != SymbolType.Integer)
+        {
+            errorReporter.Report.TypeCheck(
+                node, $"Property 'skip' must be an Integer"
+            );
         }
-    }
-    
-    // Check for missing required properties 
-    foreach (var required in requiredPropertyNames)
-    {
-         if (!node.Properties.ContainsKey(required))
-         {
-             errorReporter.Report.TypeCheck(
-                 node,
-                 $"Required property '{required}' missing in dataset"
-             );
-         }
     }
     
     // Set and return the inferred type
     node.InferredType = SymbolType.Dataset;
     return SymbolType.Dataset;
 }
+
+
 
     // Helper methods
     private bool IsNumeric(SymbolType type)
