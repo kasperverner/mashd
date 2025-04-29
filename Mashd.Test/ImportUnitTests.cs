@@ -8,7 +8,7 @@ public class ImportUnitTests
     public void CanParseImportStatement()
     {
         // Arrange
-        string input = "import 'another_file.mashd';";
+        string input = "import \"another_file.mashd\";";
         
         // Act
         var result = ExpressionParser.Parse(input);

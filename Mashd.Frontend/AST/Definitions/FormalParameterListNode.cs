@@ -1,4 +1,4 @@
-﻿namespace Mashd.Frontend.AST;
+﻿namespace Mashd.Frontend.AST.Definitions;
 
 public class FormalParameterListNode : AstNode
 {

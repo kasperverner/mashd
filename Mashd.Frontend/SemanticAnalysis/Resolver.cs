@@ -1,9 +1,9 @@
 ﻿using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
-using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Expressions;
+using Mashd.Frontend.AST.Statements;
 
-namespace Mashd.Frontend.TypeChecking;
+namespace Mashd.Frontend.SemanticAnalysis;
 
 public struct DummyVoid
 {

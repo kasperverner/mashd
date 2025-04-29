@@ -1,8 +1,8 @@
-﻿using Mashd.Frontend.TypeChecking;
-using Antlr4.Runtime;
+﻿using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Mashd.Frontend;
 using Mashd.Frontend.AST;
+using Mashd.Frontend.SemanticAnalysis;
 
 namespace Mashd.Application;
 
