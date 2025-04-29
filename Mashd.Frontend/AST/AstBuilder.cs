@@ -229,6 +229,17 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
         return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
     }
+    
+    public override ExpressionNode VisitTypeMethodCallExpression(MashdParser.TypeMethodCallExpressionContext context)
+    {
+        var target = VisitTypeLiteral(context.type());
+        
+        var methodChain = BuildMethodChain(context.methodChain());
+
+        var (line, column, text) = ExtractNodeInfo(context);
+        
+        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
+    }
 
     public override AstNode VisitObjectExpression(MashdParser.ObjectExpressionContext context)
     {
@@ -414,15 +425,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return Visit(context.literal());
     }
 
-    public override AstNode VisitTypeExpression(MashdParser.TypeExpressionContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string typeText = context.type().GetText();
-        
-        SymbolType type = ParseVariableType(typeText);
-        return new LiteralNode(type, line, column, text, type);
-    }
-
     public override AstNode VisitIntegerLiteral(MashdParser.IntegerLiteralContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
@@ -555,12 +557,14 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new AssignmentNode(name, expression, line, column, text);
     }
 
-    public override AstNode VisitExpressionStatement(MashdParser.ExpressionStatementContext context)
+    public override AstNode VisitMethodCallStatement(MashdParser.MethodCallStatementContext context)
     {
-        var expression = Visit(context.expression()) as ExpressionNode;
-        var (line, column, text) = ExtractNodeInfo(context);
+        var target = Visit(context.expression()) as ExpressionNode;
         
-        return new ExpressionStatementNode(expression, line, column, text);
+        var methodChain = BuildMethodChain(context.methodChain());
+
+        var (line, column, text) = ExtractNodeInfo(context);
+        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
     }
 
     // Coalescing Assignment Nodes
@@ -652,6 +656,15 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     private (int line, int column, string text) ExtractNodeInfo(ParserRuleContext context)
     {
         return (context.Start.Line, context.Start.Column, context.GetText());
+    }
+    
+    private ExpressionNode VisitTypeLiteral(MashdParser.TypeContext context)
+    {
+        var (line, column, text) = ExtractNodeInfo(context);
+        string typeText = context.GetText();
+        SymbolType type = ParseVariableType(typeText);
+        
+        return new LiteralNode(type, line, column, text, type);
     }
 
     private SymbolType ParseVariableType(string typeText)

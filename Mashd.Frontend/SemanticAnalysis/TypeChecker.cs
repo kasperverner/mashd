@@ -518,15 +518,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return SymbolType.Dataset;
     }
 
-    public SymbolType VisitExpressionStatementNode(ExpressionStatementNode node)
-    {
-        var exprType = node.Expression.Accept(this);
-        node.InferredType = exprType;
-        
-        return exprType;
-    }
-
-
     // Helper methods
     private bool IsNumeric(SymbolType type)
     {

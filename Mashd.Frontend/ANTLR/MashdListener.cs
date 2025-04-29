@@ -371,6 +371,18 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitNullCoalescingAssignment([NotNull] MashdParser.NullCoalescingAssignmentContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>MethodCallStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterMethodCallStatement([NotNull] MashdParser.MethodCallStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>MethodCallStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitMethodCallStatement([NotNull] MashdParser.MethodCallStatementContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>ReturnStatement</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// </summary>
@@ -382,18 +394,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitReturnStatement([NotNull] MashdParser.ReturnStatementContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>ExpressionStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterExpressionStatement([NotNull] MashdParser.ExpressionStatementContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>ExpressionStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitExpressionStatement([NotNull] MashdParser.ExpressionStatementContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>IfDefinition</c>
 	/// labeled alternative in <see cref="MashdParser.if"/>.
@@ -611,6 +611,18 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitPostIncrementExpression([NotNull] MashdParser.PostIncrementExpressionContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>TypeMethodCallExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterTypeMethodCallExpression([NotNull] MashdParser.TypeMethodCallExpressionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>TypeMethodCallExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitTypeMethodCallExpression([NotNull] MashdParser.TypeMethodCallExpressionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>PreDecrementExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// </summary>
@@ -622,18 +634,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitPreDecrementExpression([NotNull] MashdParser.PreDecrementExpressionContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>TypeExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterTypeExpression([NotNull] MashdParser.TypeExpressionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>TypeExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitTypeExpression([NotNull] MashdParser.TypeExpressionContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>LiteralExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.

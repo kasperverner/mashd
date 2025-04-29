@@ -434,6 +434,20 @@ public partial class MashdBaseListener : IMashdListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitNullCoalescingAssignment([NotNull] MashdParser.NullCoalescingAssignmentContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>MethodCallStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterMethodCallStatement([NotNull] MashdParser.MethodCallStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>MethodCallStatement</c>
+	/// labeled alternative in <see cref="MashdParser.statement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitMethodCallStatement([NotNull] MashdParser.MethodCallStatementContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>ReturnStatement</c>
 	/// labeled alternative in <see cref="MashdParser.statement"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -447,20 +461,6 @@ public partial class MashdBaseListener : IMashdListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitReturnStatement([NotNull] MashdParser.ReturnStatementContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>ExpressionStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExpressionStatement([NotNull] MashdParser.ExpressionStatementContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>ExpressionStatement</c>
-	/// labeled alternative in <see cref="MashdParser.statement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExpressionStatement([NotNull] MashdParser.ExpressionStatementContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>IfDefinition</c>
 	/// labeled alternative in <see cref="MashdParser.if"/>.
@@ -714,6 +714,20 @@ public partial class MashdBaseListener : IMashdListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitPostIncrementExpression([NotNull] MashdParser.PostIncrementExpressionContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>TypeMethodCallExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterTypeMethodCallExpression([NotNull] MashdParser.TypeMethodCallExpressionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>TypeMethodCallExpression</c>
+	/// labeled alternative in <see cref="MashdParser.expression"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitTypeMethodCallExpression([NotNull] MashdParser.TypeMethodCallExpressionContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>PreDecrementExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.
 	/// <para>The default implementation does nothing.</para>
@@ -727,20 +741,6 @@ public partial class MashdBaseListener : IMashdListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitPreDecrementExpression([NotNull] MashdParser.PreDecrementExpressionContext context) { }
-	/// <summary>
-	/// Enter a parse tree produced by the <c>TypeExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTypeExpression([NotNull] MashdParser.TypeExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by the <c>TypeExpression</c>
-	/// labeled alternative in <see cref="MashdParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTypeExpression([NotNull] MashdParser.TypeExpressionContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>LiteralExpression</c>
 	/// labeled alternative in <see cref="MashdParser.expression"/>.

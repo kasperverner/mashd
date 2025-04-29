@@ -7,9 +7,9 @@ importStatement : 'import' TEXT ';'                                           # 
                 ;
 
 definition      : type ID '(' formalParameters ')' block                      # FunctionDefinition
-                | SCHEMA_TYPE ID '=' expression ';'                           # SchemaDefinition
-                | DATASET_TYPE ID '=' expression ';'                          # DatasetDefinition                                
-                | MASHD_TYPE ID '=' expression ';'                            # MashdDefinition
+                | SCHEMA_TYPE ID '=' expression ';'                              # SchemaDefinition
+                | DATASET_TYPE ID '=' expression ';'                             # DatasetDefinition                                
+                | MASHD_TYPE ID '=' expression ';'                               # MashdDefinition
                 ;
 
 //Schema                
@@ -26,27 +26,27 @@ schemaProperty
                 ;
                     
 schemaFieldProperty
-                : ID ':' type                                               # SchemaType
-                | ID ':' TEXT                                               # SchemaName
+                : ID ':' type                           # SchemaType
+                | ID ':' TEXT                           # SchemaName
                 ;
                 
 //Dataset
 datasetObject
-                : '{' datasetProperties? '}'                                # DatasetObjectExpression
+                : '{' datasetProperties? '}'   # DatasetObjectExpression
                 ;
 
 datasetProperties
-                : datasetProperty (',' datasetProperty)*                    # DatasetPropertyList
+                : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
                 ;
 
 datasetProperty
-                : ID ':' TEXT                                               # DatasetAdapter
-                | ID ':' TEXT                                               # DatasetSource
-                | ID ':' ID                                                 # DatasetSchema
-                | ID ':' TEXT                                               # CsvDelimiter
-                | ID ':' TEXT                                               # DatabaseQuery
-                | ID ':' INTEGER                                            # DatasetSkip
-                | ID ':' INTEGER                                            # DatasetLimit
+                : ID ':' TEXT                           # DatasetAdapter
+                | ID ':' TEXT                           # DatasetSource
+                | ID ':' ID                             # DatasetSchema
+                | ID ':' TEXT                           # CsvDelimiter
+                | ID ':' TEXT                           # DatabaseQuery
+                | ID ':' INTEGER                        # DatasetSkip
+                | ID ':' INTEGER                        # DatasetLimit
                 ;
 
 formalParameters 
@@ -61,11 +61,11 @@ statement       : if                                                        # If
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
                 | ID '??=' expression ';'                                   # NullCoalescingAssignment
-                | 'return' expression ';'                                   # ReturnStatement
-                | expression ('.' method)+                                  # MethodChainStatement
+                | expression '.' methodChain ';'                            # MethodCallStatement
+                | 'return' expression ';'                                   # ReturnStatement                
                 ;
 
-if              : 'if' '(' expression ')' block ('else' (block | if))?      # IfDefinition
+if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfDefinition
                 ;
 
 block           : '{' statement* '}'                                        # BlockDefinition
@@ -76,7 +76,8 @@ expression      : literal                                                   # Li
                 | '(' expression ')'                                        # ParenExpression
                 | functionCall                                              # FunctionCallExpression
                 | expression '.' ID                                         # PropertyAccessExpression
-                | type '.parse(' actualParameters ')'                       # ParseMethodCallExpression
+                | expression '.' methodChain                                # MethodCallExpression
+                | type '.' methodChain                                      # TypeMethodCallExpression
                 | expression '++'                                           # PostIncrementExpression
                 | expression '--'                                           # PostDecrementExpression
                 | '++' expression                                           # PreIncrementExpression
@@ -102,6 +103,8 @@ expression      : literal                                                   # Li
                 | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
                 ;
 
+
+
 literal
                 : BOOLEAN                                                   # BooleanLiteral
                 | INTEGER                                                   # IntegerLiteral
@@ -113,22 +116,6 @@ literal
                 | NULL                                                      # NullLiteral
                 ;
 
-method          : datasetMethod
-                | mashdMethod
-                ;
-
-mashdMethod     : 'match(' actualParameters? ')'                           # MashdMatchMethod
-                | 'fuzzyMatch(' actualParameters? ')'                      # MashdFuzzyMatchMethod
-                | 'functionMatch(' actualParameters? ')'                   # MashdFunctionMatchMethod
-                | 'transform(' actualParameters? ')'                       # MashdTransformMethod
-                | 'join(' actualParameters? ')'                            # MashdJoinMethod
-                | 'union(' actualParameters? ')'                           # MashdUnionMethod
-                ;
-
-datasetMethod   : 'toFile(' actualParameters? ')'                          # DatasetToFileMethod
-                | 'toTable(' actualParameters? ')'                         # DatasetToTableMethod
-                ;
-
 keyValuePair    : ID ':' expression
                 ;
 
@@ -138,6 +125,9 @@ actualParameters
               
 functionCall    : ID '(' actualParameters? ')'
                 ;
+
+methodChain     : functionCall ('.' methodChain)?
+                ;       
 
 type            : BOOLEAN_TYPE | INTEGER_TYPE | DATE_TYPE | DECIMAL_TYPE | TEXT_TYPE | SCHEMA_TYPE | DATASET_TYPE | MASHD_TYPE
                 ;

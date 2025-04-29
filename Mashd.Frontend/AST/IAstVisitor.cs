@@ -48,6 +48,4 @@ public interface IAstVisitor<T>
     T VisitSchemaObjectNode(SchemaObjectNode objectNode);
     
     T VisitDatasetObjectNode(DatasetObjectNode node);
-    
-    T VisitExpressionStatementNode(ExpressionStatementNode node);
 }
