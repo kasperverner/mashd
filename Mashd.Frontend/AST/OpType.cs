@@ -27,4 +27,5 @@ public enum OpType
     MultiplyAssign,
     DivideAssign,
     NullCoalesceAssign,
+    Combine
 }

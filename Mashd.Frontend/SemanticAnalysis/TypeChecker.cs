@@ -397,39 +397,29 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Property access expression not implemented");
+        var objectType = node.Left.Accept(this);
+        if (objectType != SymbolType.Schema && objectType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(node, $"Property access requires Schema or Dataset");
+        }
+
+        // TODO: Check if the property exists in the schema or dataset
+        // TODO: Check if the return type is of the correct type
+        
+        return node.InferredType;
     }
 
     public SymbolType VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Method chain expression not implemented");
-    }
+        // Visit the left side
+        var leftType = node.Left?.Accept(this) ?? SymbolType.Unknown;
 
-    public SymbolType VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
-    {
-        // Visit and type check the left and right sides
-        var leftType = node.Left.Accept(this);
-        var rightType = node.Right.Accept(this);
-
-        // Check that both sides are datasets
-        if (leftType != SymbolType.Dataset)
-        {
-            errorReporter.Report.TypeCheck(
-                node, $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
-            );
-        }
-
-        if (rightType != SymbolType.Dataset)
-        {
-            errorReporter.Report.TypeCheck(
-                node, $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
-            );
-        }
+        // TODO: Check if the method is valid for the left type
+        // TODO: Visit the next method in the chain if any
         
-        node.InferredType = SymbolType.Mashd;
-        return SymbolType.Mashd;
+        node.InferredType = leftType;
+        return leftType;
     }
-
 
     public SymbolType VisitObjectExpressionNode(ObjectExpressionNode node)
     {
@@ -461,76 +451,80 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return SymbolType.Schema;
     }
 
-
-
-
-public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
-{
-    var validPropertyNames = new List<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
-    var requiredPropertyNames = new List<string> { "adapter", "source", "schema" };
-    
-    // Check for missing required properties first
-    foreach (var required in requiredPropertyNames)
+    public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        if (!node.Properties.ContainsKey(required))
-        {
-            errorReporter.Report.TypeCheck(
-                node, $"Required property '{required}' missing in dataset"
-            );
-        }
-    }
-
-    // Check for unknown properties
-    foreach (var (propertyKey, property) in node.Properties)
-    {
-        if (!validPropertyNames.Contains(propertyKey.ToLower()))
-        {
-            errorReporter.Report.TypeCheck(
-                node, $"Unknown property '{propertyKey}' in dataset"
-            );
-            continue; // Skip further checks for this property
-        }
+        var validPropertyNames = new List<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
+        var requiredPropertyNames = new List<string> { "adapter", "source", "schema" };
         
-        // Special handling for the 'schema' property (reference to schema)
-        if (propertyKey.ToLower() == "schema")
+        // Check for missing required properties first
+        foreach (var required in requiredPropertyNames)
         {
-            if (property.Value is string schemaName)
+            if (!node.Properties.ContainsKey(required))
             {
-                // Look up schema in the symbol table to make sure it's defined
-                if (!symbolTable.TryLookup(schemaName, out var declaration) || !(declaration is SchemaDefinitionNode))
-                {
-                    errorReporter.Report.TypeCheck(
-                        node, $"Referenced schema '{schemaName}' is not defined"
-                    );
-                }
+                errorReporter.Report.TypeCheck(
+                    node, $"Required property '{required}' missing in dataset"
+                );
             }
-            continue; // Skip further type checks for 'schema' 
         }
 
-        // For other properties, infer and check types
-        SymbolType propertyType = InferPropertyType(property.Value);
-        
-        if (!IsBasicType(propertyType))
+        // Check for unknown properties
+        foreach (var (propertyKey, property) in node.Properties)
         {
-            errorReporter.Report.TypeCheck(
-                node, $"Invalid type for property '{propertyKey}' in dataset"
-            );
+            if (!validPropertyNames.Contains(propertyKey.ToLower()))
+            {
+                errorReporter.Report.TypeCheck(
+                    node, $"Unknown property '{propertyKey}' in dataset"
+                );
+                continue; // Skip further checks for this property
+            }
+            
+            // Special handling for the 'schema' property (reference to schema)
+            if (propertyKey.ToLower() == "schema")
+            {
+                if (property.Value is string schemaName)
+                {
+                    // Look up schema in the symbol table to make sure it's defined
+                    if (!symbolTable.TryLookup(schemaName, out var declaration) || !(declaration is SchemaDefinitionNode))
+                    {
+                        errorReporter.Report.TypeCheck(
+                            node, $"Referenced schema '{schemaName}' is not defined"
+                        );
+                    }
+                }
+                continue; // Skip further type checks for 'schema' 
+            }
+
+            // For other properties, infer and check types
+            SymbolType propertyType = InferPropertyType(property.Value);
+            
+            if (!IsBasicType(propertyType))
+            {
+                errorReporter.Report.TypeCheck(
+                    node, $"Invalid type for property '{propertyKey}' in dataset"
+                );
+            }
+            
+            // Specific validation for 'skip' 
+            if (propertyKey.ToLower() == "skip" && propertyType != SymbolType.Integer)
+            {
+                errorReporter.Report.TypeCheck(
+                    node, $"Property 'skip' must be an Integer"
+                );
+            }
         }
         
-        // Specific validation for 'skip' 
-        if (propertyKey.ToLower() == "skip" && propertyType != SymbolType.Integer)
-        {
-            errorReporter.Report.TypeCheck(
-                node, $"Property 'skip' must be an Integer"
-            );
-        }
+        // Set and return the inferred type
+        node.InferredType = SymbolType.Dataset;
+        return SymbolType.Dataset;
     }
-    
-    // Set and return the inferred type
-    node.InferredType = SymbolType.Dataset;
-    return SymbolType.Dataset;
-}
 
+    public SymbolType VisitExpressionStatementNode(ExpressionStatementNode node)
+    {
+        var exprType = node.Expression.Accept(this);
+        node.InferredType = exprType;
+        
+        return exprType;
+    }
 
 
     // Helper methods

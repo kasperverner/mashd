@@ -103,6 +103,11 @@ public class Resolver : IAstVisitor<DummyVoid>
         {
             Resolve(node.ObjectNode);
         }
+        
+        if (node.MethodNode != null)
+        {
+            Resolve(node.MethodNode);
+        }
     
         return DummyVoid.Null;
     }
@@ -271,7 +276,15 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException();
+        if (node.Left is not null)
+            Resolve(node.Left);
+        
+        foreach (var method in node.Arguments)
+        {
+            Resolve(method);
+        }
+        
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDateLiteralNode(DateLiteralNode node)
@@ -317,6 +330,13 @@ public class Resolver : IAstVisitor<DummyVoid>
             }
         }
     
+        return DummyVoid.Null;
+    }
+    
+    public DummyVoid VisitExpressionStatementNode(ExpressionStatementNode node)
+    {
+        Resolve(node.Expression);
+        
         return DummyVoid.Null;
     }
 

@@ -44,8 +44,7 @@ Text combinedFullname(Text firstName, Text lastName) {
 }
 
 Date toISODate(Text date) {
-  // return Date.parse(date, "MM-dd-yyyy");
-  return null;
+  return Date.parse(date, "MM-dd-yyyy");
 }
 
 Boolean ageBirthYearMatch(Integer birthYear, Integer age) {
@@ -64,11 +63,11 @@ Boolean ageBirthYearMatch(Integer birthYear, Integer age) {
   return match;
 }
 
-Mashd mash = patientData & operationData;
+Mashd name = patientData & operationData;
 
 Decimal threshold = 0.85;
 
-mash
+name
   .match(patientData.vaccinated, operationData.vaccinated)
   .fuzzyMatch(combinedFullname(patientData.firstName, patientData.lastName), operationData.patientName, threshold)
   .functionMatch(ageBirthYearMatch, patientData.birthYear, operationData.age)
@@ -80,5 +79,5 @@ mash
     operationDate: toISODate(operationData.date)
   });
 
-Dataset mergedDataSet = mash.join();
+Dataset mergedDataSet = name.join();
 mergedDataSet.toFile("merged_output.csv");

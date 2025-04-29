@@ -49,4 +49,5 @@ public interface IAstVisitor<T>
     
     T VisitDatasetObjectNode(DatasetObjectNode node);
     
+    T VisitExpressionStatementNode(ExpressionStatementNode node);
 }
