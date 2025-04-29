@@ -1,4 +1,4 @@
-﻿Schema operationSchema = Schema {
+﻿Schema operationSchema = {
   operationId: {
     type: Integer,
     name: "Operation-ID"
@@ -25,17 +25,17 @@
   }
 };
 
-Dataset operationData = Dataset {
+Dataset operationData = {
   adapter: "csv",
   schema: operationSchema,
-  file: "../patientdata/operations.csv",
+  source: "../patientdata/operations.csv",
   delimiter: ","
 };
 
-Dataset patientData = Dataset {
+Dataset patientData = {
   adapter: "postgresql",
   schema: patientSchema,
-  connectionString: "postgresql://supervisor1:secretpassword123@localhost:5432/patientdata",
+  source: "postgresql://supervisor1:secretpassword123@localhost:5432/patientdata",
   query: "SELECT * FROM patients"
 };
 
@@ -44,7 +44,8 @@ Text combinedFullname(Text firstName, Text lastName) {
 }
 
 Date toISODate(Text date) {
-  return Date.parse(date, "MM-dd-yyyy");
+  // return Date.parse(date, "MM-dd-yyyy");
+  return null;
 }
 
 Boolean ageBirthYearMatch(Integer birthYear, Integer age) {
