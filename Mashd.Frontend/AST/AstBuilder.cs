@@ -438,7 +438,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         string intText = context.INTEGER().GetText();
         
-        int value = int.Parse(intText);
+        long value = long.Parse(intText);
         return new LiteralNode(value, line, column, text, SymbolType.Integer);
     }
 
@@ -449,7 +449,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         string decText = context.DECIMAL().GetText();
 
-        decimal value = decimal.Parse(decText);
+        double value = double.Parse(decText);
         return new LiteralNode(value, line, column, text, SymbolType.Decimal);
     }
 

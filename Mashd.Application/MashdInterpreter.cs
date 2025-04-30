@@ -1,6 +1,7 @@
-﻿using Mashd.Frontend.TypeChecking;
+﻿using Mashd.Frontend.SemanticAnalysis;
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
+using Mashd.Backend;
 using Mashd.Frontend;
 using Mashd.Frontend.AST;
 
@@ -14,7 +15,7 @@ public class MashdInterpreter
     private string Input;
     private CommonTokenStream? Tokens { get; set; }
     private IParseTree? Tree { get; set; }
-    private AstNode? Ast { get; set; }
+    public ProgramNode? Ast { get; private set; }
     
     public MashdInterpreter(string input)
     {
@@ -34,6 +35,16 @@ public class MashdInterpreter
         CheckErrors(ErrorType.Lexical);
 
         return this;
+    }
+
+    public void Run()
+    {
+        Lex();
+        Parse();
+        BuildAst();
+        Resolve();
+        TypeCheck();
+        Interpret();
     }
     
     public MashdInterpreter Parse()
@@ -62,7 +73,7 @@ public class MashdInterpreter
             throw new InvalidOperationException("Parser must be run before AstBuilder.");
         }
         AstBuilder astBuilder = new AstBuilder(errorReporter);
-        Ast = astBuilder.Visit(Tree);
+        Ast = (ProgramNode) astBuilder.Visit(Tree);
 
         CheckErrors(ErrorType.AstBuilder);
         return this;
@@ -90,6 +101,18 @@ public class MashdInterpreter
         
         CheckErrors(ErrorType.TypeCheck);
         return this;
+    }
+    
+    public void Interpret()
+    {
+        if (Ast == null)
+        {
+            throw new InvalidOperationException("AstBuilder must be run before Interpreter.");
+        }
+        Interpreter interpreter = new Interpreter();
+        Value result = interpreter.Evaluate((ProgramNode)Ast);
+        Console.WriteLine("Last line result:");
+        Console.WriteLine(result.ToString());
     }
     
     private void CheckErrors(ErrorType phase)

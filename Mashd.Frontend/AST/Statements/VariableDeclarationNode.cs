@@ -1,5 +1,5 @@
 ﻿using Mashd.Frontend.AST.Expressions;
-using Mashd.Frontend.TypeChecking;
+using Mashd.Frontend.SemanticAnalysis;
 
 namespace Mashd.Frontend.AST.Statements;
 
