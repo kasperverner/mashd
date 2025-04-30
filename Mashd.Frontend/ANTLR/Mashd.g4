@@ -147,14 +147,15 @@ INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
 BOOLEAN         : 'true' | 'false' ;
 
-TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
-
 NULL            : 'null' ;
+
+TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
 
 DATE            : '\'' ISO8601Date '\'' 
                 | '"' ISO8601Date '"'
                 ;
+
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 // Whitespace and comments
 WS              : [ \t\r\n]+ -> skip
