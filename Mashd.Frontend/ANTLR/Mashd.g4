@@ -137,10 +137,11 @@ mashd           : 'Mashd'
 INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
 TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 BOOLEAN         : 'true' | 'false' ;
 NULL            : 'null' ;
+
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 DATE            : '\'' ISO8601Date '\'' 
                 | '"' ISO8601Date '"'
