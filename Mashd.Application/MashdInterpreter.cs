@@ -109,8 +109,16 @@ public class MashdInterpreter
         {
             throw new InvalidOperationException("AstBuilder must be run before Interpreter.");
         }
-        Interpreter interpreter = new Interpreter();
-        Value result = interpreter.Evaluate((ProgramNode)Ast);
+        Value result = null;
+        try 
+        {
+            Interpreter interpreter = new Interpreter();
+            result = interpreter.Evaluate((ProgramNode)Ast);
+        }
+        catch (Exception e)
+        {
+            ReportException(e);
+        }
         Console.WriteLine("Last line result:");
         Console.WriteLine(result.ToString());
     }
@@ -124,9 +132,14 @@ public class MashdInterpreter
             {
                 Console.Error.WriteLine(e);
             }
-            
-            // Exit with error code
             Environment.Exit(1);
         }
+    }
+    
+    private void ReportException(Exception ex)
+    {
+        Console.Error.WriteLine("Error during interpretation:");
+        Console.Error.WriteLine(ex.Message);
+        Environment.Exit(1);
     }
 }

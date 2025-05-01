@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using Mashd.Backend.Errors;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Expressions;
@@ -9,7 +10,6 @@ namespace Mashd.Backend;
 
 public class Interpreter : IAstVisitor<Value>
 {
-    
     // Runtime store: map each declaration to its current Value
     private readonly Dictionary<IDeclaration, Value> _values = new Dictionary<IDeclaration, Value>();
 
@@ -49,6 +49,7 @@ public class Interpreter : IAstVisitor<Value>
             // default uninitialized integer to 0, TBD implement properly
             value = new IntegerValue(0L);
         }
+
         _values[node] = value;
         return value;
     }
@@ -77,7 +78,7 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitParenNode(ParenNode node)
     {
-        throw new NotImplementedException();
+        return node.InnerExpression.Accept(this);
     }
 
     public Value VisitLiteralNode(LiteralNode node)
@@ -124,7 +125,8 @@ public class Interpreter : IAstVisitor<Value>
                 break;
         }
 
-        throw new NotImplementedException($"Unary operator {node.Operator} not implemented for type {value.GetType()}.");
+        throw new NotImplementedException(
+            $"Unary operator {node.Operator} not implemented for type {value.GetType()}.");
     }
 
     public Value VisitBinaryNode(BinaryNode node)
@@ -180,11 +182,21 @@ public class Interpreter : IAstVisitor<Value>
             case OpType.Divide:
                 if (leftVal is IntegerValue li4 && rightVal is IntegerValue ri4)
                 {
+                    if (ri4.Raw == 0)
+                    {
+                        throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    }
+
                     return new IntegerValue(li4.Raw / ri4.Raw);
                 }
 
                 if (leftVal is DecimalValue lf4 && rightVal is DecimalValue rf4)
                 {
+                    if (rf4.Raw == 0.0)
+                    {
+                        throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    }
+
                     return new DecimalValue(lf4.Raw / rf4.Raw);
                 }
 
@@ -192,6 +204,11 @@ public class Interpreter : IAstVisitor<Value>
             case OpType.Modulo:
                 if (leftVal is IntegerValue li5 && rightVal is IntegerValue ri5)
                 {
+                    if (ri5.Raw == 0)
+                    {
+                        throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    }
+
                     return new IntegerValue(li5.Raw % ri5.Raw);
                 }
 
@@ -210,6 +227,7 @@ public class Interpreter : IAstVisitor<Value>
         {
             return value;
         }
+
         throw new Exception($"Uninitialized variable '{node.Name}'");
     }
 
