@@ -67,8 +67,8 @@ public class Arithmetics
     [InlineData("Decimal", "-5.0", -5.0)]
     [InlineData("Decimal", "-0.0", 0.0)]
     // Boolean not
-    // [InlineData("Boolean", "!true", false)] // Cannot parse boolean "true" or "false" literal currently
-    // [InlineData("Boolean", "!false", true)]
+    [InlineData("Boolean", "!true", false)] // Cannot parse boolean "true" or "false" literal currently
+    [InlineData("Boolean", "!false", true)]
     public void Arithmetic_OnPrimitives(string type, string expr, object expected)
     {
         // Arrange:
