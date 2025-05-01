@@ -1,4 +1,6 @@
-﻿namespace TestProject1.Integration;
+﻿using Mashd.Backend.Errors;
+
+namespace TestProject1.Integration;
 
 public class Comparison
 {
@@ -28,7 +30,7 @@ public class Comparison
         // Assert
         Assert.Equal(expected, actual);
     }
-
+    
     [Theory]
     [InlineData("3.5 < 5.0", true)]
     [InlineData("5.0 <= 5.0", true)]
@@ -46,7 +48,7 @@ public class Comparison
         // Assert
         Assert.Equal(expected, actual);
     }
-
+    
     [Theory]
     [InlineData("\"a\" == \"a\"", true)]
     [InlineData("\"a\" != \"b\"", true)]
@@ -62,4 +64,61 @@ public class Comparison
         // Assert
         Assert.Equal(expected, actual);
     }
+    
+    [Fact]
+    public void Ternary_Statement()
+    {
+        // Arrange
+        string source = "Integer result = 1 > 0 ? 5 : 6;";
+        
+        // Act
+        var (interp, ast) = TestPipeline.Run(source);
+        
+        // Assert
+        long i = TestPipeline.GetInteger(interp, ast, "result");
+        Assert.Equal(5L, i);
+    }
+    
+    [Theory]
+    // simple integer ternary
+    [InlineData("Integer", "1 > 0 ? 5 : 6",     5L)]
+    [InlineData("Integer", "0 > 1 ? 5 : 6",    6L)]
+    // nested integer ternary
+    [InlineData("Integer", "1 > 0 ? (0 > 1 ? 1 : 2) : 3", 2L)]
+    [InlineData("Integer", "0 > 1 ? 1 : (1 > 0 ? 4 : 5)", 4L)]
+    
+    // decimal ternary
+    [InlineData("Decimal", "1 > 0 ? 2.5 : 3.5",      2.5)]
+    [InlineData("Decimal", "0 > 1 ? 2.5 : 3.5",     3.5)]
+    
+    // text ternary
+    [InlineData("Text", "1 > 0 ? \"yes\" : \"no\"",  "yes")]
+    [InlineData("Text", "0 > 1 ? \"yes\" : \"no\"", "no")]
+    public void Ternary_ReturnsExpectedValue(string type, string expr, object expected)
+    {
+        // Arrange
+        string source = $"{type} result = {expr};";
+        
+        // Act
+        var (interp, ast) = TestPipeline.Run(source);
+        
+        // Assert
+        switch (type)
+        {
+            case "Integer":
+                Console.WriteLine("Integer case");
+                long i = TestPipeline.GetInteger(interp, ast, "result");
+                Assert.Equal((long)expected, i);
+                break;
+            case "Decimal":
+                double d = TestPipeline.GetDecimal(interp, ast, "result");
+                Assert.Equal((double)expected, d, precision: 10);
+                break;
+            case "Text":
+                string s = TestPipeline.GetText(interp, ast, "result");
+                Assert.Equal((string)expected, s);
+                break;
+        }
+    }
+    
 }
