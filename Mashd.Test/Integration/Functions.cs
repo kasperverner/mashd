@@ -129,4 +129,101 @@ public class Functions
         Assert.Equal(1, TestPipeline.GetInteger(interp, ast, "result1"));
         Assert.Equal(5, TestPipeline.GetInteger(interp, ast, "result5"));
     }
+    
+    [Fact]
+    public void SingleLevelNestedCall()
+    {
+        var src = @"
+            // foo returns 5
+            Integer foo() {
+                return 5;
+            }
+            // bar returns foo() + 3  ⇒ 8
+            Integer bar() {
+                return foo() + 3;
+            }
+            // result should be bar()
+            Integer result = bar();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(8, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+    
+    [Fact]
+    public void TwoLevelNestedCall()
+    {
+        var src = @"
+            Integer f1() { return 2; }
+            Integer f2() { return f1() * 3; }    // 2*3 = 6
+            Integer f3() { return f2() + 4; }    // 6+4 = 10
+            Integer result = f3();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(10, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+    
+    [Fact]
+    public void SumOfMultipleFunctionCalls()
+    {
+        var src = @"
+            Integer a() { return 1; }
+            Integer b() { return 2; }
+            Integer c() { return 3; }
+            // call a()+b()+c() in one expression => 6
+            Integer result = a() + b() + c();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(6, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+    
+    [Theory]
+    [InlineData(1, 2, 3, 6)]
+    [InlineData(5, 7, 9, 21)]
+    public void ParameterizedNestedCalls(int x, int y, int z, int expected)
+    {
+        // functions that take parameters and call each other
+        var src = $@"
+            Integer f1(Integer n) {{ return n; }}
+            Integer f2(Integer n) {{ return f1(n) + {y}; }}
+            Integer f3(Integer n) {{ return f2(n) + {z}; }}
+            Integer result = f3({x});
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(expected, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+
+    [Theory]
+    [InlineData(3, 4)]
+    [InlineData(10, 11)]
+    public void ArgumentIsFunctionCall(int input, int expected)
+    {
+        var src = $@"
+            Integer f1(Integer n) {{
+                return n;
+            }}
+            Integer f2(Integer m) {{
+                return m + 1;
+            }}
+            Integer result = f2(f1({input}));
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(expected, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+
+    [Fact]
+    public void DeeplyNestedCallInArgument()
+    {
+        var src = @"
+            Integer one() { return 1; }
+            Integer two(Integer x) { return x + 1; }
+            Integer three(Integer y) { return y + 1; }
+
+            Integer result = three(two(one()));
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(3, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+
+
+
 }
