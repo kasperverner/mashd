@@ -16,8 +16,25 @@ public class Interpreter : IAstVisitor<Value>
     // Expose values for testing or inspection
     public IReadOnlyDictionary<IDeclaration, Value> Values => _values;
 
+    // New: store function definitions
+    private readonly Dictionary<FunctionDefinitionNode, FunctionDefinitionNode> _functions
+        = new Dictionary<FunctionDefinitionNode, FunctionDefinitionNode>();
+
+    // New: an activation record stack for parameters/locals
+    private readonly Stack<Dictionary<IDeclaration, Value>> _callStack
+        = new Stack<Dictionary<IDeclaration, Value>>();
+
+
     public Value VisitProgramNode(ProgramNode node)
     {
+        // Phase 1: register every function
+        foreach (var def in node.Definitions)
+            if (def is FunctionDefinitionNode fn)
+            {
+                VisitFunctionDefinitionNode(fn);
+            }
+
+        // Phase 2: run everything (function definitions return null)
         Value last = null;
         foreach (var stmt in node.Statements)
         {
@@ -34,7 +51,37 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitFunctionCallNode(FunctionCallNode node)
     {
-        throw new NotImplementedException();
+        var def = (FunctionDefinitionNode)node.Definition!;
+
+        // evaluate arguments
+        var argValues = node.Arguments.Select(a => a.Accept(this)).ToArray();
+
+        // bind parameters into a fresh activation‐record
+        var locals = new Dictionary<IDeclaration, Value>();
+        for (int i = 0; i < def.ParameterList.Parameters.Count; i++)
+        {
+            IDeclaration paramDecl = def.ParameterList.Parameters[i];
+            locals[paramDecl] = argValues[i];
+        }
+
+        _callStack.Push(locals);
+
+        try
+        {
+            // any return inside the body will throw FunctionReturnException
+            foreach (var stmt in def.Body.Statements)
+                stmt.Accept(this);
+            // no return ⇒ default null (or you could choose 0/""/false)
+            return null!;
+        }
+        catch (FunctionReturnExceptionSignal ret)
+        {
+            return ret.ReturnValue;
+        }
+        finally
+        {
+            _callStack.Pop();
+        }
     }
 
     public Value VisitVariableDeclarationNode(VariableDeclarationNode node)
@@ -92,7 +139,7 @@ public class Interpreter : IAstVisitor<Value>
         {
             return booleanValue.Raw ? node.TrueExpression.Accept(this) : node.FalseExpression.Accept(this);
         }
-        
+
         throw new TypeMismatchException(node.Condition);
     }
 
@@ -192,9 +239,17 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitIdentifierNode(IdentifierNode node)
     {
-        if (_values.TryGetValue(node.Definition, out var value))
+        // 1) if inside a function, check the top of the call‐stack first
+        if (_callStack.Count > 0 &&
+            _callStack.Peek().TryGetValue(node.Definition, out var localVal))
         {
-            return value;
+            return localVal;
+        }
+
+        // 2) otherwise fall back to global variables
+        if (_values.TryGetValue(node.Definition, out var globalVal))
+        {
+            return globalVal;
         }
 
         throw new UndefinedVariableException(node);
@@ -223,7 +278,9 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // register the function AST-node so calls can find it
+        _functions[node] = node;
+        return null;
     }
 
     public Value VisitSchemaDefinitionNode(SchemaDefinitionNode node)
@@ -243,7 +300,8 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitReturnNode(ReturnNode node)
     {
-        return node.Expression.Accept(this);
+        var value = node.Expression.Accept(this);
+        throw new FunctionReturnExceptionSignal(value);
     }
 
     public Value VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
@@ -309,6 +367,7 @@ public class Interpreter : IAstVisitor<Value>
                     {
                         throw new DivisionByZeroException(node);
                     }
+
                     return new IntegerValue(li4.Raw / ri4.Raw);
                 }
 
@@ -318,6 +377,7 @@ public class Interpreter : IAstVisitor<Value>
                     {
                         throw new DivisionByZeroException(node);
                     }
+
                     return new DecimalValue(lf4.Raw / rf4.Raw);
                 }
 
@@ -329,6 +389,7 @@ public class Interpreter : IAstVisitor<Value>
                     {
                         throw new DivisionByZeroException(node);
                     }
+
                     return new IntegerValue(li5.Raw % ri5.Raw);
                 }
 
