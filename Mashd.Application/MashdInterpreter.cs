@@ -2,6 +2,7 @@
 using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Mashd.Backend;
+using Mashd.Backend.Errors;
 using Mashd.Frontend;
 using Mashd.Frontend.AST;
 
@@ -110,14 +111,20 @@ public class MashdInterpreter
             throw new InvalidOperationException("AstBuilder must be run before Interpreter.");
         }
         Value result = null;
-        try 
+        try
         {
             Interpreter interpreter = new Interpreter();
             result = interpreter.Evaluate((ProgramNode)Ast);
         }
+        catch (RuntimeException ex)
+        {
+            ReportException(ex);
+        }
         catch (Exception e)
         {
-            ReportException(e);
+            Console.Error.WriteLine("Unexpected error during interpretation:");
+            Console.Error.WriteLine(e.Message);
+            Environment.Exit(1);
         }
         Console.WriteLine("Last line result:");
         Console.WriteLine(result.ToString());
@@ -136,7 +143,7 @@ public class MashdInterpreter
         }
     }
     
-    private void ReportException(Exception ex)
+    private void ReportException(RuntimeException  ex)
     {
         Console.Error.WriteLine("Error during interpretation:");
         Console.Error.WriteLine(ex.Message);

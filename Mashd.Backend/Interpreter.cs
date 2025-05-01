@@ -87,7 +87,13 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitTernaryNode(TernaryNode node)
     {
-        throw new NotImplementedException();
+        var conditionValue = node.Condition.Accept(this);
+        if (conditionValue is BooleanValue booleanValue)
+        {
+            return booleanValue.Raw ? node.TrueExpression.Accept(this) : node.FalseExpression.Accept(this);
+        }
+        
+        throw new TypeMismatchException(node.Condition);
     }
 
     public Value VisitParenNode(ParenNode node)
@@ -170,11 +176,11 @@ public class Interpreter : IAstVisitor<Value>
             // Logical & Coalesce (if needed)
             case OpType.LogicalAnd:
                 return new BooleanValue(
-                    ToBoolean(leftVal) && ToBoolean(rightVal)
+                    ToBoolean(leftVal, node.Left) && ToBoolean(rightVal, node.Right)
                 );
             case OpType.LogicalOr:
                 return new BooleanValue(
-                    ToBoolean(leftVal) || ToBoolean(rightVal)
+                    ToBoolean(leftVal, node.Left) || ToBoolean(rightVal, node.Right)
                 );
             case OpType.NullishCoalescing:
                 return leftVal != null ? leftVal : rightVal;
@@ -183,7 +189,7 @@ public class Interpreter : IAstVisitor<Value>
                 throw new NotImplementedException($"Binary operator {node.Operator} not implemented.");
         }
     }
-    
+
     public Value VisitIdentifierNode(IdentifierNode node)
     {
         if (_values.TryGetValue(node.Definition, out var value))
@@ -191,7 +197,7 @@ public class Interpreter : IAstVisitor<Value>
             return value;
         }
 
-        throw new Exception($"Uninitialized variable '{node.Name}'");
+        throw new UndefinedVariableException(node);
     }
 
     public Value VisitBlockNode(BlockNode node)
@@ -269,10 +275,10 @@ public class Interpreter : IAstVisitor<Value>
     {
         throw new NotImplementedException();
     }
-    
+
     // Helper methods
-    
-        private Value EvaluateArithmetic(OpType op, Value leftVal, Value rightVal, BinaryNode node)
+
+    private Value EvaluateArithmetic(OpType op, Value leftVal, Value rightVal, BinaryNode node)
     {
         switch (op)
         {
@@ -299,14 +305,19 @@ public class Interpreter : IAstVisitor<Value>
             case OpType.Divide:
                 if (leftVal is IntegerValue li4 && rightVal is IntegerValue ri4)
                 {
-                    if (ri4.Raw == 0) throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    if (ri4.Raw == 0)
+                    {
+                        throw new DivisionByZeroException(node);
+                    }
                     return new IntegerValue(li4.Raw / ri4.Raw);
                 }
 
                 if (leftVal is DecimalValue lf4 && rightVal is DecimalValue rf4)
                 {
                     if (rf4.Raw == 0.0)
-                        throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    {
+                        throw new DivisionByZeroException(node);
+                    }
                     return new DecimalValue(lf4.Raw / rf4.Raw);
                 }
 
@@ -314,7 +325,10 @@ public class Interpreter : IAstVisitor<Value>
             case OpType.Modulo:
                 if (leftVal is IntegerValue li5 && rightVal is IntegerValue ri5)
                 {
-                    if (ri5.Raw == 0) throw new DivisionByZeroException(node.Right.Line, node.Right.Column, node.Text);
+                    if (ri5.Raw == 0)
+                    {
+                        throw new DivisionByZeroException(node);
+                    }
                     return new IntegerValue(li5.Raw % ri5.Raw);
                 }
 
@@ -380,10 +394,10 @@ public class Interpreter : IAstVisitor<Value>
             $"Comparison {op} not implemented for types {leftVal.GetType()} and {rightVal.GetType()}.");
     }
 
-    private bool ToBoolean(Value v)
+    private bool ToBoolean(Value v, AstNode node)
     {
         if (v is BooleanValue bv) return bv.Raw;
-        throw new Exception($"Expected boolean, got {v.GetType()}");
+        throw new TypeMismatchException(node);
     }
 
     // Main entry point for evaluation
