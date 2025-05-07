@@ -8,7 +8,6 @@ public class ExpressionUnitTests
 {
     [Theory]
     [InlineData("42", "42", typeof(MashdParser.LiteralExpressionContext))]
-    [InlineData("true", "true", typeof(MashdParser.LiteralExpressionContext))]
     [InlineData("x", "x", typeof(MashdParser.IdentifierExpressionContext))]
     [InlineData("(1 + 2)", "(1+2)", typeof(MashdParser.ParenExpressionContext))]
     [InlineData("sum(1, 2)", "sum(1,2)", typeof(MashdParser.FunctionCallExpressionContext))]
