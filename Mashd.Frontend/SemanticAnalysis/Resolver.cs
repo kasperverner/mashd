@@ -3,7 +3,7 @@ using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Expressions;
 
-namespace Mashd.Frontend.TypeChecking;
+namespace Mashd.Frontend.SemanticAnalysis;
 
 public struct DummyVoid
 {

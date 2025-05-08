@@ -20,6 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Mashd.Application\Mashd.Application.csproj" />
       <ProjectReference Include="..\Mashd.Backend\Mashd.Backend.csproj" />
     </ItemGroup>
 

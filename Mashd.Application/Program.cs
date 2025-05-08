@@ -26,7 +26,7 @@ public static class Program
         // Execution stage
         
         // Interpretation
-        //interpreter.Interpret();
+        interpreter.Interpret();
     }
     
 }

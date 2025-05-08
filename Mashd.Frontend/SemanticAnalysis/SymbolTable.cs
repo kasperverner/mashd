@@ -1,6 +1,6 @@
 ﻿using Mashd.Frontend.AST;
 
-namespace Mashd.Frontend.TypeChecking;
+namespace Mashd.Frontend.SemanticAnalysis;
 
 public class SymbolTable
 {
