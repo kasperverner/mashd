@@ -21,5 +21,4 @@ public class IfNode : StatementNode
     {
         return visitor.VisitIfNode(this);
     }
-    
 }

@@ -1,4 +1,4 @@
-﻿using Mashd.Frontend.SemanticAnalysis;
+using Mashd.Frontend.SemanticAnalysis;
 
 namespace Mashd.Frontend.AST.Expressions;
 

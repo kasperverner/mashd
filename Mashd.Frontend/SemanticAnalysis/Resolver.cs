@@ -1,7 +1,7 @@
 ﻿using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
-using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Expressions;
+using Mashd.Frontend.AST.Statements;
 
 namespace Mashd.Frontend.SemanticAnalysis;
 
@@ -12,12 +12,12 @@ public struct DummyVoid
 
 public class Resolver : IAstVisitor<DummyVoid>
 {
-    private readonly ErrorReporter errorReporter;
+    private readonly ErrorReporter _errorReporter;
     private SymbolTable currentScope; // global scope
 
     public Resolver(ErrorReporter errorReporter)
     {
-        this.errorReporter = errorReporter;
+        this._errorReporter = errorReporter;
         this.currentScope = new SymbolTable(errorReporter);
     }
     public DummyVoid VisitProgramNode(ProgramNode node)
@@ -53,14 +53,13 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
-        Console.WriteLine($"Visiting function definition: {node.Identifier}, it is in global scope: {currentScope.IsGlobalScope}");
         if (!currentScope.IsGlobalScope)
         {
-            errorReporter.Report.NameResolution(node, "Function cannot be declared inside a block.");
+            _errorReporter.Report.NameResolution(node, "Function cannot be declared inside a block.");
         }
         
         // Enter a new scope for the function
-        node.Symbols = new SymbolTable(errorReporter, currentScope);
+        node.Symbols = new SymbolTable(_errorReporter, currentScope);
         var outer = currentScope;
         currentScope = node.Symbols;
 
@@ -80,23 +79,53 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the schema definition in the current scope
+        currentScope.Add(node.Identifier, node);
+    
+        // Visit the schema object to handle any nested expressions or field references
+        if (node.ObjectNode != null)
+        {
+            Resolve(node.ObjectNode);
+        }
+    
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the dataset definition in the current scope
+        currentScope.Add(node.Identifier, node);
+
+        // Resolve the object literal inside it
+        if (node.ObjectNode != null)
+        {
+            Resolve(node.ObjectNode);
+        }
+
+        if (node.MethodNode != null)
+        {
+            Resolve(node.MethodNode);
+        }
+
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitMashdDefinitionNode(MashdDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Register the mashd definition in the current scope
+        currentScope.Add(node.Identifier, node);
+    
+        // Visit left and right expressions to resolve any identifiers
+        Resolve(node.Left);
+        Resolve(node.Right);
+    
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitBlockNode(BlockNode node)
     {
         // Enter a new scope for the block
-        node.Symbols = new SymbolTable(errorReporter, currentScope);
+        node.Symbols = new SymbolTable(_errorReporter, currentScope);
         var outer = currentScope;
         currentScope = node.Symbols;
 
@@ -124,7 +153,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     {
         // Ensure target was declared
         if (!currentScope.TryLookup(node.Identifier, out var decl))
-            errorReporter.Report.NameResolution(node, $"Undefined symbol");
+            _errorReporter.Report.NameResolution(node, $"Undefined symbol");
         node.Definition = decl;
 
         // Bind right‐hand side
@@ -135,7 +164,9 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitFunctionCallNode(FunctionCallNode node)
     {
         if (!currentScope.TryLookup(node.FunctionName, out var decl))
-            errorReporter.Report.NameResolution(node, $"Undefined function '{node.FunctionName}'");
+        {
+            _errorReporter.Report.NameResolution(node, $"Undefined function '{node.FunctionName}'");
+        }
         node.Definition = decl;
         
         foreach (var arg in node.Arguments)
@@ -157,7 +188,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     {
         // Check if the identifier is defined in the current scope
         if (!currentScope.TryLookup(node.Name, out var decl))
-            errorReporter.Report.NameResolution(node, $"Undefined symbol '{node.Name}'");
+            _errorReporter.Report.NameResolution(node, $"Undefined symbol '{node.Name}'");
         node.Definition = decl;
 
         return DummyVoid.Null;
@@ -245,7 +276,15 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException();
+        if (node.Left is not null)
+            Resolve(node.Left);
+        
+        foreach (var method in node.Arguments)
+        {
+            Resolve(method);
+        }
+        
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDateLiteralNode(DateLiteralNode node)
@@ -264,14 +303,58 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
-        throw new NotImplementedException();
+        // No need to resolve further for simple schema objects
+        // If there were expressions in field values, we would resolve them here
+        return DummyVoid.Null;
     }
 
     public DummyVoid VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        throw new NotImplementedException();
-    }
+        foreach (var property in node.Properties.Values)
+        {
+            Console.WriteLine(property.Key + ": " + property.Value);
+        }
+        foreach (var property in node.Properties.Values)
+        {
+        
+            if (property.Key.Equals("schema", StringComparison.OrdinalIgnoreCase))
+            {
+                if (property.Value is IdentifierNode idNode)
+                {
+                    if (!currentScope.TryLookup(idNode.Name, out var decl))
+                    {
+                        _errorReporter.Report.NameResolution(node, $"Undefined schema '{idNode.Name}'");
+                    }
+                    else if (decl is SchemaDefinitionNode schemaDecl)
+                    {
+                        // annotate both the identifier and object node
+                        idNode.Definition = schemaDecl;
+                        node.ResolvedSchema = schemaDecl;
+                    }
+                    else
+                    {
+                        _errorReporter.Report.NameResolution(node, $"Identifier '{idNode.Name}' is not a schema");
+                    }
+                }
+                else
+                {
+                    // if someone passed a text literal or integer instead of identifier node
+                    _errorReporter.Report.NameResolution(node, $"Schema property must be an identifier");
+                }
+            }
+            else
+            {
+                // If property contains expressions, resolve them
+                if (property.Value is ExpressionNode expr)
+                {
+                    Resolve(expr);
+                }
+        
+            }
+        }
 
+        return DummyVoid.Null;
+    }
 
     // Helper methods
     void Resolve(List<StatementNode> nodes)

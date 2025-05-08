@@ -16,13 +16,13 @@ public class SymbolTable
     }
     public void Add(string name, IDeclaration declaration)
     {
-        if (_symbols.ContainsKey(name))
+        if (ContainsInCurrentScope(name))
         {
             errorReporter.Report.NameResolution((AstNode) declaration,$"Symbol '{name}' is already defined in the current scope.");
         }
         _symbols[name] = declaration;
     }
-
+    
     public bool ContainsInCurrentScope(string name)
     {
         return _symbols.ContainsKey(name);

@@ -40,43 +40,40 @@ public partial class MashdParser : Parser {
 		T__9=10, T__10=11, T__11=12, T__12=13, T__13=14, T__14=15, T__15=16, T__16=17, 
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, T__25=26, T__26=27, T__27=28, T__28=29, T__29=30, T__30=31, 
-		T__31=32, T__32=33, T__33=34, T__34=35, T__35=36, T__36=37, T__37=38, 
-		T__38=39, T__39=40, T__40=41, T__41=42, T__42=43, T__43=44, T__44=45, 
-		T__45=46, T__46=47, T__47=48, T__48=49, T__49=50, T__50=51, T__51=52, 
-		T__52=53, INTEGER=54, DECIMAL=55, TEXT=56, ID=57, BOOLEAN=58, NULL=59, 
-		DATE=60, WS=61, COMMENT=62, MULTILINE_COMMENT=63;
+		T__31=32, T__32=33, T__33=34, T__34=35, T__35=36, T__36=37, BOOLEAN_TYPE=38, 
+		INTEGER_TYPE=39, DATE_TYPE=40, DECIMAL_TYPE=41, TEXT_TYPE=42, SCHEMA_TYPE=43, 
+		DATASET_TYPE=44, MASHD_TYPE=45, INTEGER=46, DECIMAL=47, BOOLEAN=48, NULL=49, 
+		TEXT=50, DATE=51, ID=52, WS=53, COMMENT=54, MULTILINE_COMMENT=55;
 	public const int
-		RULE_program = 0, RULE_importStatement = 1, RULE_definition = 2, RULE_formalParameters = 3, 
-		RULE_statement = 4, RULE_if = 5, RULE_block = 6, RULE_expression = 7, 
-		RULE_literal = 8, RULE_keyValuePair = 9, RULE_actualParameters = 10, RULE_methodChain = 11, 
-		RULE_functionCall = 12, RULE_schemaObject = 13, RULE_schemaProperties = 14, 
-		RULE_schemaProperty = 15, RULE_schemaFieldProperty = 16, RULE_datasetObject = 17, 
-		RULE_datasetProperties = 18, RULE_datasetProperty = 19, RULE_type = 20, 
-		RULE_schema = 21, RULE_dataset = 22, RULE_mashd = 23;
+		RULE_program = 0, RULE_importStatement = 1, RULE_definition = 2, RULE_schemaObject = 3, 
+		RULE_schemaProperties = 4, RULE_schemaProperty = 5, RULE_schemaFieldProperty = 6, 
+		RULE_datasetObject = 7, RULE_datasetProperties = 8, RULE_datasetProperty = 9, 
+		RULE_formalParameters = 10, RULE_statement = 11, RULE_if = 12, RULE_block = 13, 
+		RULE_expression = 14, RULE_literal = 15, RULE_keyValuePair = 16, RULE_actualParameters = 17, 
+		RULE_functionCall = 18, RULE_methodChain = 19, RULE_type = 20;
 	public static readonly string[] ruleNames = {
-		"program", "importStatement", "definition", "formalParameters", "statement", 
-		"if", "block", "expression", "literal", "keyValuePair", "actualParameters", 
-		"methodChain", "functionCall", "schemaObject", "schemaProperties", "schemaProperty", 
-		"schemaFieldProperty", "datasetObject", "datasetProperties", "datasetProperty", 
-		"type", "schema", "dataset", "mashd"
+		"program", "importStatement", "definition", "schemaObject", "schemaProperties", 
+		"schemaProperty", "schemaFieldProperty", "datasetObject", "datasetProperties", 
+		"datasetProperty", "formalParameters", "statement", "if", "block", "expression", 
+		"literal", "keyValuePair", "actualParameters", "functionCall", "methodChain", 
+		"type"
 	};
 
 	private static readonly string[] _LiteralNames = {
-		null, "'import'", "';'", "'('", "')'", "'='", "'&'", "','", "'+='", "'-='", 
-		"'*='", "'/='", "'??='", "'return'", "'if'", "'else'", "'{'", "'}'", "'.'", 
+		null, "'import'", "';'", "'('", "')'", "'='", "'{'", "'}'", "','", "':'", 
+		"'+='", "'-='", "'*='", "'/='", "'??='", "'.'", "'return'", "'if'", "'else'", 
 		"'++'", "'--'", "'-'", "'!'", "'*'", "'/'", "'%'", "'+'", "'<'", "'<='", 
-		"'>'", "'>='", "'=='", "'!='", "'??'", "'&&'", "'||'", "'?'", "':'", "'type'", 
-		"'name'", "'adapter'", "'source'", "'schema'", "'delimiter'", "'query'", 
-		"'skip'", "'Boolean'", "'Integer'", "'Date'", "'Decimal'", "'Text'", "'Schema'", 
-		"'Dataset'", "'Mashd'", null, null, null, null, null, "'null'"
+		"'>'", "'>='", "'=='", "'!='", "'??'", "'&&'", "'||'", "'?'", "'&'", "'Boolean'", 
+		"'Integer'", "'Date'", "'Decimal'", "'Text'", "'Schema'", "'Dataset'", 
+		"'Mashd'", null, null, null, "'null'"
 	};
 	private static readonly string[] _SymbolicNames = {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, null, null, null, null, null, null, null, null, null, null, 
-		null, null, null, null, null, null, "INTEGER", "DECIMAL", "TEXT", "ID", 
-		"BOOLEAN", "NULL", "DATE", "WS", "COMMENT", "MULTILINE_COMMENT"
+		null, null, "BOOLEAN_TYPE", "INTEGER_TYPE", "DATE_TYPE", "DECIMAL_TYPE", 
+		"TEXT_TYPE", "SCHEMA_TYPE", "DATASET_TYPE", "MASHD_TYPE", "INTEGER", "DECIMAL", 
+		"BOOLEAN", "NULL", "TEXT", "DATE", "ID", "WS", "COMMENT", "MULTILINE_COMMENT"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -161,39 +158,39 @@ public partial class MashdParser : Parser {
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 53;
+			State = 47;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 162059217841184770L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 9006924384895050L) != 0)) {
 				{
-				State = 51;
+				State = 45;
 				ErrorHandler.Sync(this);
 				switch ( Interpreter.AdaptivePredict(TokenStream,0,Context) ) {
 				case 1:
 					{
-					State = 48;
+					State = 42;
 					importStatement();
 					}
 					break;
 				case 2:
 					{
-					State = 49;
+					State = 43;
 					definition();
 					}
 					break;
 				case 3:
 					{
-					State = 50;
+					State = 44;
 					statement();
 					}
 					break;
 				}
 				}
-				State = 55;
+				State = 49;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 56;
+			State = 50;
 			Match(Eof);
 			}
 		}
@@ -249,11 +246,11 @@ public partial class MashdParser : Parser {
 			_localctx = new ImportDeclarationContext(_localctx);
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 58;
+			State = 52;
 			Match(T__0);
-			State = 59;
+			State = 53;
 			Match(TEXT);
-			State = 60;
+			State = 54;
 			Match(T__1);
 			}
 		}
@@ -281,12 +278,10 @@ public partial class MashdParser : Parser {
 		}
 	}
 	public partial class SchemaDefinitionContext : DefinitionContext {
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaContext schema() {
-			return GetRuleContext<SchemaContext>(0);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SCHEMA_TYPE() { return GetToken(MashdParser.SCHEMA_TYPE, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaObjectContext schemaObject() {
-			return GetRuleContext<SchemaObjectContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
 		}
 		public SchemaDefinitionContext(DefinitionContext context) { CopyFrom(context); }
 		[System.Diagnostics.DebuggerNonUserCode]
@@ -336,12 +331,10 @@ public partial class MashdParser : Parser {
 		}
 	}
 	public partial class DatasetDefinitionContext : DefinitionContext {
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetContext dataset() {
-			return GetRuleContext<DatasetContext>(0);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DATASET_TYPE() { return GetToken(MashdParser.DATASET_TYPE, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetObjectContext datasetObject() {
-			return GetRuleContext<DatasetObjectContext>(0);
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
 		}
 		public DatasetDefinitionContext(DefinitionContext context) { CopyFrom(context); }
 		[System.Diagnostics.DebuggerNonUserCode]
@@ -362,15 +355,10 @@ public partial class MashdParser : Parser {
 		}
 	}
 	public partial class MashdDefinitionContext : DefinitionContext {
-		[System.Diagnostics.DebuggerNonUserCode] public MashdContext mashd() {
-			return GetRuleContext<MashdContext>(0);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode MASHD_TYPE() { return GetToken(MashdParser.MASHD_TYPE, 0); }
 		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetObjectContext[] datasetObject() {
-			return GetRuleContexts<DatasetObjectContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetObjectContext datasetObject(int i) {
-			return GetRuleContext<DatasetObjectContext>(i);
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
 		}
 		public MashdDefinitionContext(DefinitionContext context) { CopyFrom(context); }
 		[System.Diagnostics.DebuggerNonUserCode]
@@ -396,24 +384,24 @@ public partial class MashdParser : Parser {
 		DefinitionContext _localctx = new DefinitionContext(Context, State);
 		EnterRule(_localctx, 4, RULE_definition);
 		try {
-			State = 89;
+			State = 81;
 			ErrorHandler.Sync(this);
 			switch ( Interpreter.AdaptivePredict(TokenStream,2,Context) ) {
 			case 1:
 				_localctx = new FunctionDefinitionContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 62;
+				State = 56;
 				type();
-				State = 63;
+				State = 57;
 				Match(ID);
-				State = 64;
+				State = 58;
 				Match(T__2);
-				State = 65;
+				State = 59;
 				formalParameters();
-				State = 66;
+				State = 60;
 				Match(T__3);
-				State = 67;
+				State = 61;
 				block();
 				}
 				break;
@@ -421,15 +409,15 @@ public partial class MashdParser : Parser {
 				_localctx = new SchemaDefinitionContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 69;
-				schema();
-				State = 70;
+				State = 63;
+				Match(SCHEMA_TYPE);
+				State = 64;
 				Match(ID);
-				State = 71;
+				State = 65;
 				Match(T__4);
-				State = 72;
-				schemaObject();
-				State = 73;
+				State = 66;
+				expression(0);
+				State = 67;
 				Match(T__1);
 				}
 				break;
@@ -437,15 +425,15 @@ public partial class MashdParser : Parser {
 				_localctx = new DatasetDefinitionContext(_localctx);
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 75;
-				dataset();
-				State = 76;
+				State = 69;
+				Match(DATASET_TYPE);
+				State = 70;
 				Match(ID);
-				State = 77;
+				State = 71;
 				Match(T__4);
-				State = 78;
-				datasetObject();
-				State = 79;
+				State = 72;
+				expression(0);
+				State = 73;
 				Match(T__1);
 				}
 				break;
@@ -453,20 +441,743 @@ public partial class MashdParser : Parser {
 				_localctx = new MashdDefinitionContext(_localctx);
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 81;
-				mashd();
-				State = 82;
+				State = 75;
+				Match(MASHD_TYPE);
+				State = 76;
 				Match(ID);
-				State = 83;
+				State = 77;
 				Match(T__4);
-				State = 84;
-				datasetObject();
-				State = 85;
-				Match(T__5);
-				State = 86;
-				datasetObject();
-				State = 87;
+				State = 78;
+				expression(0);
+				State = 79;
 				Match(T__1);
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class SchemaObjectContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertiesContext schemaProperties() {
+			return GetRuleContext<SchemaPropertiesContext>(0);
+		}
+		public SchemaObjectContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_schemaObject; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaObject(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaObject(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaObject(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public SchemaObjectContext schemaObject() {
+		SchemaObjectContext _localctx = new SchemaObjectContext(Context, State);
+		EnterRule(_localctx, 6, RULE_schemaObject);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 83;
+			Match(T__5);
+			State = 85;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if (_la==ID) {
+				{
+				State = 84;
+				schemaProperties();
+				}
+			}
+
+			State = 87;
+			Match(T__6);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class SchemaPropertiesContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertyContext[] schemaProperty() {
+			return GetRuleContexts<SchemaPropertyContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertyContext schemaProperty(int i) {
+			return GetRuleContext<SchemaPropertyContext>(i);
+		}
+		public SchemaPropertiesContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_schemaProperties; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaProperties(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaProperties(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaProperties(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public SchemaPropertiesContext schemaProperties() {
+		SchemaPropertiesContext _localctx = new SchemaPropertiesContext(Context, State);
+		EnterRule(_localctx, 8, RULE_schemaProperties);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 89;
+			schemaProperty();
+			State = 94;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			while (_la==T__7) {
+				{
+				{
+				State = 90;
+				Match(T__7);
+				State = 91;
+				schemaProperty();
+				}
+				}
+				State = 96;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class SchemaPropertyContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaFieldPropertyContext[] schemaFieldProperty() {
+			return GetRuleContexts<SchemaFieldPropertyContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaFieldPropertyContext schemaFieldProperty(int i) {
+			return GetRuleContext<SchemaFieldPropertyContext>(i);
+		}
+		public SchemaPropertyContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_schemaProperty; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaProperty(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaProperty(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaProperty(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public SchemaPropertyContext schemaProperty() {
+		SchemaPropertyContext _localctx = new SchemaPropertyContext(Context, State);
+		EnterRule(_localctx, 10, RULE_schemaProperty);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 97;
+			Match(ID);
+			State = 98;
+			Match(T__8);
+			State = 99;
+			Match(T__5);
+			State = 100;
+			schemaFieldProperty();
+			State = 105;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			while (_la==T__7) {
+				{
+				{
+				State = 101;
+				Match(T__7);
+				State = 102;
+				schemaFieldProperty();
+				}
+				}
+				State = 107;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+			}
+			State = 108;
+			Match(T__6);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class SchemaFieldPropertyContext : ParserRuleContext {
+		public SchemaFieldPropertyContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_schemaFieldProperty; } }
+	 
+		public SchemaFieldPropertyContext() { }
+		public virtual void CopyFrom(SchemaFieldPropertyContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class SchemaTypeContext : SchemaFieldPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
+			return GetRuleContext<TypeContext>(0);
+		}
+		public SchemaTypeContext(SchemaFieldPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaType(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaType(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaType(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class SchemaNameContext : SchemaFieldPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
+		public SchemaNameContext(SchemaFieldPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaName(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaName(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaName(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public SchemaFieldPropertyContext schemaFieldProperty() {
+		SchemaFieldPropertyContext _localctx = new SchemaFieldPropertyContext(Context, State);
+		EnterRule(_localctx, 12, RULE_schemaFieldProperty);
+		try {
+			State = 116;
+			ErrorHandler.Sync(this);
+			switch ( Interpreter.AdaptivePredict(TokenStream,6,Context) ) {
+			case 1:
+				_localctx = new SchemaTypeContext(_localctx);
+				EnterOuterAlt(_localctx, 1);
+				{
+				State = 110;
+				Match(ID);
+				State = 111;
+				Match(T__8);
+				State = 112;
+				type();
+				}
+				break;
+			case 2:
+				_localctx = new SchemaNameContext(_localctx);
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 113;
+				Match(ID);
+				State = 114;
+				Match(T__8);
+				State = 115;
+				Match(TEXT);
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class DatasetObjectContext : ParserRuleContext {
+		public DatasetObjectContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_datasetObject; } }
+	 
+		public DatasetObjectContext() { }
+		public virtual void CopyFrom(DatasetObjectContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class DatasetObjectExpressionContext : DatasetObjectContext {
+		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertiesContext datasetProperties() {
+			return GetRuleContext<DatasetPropertiesContext>(0);
+		}
+		public DatasetObjectExpressionContext(DatasetObjectContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetObjectExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetObjectExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetObjectExpression(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public DatasetObjectContext datasetObject() {
+		DatasetObjectContext _localctx = new DatasetObjectContext(Context, State);
+		EnterRule(_localctx, 14, RULE_datasetObject);
+		int _la;
+		try {
+			_localctx = new DatasetObjectExpressionContext(_localctx);
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 118;
+			Match(T__5);
+			State = 120;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if (_la==ID) {
+				{
+				State = 119;
+				datasetProperties();
+				}
+			}
+
+			State = 122;
+			Match(T__6);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class DatasetPropertiesContext : ParserRuleContext {
+		public DatasetPropertiesContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_datasetProperties; } }
+	 
+		public DatasetPropertiesContext() { }
+		public virtual void CopyFrom(DatasetPropertiesContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class DatasetPropertyListContext : DatasetPropertiesContext {
+		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertyContext[] datasetProperty() {
+			return GetRuleContexts<DatasetPropertyContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertyContext datasetProperty(int i) {
+			return GetRuleContext<DatasetPropertyContext>(i);
+		}
+		public DatasetPropertyListContext(DatasetPropertiesContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetPropertyList(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetPropertyList(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetPropertyList(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public DatasetPropertiesContext datasetProperties() {
+		DatasetPropertiesContext _localctx = new DatasetPropertiesContext(Context, State);
+		EnterRule(_localctx, 16, RULE_datasetProperties);
+		int _la;
+		try {
+			_localctx = new DatasetPropertyListContext(_localctx);
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 124;
+			datasetProperty();
+			State = 129;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			while (_la==T__7) {
+				{
+				{
+				State = 125;
+				Match(T__7);
+				State = 126;
+				datasetProperty();
+				}
+				}
+				State = 131;
+				ErrorHandler.Sync(this);
+				_la = TokenStream.LA(1);
+			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class DatasetPropertyContext : ParserRuleContext {
+		public DatasetPropertyContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_datasetProperty; } }
+	 
+		public DatasetPropertyContext() { }
+		public virtual void CopyFrom(DatasetPropertyContext context) {
+			base.CopyFrom(context);
+		}
+	}
+	public partial class DatasetSkipContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTEGER() { return GetToken(MashdParser.INTEGER, 0); }
+		public DatasetSkipContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetSkip(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetSkip(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetSkip(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatabaseQueryContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
+		public DatabaseQueryContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatabaseQuery(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatabaseQuery(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatabaseQuery(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatasetSchemaContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode[] ID() { return GetTokens(MashdParser.ID); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID(int i) {
+			return GetToken(MashdParser.ID, i);
+		}
+		public DatasetSchemaContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetSchema(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetSchema(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetSchema(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatasetAdapterContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
+		public DatasetAdapterContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetAdapter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetAdapter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetAdapter(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class CsvDelimiterContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
+		public CsvDelimiterContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterCsvDelimiter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitCsvDelimiter(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitCsvDelimiter(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatasetSourceContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
+		public DatasetSourceContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetSource(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetSource(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetSource(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatasetLimitContext : DatasetPropertyContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTEGER() { return GetToken(MashdParser.INTEGER, 0); }
+		public DatasetLimitContext(DatasetPropertyContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetLimit(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetLimit(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetLimit(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public DatasetPropertyContext datasetProperty() {
+		DatasetPropertyContext _localctx = new DatasetPropertyContext(Context, State);
+		EnterRule(_localctx, 18, RULE_datasetProperty);
+		try {
+			State = 153;
+			ErrorHandler.Sync(this);
+			switch ( Interpreter.AdaptivePredict(TokenStream,9,Context) ) {
+			case 1:
+				_localctx = new DatasetAdapterContext(_localctx);
+				EnterOuterAlt(_localctx, 1);
+				{
+				State = 132;
+				Match(ID);
+				State = 133;
+				Match(T__8);
+				State = 134;
+				Match(TEXT);
+				}
+				break;
+			case 2:
+				_localctx = new DatasetSourceContext(_localctx);
+				EnterOuterAlt(_localctx, 2);
+				{
+				State = 135;
+				Match(ID);
+				State = 136;
+				Match(T__8);
+				State = 137;
+				Match(TEXT);
+				}
+				break;
+			case 3:
+				_localctx = new DatasetSchemaContext(_localctx);
+				EnterOuterAlt(_localctx, 3);
+				{
+				State = 138;
+				Match(ID);
+				State = 139;
+				Match(T__8);
+				State = 140;
+				Match(ID);
+				}
+				break;
+			case 4:
+				_localctx = new CsvDelimiterContext(_localctx);
+				EnterOuterAlt(_localctx, 4);
+				{
+				State = 141;
+				Match(ID);
+				State = 142;
+				Match(T__8);
+				State = 143;
+				Match(TEXT);
+				}
+				break;
+			case 5:
+				_localctx = new DatabaseQueryContext(_localctx);
+				EnterOuterAlt(_localctx, 5);
+				{
+				State = 144;
+				Match(ID);
+				State = 145;
+				Match(T__8);
+				State = 146;
+				Match(TEXT);
+				}
+				break;
+			case 6:
+				_localctx = new DatasetSkipContext(_localctx);
+				EnterOuterAlt(_localctx, 6);
+				{
+				State = 147;
+				Match(ID);
+				State = 148;
+				Match(T__8);
+				State = 149;
+				Match(INTEGER);
+				}
+				break;
+			case 7:
+				_localctx = new DatasetLimitContext(_localctx);
+				EnterOuterAlt(_localctx, 7);
+				{
+				State = 150;
+				Match(ID);
+				State = 151;
+				Match(T__8);
+				State = 152;
+				Match(INTEGER);
 				}
 				break;
 			}
@@ -527,36 +1238,36 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public FormalParametersContext formalParameters() {
 		FormalParametersContext _localctx = new FormalParametersContext(Context, State);
-		EnterRule(_localctx, 6, RULE_formalParameters);
+		EnterRule(_localctx, 20, RULE_formalParameters);
 		int _la;
 		try {
 			_localctx = new ParameterListContext(_localctx);
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 102;
+			State = 166;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 17944029765304320L) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 70093866270720L) != 0)) {
 				{
-				State = 91;
+				State = 155;
 				type();
-				State = 92;
+				State = 156;
 				Match(ID);
-				State = 99;
+				State = 163;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
-				while (_la==T__6) {
+				while (_la==T__7) {
 					{
 					{
-					State = 93;
-					Match(T__6);
-					State = 94;
+					State = 157;
+					Match(T__7);
+					State = 158;
 					type();
-					State = 95;
+					State = 159;
 					Match(ID);
 					}
 					}
-					State = 101;
+					State = 165;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
 				}
@@ -702,6 +1413,31 @@ public partial class MashdParser : Parser {
 			else return visitor.VisitChildren(this);
 		}
 	}
+	public partial class MethodCallStatementContext : StatementContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public MethodChainContext methodChain() {
+			return GetRuleContext<MethodChainContext>(0);
+		}
+		public MethodCallStatementContext(StatementContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterMethodCallStatement(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitMethodCallStatement(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitMethodCallStatement(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
 	public partial class ReturnStatementContext : StatementContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
 			return GetRuleContext<ExpressionContext>(0);
@@ -800,17 +1536,17 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public StatementContext statement() {
 		StatementContext _localctx = new StatementContext(Context, State);
-		EnterRule(_localctx, 8, RULE_statement);
+		EnterRule(_localctx, 22, RULE_statement);
 		int _la;
 		try {
-			State = 147;
+			State = 216;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,6,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,13,Context) ) {
 			case 1:
 				_localctx = new IfStatementContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 104;
+				State = 168;
 				@if();
 				}
 				break;
@@ -818,23 +1554,23 @@ public partial class MashdParser : Parser {
 				_localctx = new VariableDeclarationContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 105;
+				State = 169;
 				type();
-				State = 106;
+				State = 170;
 				Match(ID);
-				State = 109;
+				State = 173;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==T__4) {
 					{
-					State = 107;
+					State = 171;
 					Match(T__4);
-					State = 108;
+					State = 172;
 					expression(0);
 					}
 				}
 
-				State = 111;
+				State = 175;
 				Match(T__1);
 				}
 				break;
@@ -842,13 +1578,13 @@ public partial class MashdParser : Parser {
 				_localctx = new AssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 113;
+				State = 177;
 				Match(ID);
-				State = 114;
+				State = 178;
 				Match(T__4);
-				State = 115;
+				State = 179;
 				expression(0);
-				State = 116;
+				State = 180;
 				Match(T__1);
 				}
 				break;
@@ -856,13 +1592,13 @@ public partial class MashdParser : Parser {
 				_localctx = new AddAssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 118;
+				State = 182;
 				Match(ID);
-				State = 119;
-				Match(T__7);
-				State = 120;
+				State = 183;
+				Match(T__9);
+				State = 184;
 				expression(0);
-				State = 121;
+				State = 185;
 				Match(T__1);
 				}
 				break;
@@ -870,13 +1606,13 @@ public partial class MashdParser : Parser {
 				_localctx = new SubtractAssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 123;
+				State = 187;
 				Match(ID);
-				State = 124;
-				Match(T__8);
-				State = 125;
+				State = 188;
+				Match(T__10);
+				State = 189;
 				expression(0);
-				State = 126;
+				State = 190;
 				Match(T__1);
 				}
 				break;
@@ -884,13 +1620,13 @@ public partial class MashdParser : Parser {
 				_localctx = new MultiplyAssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 128;
+				State = 192;
 				Match(ID);
-				State = 129;
-				Match(T__9);
-				State = 130;
+				State = 193;
+				Match(T__11);
+				State = 194;
 				expression(0);
-				State = 131;
+				State = 195;
 				Match(T__1);
 				}
 				break;
@@ -898,13 +1634,13 @@ public partial class MashdParser : Parser {
 				_localctx = new DivisionAssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 7);
 				{
-				State = 133;
+				State = 197;
 				Match(ID);
-				State = 134;
-				Match(T__10);
-				State = 135;
+				State = 198;
+				Match(T__12);
+				State = 199;
 				expression(0);
-				State = 136;
+				State = 200;
 				Match(T__1);
 				}
 				break;
@@ -912,25 +1648,39 @@ public partial class MashdParser : Parser {
 				_localctx = new NullCoalescingAssignmentContext(_localctx);
 				EnterOuterAlt(_localctx, 8);
 				{
-				State = 138;
+				State = 202;
 				Match(ID);
-				State = 139;
-				Match(T__11);
-				State = 140;
+				State = 203;
+				Match(T__13);
+				State = 204;
 				expression(0);
-				State = 141;
+				State = 205;
 				Match(T__1);
 				}
 				break;
 			case 9:
-				_localctx = new ReturnStatementContext(_localctx);
+				_localctx = new MethodCallStatementContext(_localctx);
 				EnterOuterAlt(_localctx, 9);
 				{
-				State = 143;
-				Match(T__12);
-				State = 144;
+				State = 207;
 				expression(0);
-				State = 145;
+				State = 208;
+				Match(T__14);
+				State = 209;
+				methodChain();
+				State = 210;
+				Match(T__1);
+				}
+				break;
+			case 10:
+				_localctx = new ReturnStatementContext(_localctx);
+				EnterOuterAlt(_localctx, 10);
+				{
+				State = 212;
+				Match(T__15);
+				State = 213;
+				expression(0);
+				State = 214;
 				Match(T__1);
 				}
 				break;
@@ -994,41 +1744,41 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public IfContext @if() {
 		IfContext _localctx = new IfContext(Context, State);
-		EnterRule(_localctx, 10, RULE_if);
+		EnterRule(_localctx, 24, RULE_if);
 		int _la;
 		try {
 			_localctx = new IfDefinitionContext(_localctx);
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 149;
-			Match(T__13);
-			State = 150;
+			State = 218;
+			Match(T__16);
+			State = 219;
 			Match(T__2);
-			State = 151;
+			State = 220;
 			expression(0);
-			State = 152;
+			State = 221;
 			Match(T__3);
-			State = 153;
+			State = 222;
 			block();
-			State = 159;
+			State = 228;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			if (_la==T__14) {
+			if (_la==T__17) {
 				{
-				State = 154;
-				Match(T__14);
-				State = 157;
+				State = 223;
+				Match(T__17);
+				State = 226;
 				ErrorHandler.Sync(this);
 				switch (TokenStream.LA(1)) {
-				case T__15:
+				case T__5:
 					{
-					State = 155;
+					State = 224;
 					block();
 					}
 					break;
-				case T__13:
+				case T__16:
 					{
-					State = 156;
+					State = 225;
 					@if();
 					}
 					break;
@@ -1092,30 +1842,30 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public BlockContext block() {
 		BlockContext _localctx = new BlockContext(Context, State);
-		EnterRule(_localctx, 12, RULE_block);
+		EnterRule(_localctx, 26, RULE_block);
 		int _la;
 		try {
 			_localctx = new BlockDefinitionContext(_localctx);
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 161;
-			Match(T__15);
-			State = 165;
+			State = 230;
+			Match(T__5);
+			State = 234;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 162059217841184768L) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 9006924384895048L) != 0)) {
 				{
 				{
-				State = 162;
+				State = 231;
 				statement();
 				}
 				}
-				State = 167;
+				State = 236;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
-			State = 168;
-			Match(T__16);
+			State = 237;
+			Match(T__6);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1332,6 +2082,56 @@ public partial class MashdParser : Parser {
 			else return visitor.VisitChildren(this);
 		}
 	}
+	public partial class DatasetCombineExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext[] expression() {
+			return GetRuleContexts<ExpressionContext>();
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression(int i) {
+			return GetRuleContext<ExpressionContext>(i);
+		}
+		public DatasetCombineExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetCombineExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetCombineExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetCombineExpression(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class MethodCallExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
+			return GetRuleContext<ExpressionContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public MethodChainContext methodChain() {
+			return GetRuleContext<MethodChainContext>(0);
+		}
+		public MethodCallExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterMethodCallExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitMethodCallExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitMethodCallExpression(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
 	public partial class DivisionExpressionContext : ExpressionContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext[] expression() {
 			return GetRuleContexts<ExpressionContext>();
@@ -1473,6 +2273,31 @@ public partial class MashdParser : Parser {
 			else return visitor.VisitChildren(this);
 		}
 	}
+	public partial class TypeMethodCallExpressionContext : ExpressionContext {
+		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
+			return GetRuleContext<TypeContext>(0);
+		}
+		[System.Diagnostics.DebuggerNonUserCode] public MethodChainContext methodChain() {
+			return GetRuleContext<MethodChainContext>(0);
+		}
+		public TypeMethodCallExpressionContext(ExpressionContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterTypeMethodCallExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitTypeMethodCallExpression(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitTypeMethodCallExpression(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
 	public partial class PreDecrementExpressionContext : ExpressionContext {
 		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
 			return GetRuleContext<ExpressionContext>(0);
@@ -1514,31 +2339,6 @@ public partial class MashdParser : Parser {
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitLiteralExpression(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class MethodChainExpressionContext : ExpressionContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ExpressionContext expression() {
-			return GetRuleContext<ExpressionContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public MethodChainContext methodChain() {
-			return GetRuleContext<MethodChainContext>(0);
-		}
-		public MethodChainExpressionContext(ExpressionContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterMethodChainExpression(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitMethodChainExpression(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitMethodChainExpression(this);
 			else return visitor.VisitChildren(this);
 		}
 	}
@@ -1818,23 +2618,23 @@ public partial class MashdParser : Parser {
 		int _parentState = State;
 		ExpressionContext _localctx = new ExpressionContext(Context, _parentState);
 		ExpressionContext _prevctx = _localctx;
-		int _startState = 14;
-		EnterRecursionRule(_localctx, 14, RULE_expression, _p);
+		int _startState = 28;
+		EnterRecursionRule(_localctx, 28, RULE_expression, _p);
 		int _la;
 		try {
 			int _alt;
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 198;
+			State = 271;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,12,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,19,Context) ) {
 			case 1:
 				{
 				_localctx = new LiteralExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
 
-				State = 171;
+				State = 240;
 				literal();
 				}
 				break;
@@ -1843,7 +2643,7 @@ public partial class MashdParser : Parser {
 				_localctx = new IdentifierExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 172;
+				State = 241;
 				Match(ID);
 				}
 				break;
@@ -1852,11 +2652,11 @@ public partial class MashdParser : Parser {
 				_localctx = new ParenExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 173;
+				State = 242;
 				Match(T__2);
-				State = 174;
+				State = 243;
 				expression(0);
-				State = 175;
+				State = 244;
 				Match(T__3);
 				}
 				break;
@@ -1865,339 +2665,364 @@ public partial class MashdParser : Parser {
 				_localctx = new FunctionCallExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 177;
+				State = 246;
 				functionCall();
 				}
 				break;
 			case 5:
 				{
-				_localctx = new PreIncrementExpressionContext(_localctx);
+				_localctx = new TypeMethodCallExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 178;
-				Match(T__18);
-				State = 179;
-				expression(20);
+				State = 247;
+				type();
+				State = 248;
+				Match(T__14);
+				State = 249;
+				methodChain();
 				}
 				break;
 			case 6:
 				{
-				_localctx = new PreDecrementExpressionContext(_localctx);
+				_localctx = new PreIncrementExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 180;
-				Match(T__19);
-				State = 181;
-				expression(19);
+				State = 251;
+				Match(T__18);
+				State = 252;
+				expression(21);
 				}
 				break;
 			case 7:
 				{
-				_localctx = new NegationExpressionContext(_localctx);
+				_localctx = new PreDecrementExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 182;
-				Match(T__20);
-				State = 183;
-				expression(18);
+				State = 253;
+				Match(T__19);
+				State = 254;
+				expression(20);
 				}
 				break;
 			case 8:
 				{
-				_localctx = new NotExpressionContext(_localctx);
+				_localctx = new NegationExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 184;
-				Match(T__21);
-				State = 185;
-				expression(17);
+				State = 255;
+				Match(T__20);
+				State = 256;
+				expression(19);
 				}
 				break;
 			case 9:
 				{
+				_localctx = new NotExpressionContext(_localctx);
+				Context = _localctx;
+				_prevctx = _localctx;
+				State = 257;
+				Match(T__21);
+				State = 258;
+				expression(18);
+				}
+				break;
+			case 10:
+				{
 				_localctx = new ObjectExpressionContext(_localctx);
 				Context = _localctx;
 				_prevctx = _localctx;
-				State = 186;
-				Match(T__15);
-				State = 195;
+				State = 259;
+				Match(T__5);
+				State = 268;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 				if (_la==ID) {
 					{
-					State = 187;
+					State = 260;
 					keyValuePair();
-					State = 192;
+					State = 265;
 					ErrorHandler.Sync(this);
 					_la = TokenStream.LA(1);
-					while (_la==T__6) {
+					while (_la==T__7) {
 						{
 						{
-						State = 188;
-						Match(T__6);
-						State = 189;
+						State = 261;
+						Match(T__7);
+						State = 262;
 						keyValuePair();
 						}
 						}
-						State = 194;
+						State = 267;
 						ErrorHandler.Sync(this);
 						_la = TokenStream.LA(1);
 					}
 					}
 				}
 
-				State = 197;
-				Match(T__16);
+				State = 270;
+				Match(T__6);
 				}
 				break;
 			}
 			Context.Stop = TokenStream.LT(-1);
-			State = 260;
+			State = 336;
 			ErrorHandler.Sync(this);
-			_alt = Interpreter.AdaptivePredict(TokenStream,14,Context);
+			_alt = Interpreter.AdaptivePredict(TokenStream,21,Context);
 			while ( _alt!=2 && _alt!=global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( ParseListeners!=null )
 						TriggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					State = 258;
+					State = 334;
 					ErrorHandler.Sync(this);
-					switch ( Interpreter.AdaptivePredict(TokenStream,13,Context) ) {
+					switch ( Interpreter.AdaptivePredict(TokenStream,20,Context) ) {
 					case 1:
 						{
 						_localctx = new MultiplicationExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 200;
-						if (!(Precpred(Context, 16))) throw new FailedPredicateException(this, "Precpred(Context, 16)");
-						State = 201;
+						State = 273;
+						if (!(Precpred(Context, 17))) throw new FailedPredicateException(this, "Precpred(Context, 17)");
+						State = 274;
 						Match(T__22);
-						State = 202;
-						expression(17);
+						State = 275;
+						expression(18);
 						}
 						break;
 					case 2:
 						{
 						_localctx = new DivisionExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 203;
-						if (!(Precpred(Context, 15))) throw new FailedPredicateException(this, "Precpred(Context, 15)");
-						State = 204;
+						State = 276;
+						if (!(Precpred(Context, 16))) throw new FailedPredicateException(this, "Precpred(Context, 16)");
+						State = 277;
 						Match(T__23);
-						State = 205;
-						expression(16);
+						State = 278;
+						expression(17);
 						}
 						break;
 					case 3:
 						{
 						_localctx = new ModuloExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 206;
-						if (!(Precpred(Context, 14))) throw new FailedPredicateException(this, "Precpred(Context, 14)");
-						State = 207;
+						State = 279;
+						if (!(Precpred(Context, 15))) throw new FailedPredicateException(this, "Precpred(Context, 15)");
+						State = 280;
 						Match(T__24);
-						State = 208;
-						expression(15);
+						State = 281;
+						expression(16);
 						}
 						break;
 					case 4:
 						{
 						_localctx = new AdditionExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 209;
-						if (!(Precpred(Context, 13))) throw new FailedPredicateException(this, "Precpred(Context, 13)");
-						State = 210;
+						State = 282;
+						if (!(Precpred(Context, 14))) throw new FailedPredicateException(this, "Precpred(Context, 14)");
+						State = 283;
 						Match(T__25);
-						State = 211;
-						expression(14);
+						State = 284;
+						expression(15);
 						}
 						break;
 					case 5:
 						{
 						_localctx = new SubtractionExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 212;
-						if (!(Precpred(Context, 12))) throw new FailedPredicateException(this, "Precpred(Context, 12)");
-						State = 213;
+						State = 285;
+						if (!(Precpred(Context, 13))) throw new FailedPredicateException(this, "Precpred(Context, 13)");
+						State = 286;
 						Match(T__20);
-						State = 214;
-						expression(13);
+						State = 287;
+						expression(14);
 						}
 						break;
 					case 6:
 						{
 						_localctx = new LessThanExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 215;
-						if (!(Precpred(Context, 11))) throw new FailedPredicateException(this, "Precpred(Context, 11)");
-						State = 216;
+						State = 288;
+						if (!(Precpred(Context, 12))) throw new FailedPredicateException(this, "Precpred(Context, 12)");
+						State = 289;
 						Match(T__26);
-						State = 217;
-						expression(12);
+						State = 290;
+						expression(13);
 						}
 						break;
 					case 7:
 						{
 						_localctx = new LessThanEqualExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 218;
-						if (!(Precpred(Context, 10))) throw new FailedPredicateException(this, "Precpred(Context, 10)");
-						State = 219;
+						State = 291;
+						if (!(Precpred(Context, 11))) throw new FailedPredicateException(this, "Precpred(Context, 11)");
+						State = 292;
 						Match(T__27);
-						State = 220;
-						expression(11);
+						State = 293;
+						expression(12);
 						}
 						break;
 					case 8:
 						{
 						_localctx = new GreaterThanExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 221;
-						if (!(Precpred(Context, 9))) throw new FailedPredicateException(this, "Precpred(Context, 9)");
-						State = 222;
+						State = 294;
+						if (!(Precpred(Context, 10))) throw new FailedPredicateException(this, "Precpred(Context, 10)");
+						State = 295;
 						Match(T__28);
-						State = 223;
-						expression(10);
+						State = 296;
+						expression(11);
 						}
 						break;
 					case 9:
 						{
 						_localctx = new GreaterThanEqualExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 224;
-						if (!(Precpred(Context, 8))) throw new FailedPredicateException(this, "Precpred(Context, 8)");
-						State = 225;
+						State = 297;
+						if (!(Precpred(Context, 9))) throw new FailedPredicateException(this, "Precpred(Context, 9)");
+						State = 298;
 						Match(T__29);
-						State = 226;
-						expression(9);
+						State = 299;
+						expression(10);
 						}
 						break;
 					case 10:
 						{
 						_localctx = new EqualityExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 227;
-						if (!(Precpred(Context, 7))) throw new FailedPredicateException(this, "Precpred(Context, 7)");
-						State = 228;
+						State = 300;
+						if (!(Precpred(Context, 8))) throw new FailedPredicateException(this, "Precpred(Context, 8)");
+						State = 301;
 						Match(T__30);
-						State = 229;
-						expression(8);
+						State = 302;
+						expression(9);
 						}
 						break;
 					case 11:
 						{
 						_localctx = new InequalityExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 230;
-						if (!(Precpred(Context, 6))) throw new FailedPredicateException(this, "Precpred(Context, 6)");
-						State = 231;
+						State = 303;
+						if (!(Precpred(Context, 7))) throw new FailedPredicateException(this, "Precpred(Context, 7)");
+						State = 304;
 						Match(T__31);
-						State = 232;
-						expression(7);
+						State = 305;
+						expression(8);
 						}
 						break;
 					case 12:
 						{
 						_localctx = new NullishCoalescingExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 233;
-						if (!(Precpred(Context, 5))) throw new FailedPredicateException(this, "Precpred(Context, 5)");
-						State = 234;
+						State = 306;
+						if (!(Precpred(Context, 6))) throw new FailedPredicateException(this, "Precpred(Context, 6)");
+						State = 307;
 						Match(T__32);
-						State = 235;
-						expression(6);
+						State = 308;
+						expression(7);
 						}
 						break;
 					case 13:
 						{
 						_localctx = new LogicalAndExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 236;
-						if (!(Precpred(Context, 4))) throw new FailedPredicateException(this, "Precpred(Context, 4)");
-						State = 237;
+						State = 309;
+						if (!(Precpred(Context, 5))) throw new FailedPredicateException(this, "Precpred(Context, 5)");
+						State = 310;
 						Match(T__33);
-						State = 238;
-						expression(5);
+						State = 311;
+						expression(6);
 						}
 						break;
 					case 14:
 						{
 						_localctx = new LogicalOrExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 239;
-						if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
-						State = 240;
+						State = 312;
+						if (!(Precpred(Context, 4))) throw new FailedPredicateException(this, "Precpred(Context, 4)");
+						State = 313;
 						Match(T__34);
-						State = 241;
-						expression(4);
+						State = 314;
+						expression(5);
 						}
 						break;
 					case 15:
 						{
 						_localctx = new TernaryExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 242;
-						if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
-						State = 243;
+						State = 315;
+						if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
+						State = 316;
 						Match(T__35);
-						State = 244;
+						State = 317;
 						expression(0);
-						State = 245;
-						Match(T__36);
-						State = 246;
-						expression(3);
+						State = 318;
+						Match(T__8);
+						State = 319;
+						expression(4);
 						}
 						break;
 					case 16:
 						{
-						_localctx = new PropertyAccessExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						_localctx = new DatasetCombineExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 248;
-						if (!(Precpred(Context, 24))) throw new FailedPredicateException(this, "Precpred(Context, 24)");
-						State = 249;
-						Match(T__17);
-						State = 250;
-						Match(ID);
+						State = 321;
+						if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
+						State = 322;
+						Match(T__36);
+						State = 323;
+						expression(3);
 						}
 						break;
 					case 17:
 						{
-						_localctx = new MethodChainExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						_localctx = new PropertyAccessExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 251;
-						if (!(Precpred(Context, 23))) throw new FailedPredicateException(this, "Precpred(Context, 23)");
-						State = 252;
-						Match(T__17);
-						State = 253;
-						methodChain();
+						State = 324;
+						if (!(Precpred(Context, 26))) throw new FailedPredicateException(this, "Precpred(Context, 26)");
+						State = 325;
+						Match(T__14);
+						State = 326;
+						Match(ID);
 						}
 						break;
 					case 18:
 						{
-						_localctx = new PostIncrementExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						_localctx = new MethodCallExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 254;
-						if (!(Precpred(Context, 22))) throw new FailedPredicateException(this, "Precpred(Context, 22)");
-						State = 255;
-						Match(T__18);
+						State = 327;
+						if (!(Precpred(Context, 25))) throw new FailedPredicateException(this, "Precpred(Context, 25)");
+						State = 328;
+						Match(T__14);
+						State = 329;
+						methodChain();
 						}
 						break;
 					case 19:
 						{
+						_localctx = new PostIncrementExpressionContext(new ExpressionContext(_parentctx, _parentState));
+						PushNewRecursionContext(_localctx, _startState, RULE_expression);
+						State = 330;
+						if (!(Precpred(Context, 23))) throw new FailedPredicateException(this, "Precpred(Context, 23)");
+						State = 331;
+						Match(T__18);
+						}
+						break;
+					case 20:
+						{
 						_localctx = new PostDecrementExpressionContext(new ExpressionContext(_parentctx, _parentState));
 						PushNewRecursionContext(_localctx, _startState, RULE_expression);
-						State = 256;
-						if (!(Precpred(Context, 21))) throw new FailedPredicateException(this, "Precpred(Context, 21)");
-						State = 257;
+						State = 332;
+						if (!(Precpred(Context, 22))) throw new FailedPredicateException(this, "Precpred(Context, 22)");
+						State = 333;
 						Match(T__19);
 						}
 						break;
 					}
 					} 
 				}
-				State = 262;
+				State = 338;
 				ErrorHandler.Sync(this);
-				_alt = Interpreter.AdaptivePredict(TokenStream,14,Context);
+				_alt = Interpreter.AdaptivePredict(TokenStream,21,Context);
 			}
 			}
 		}
@@ -2261,6 +3086,28 @@ public partial class MashdParser : Parser {
 		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
 			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
 			if (typedVisitor != null) return typedVisitor.VisitBooleanLiteral(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+	public partial class DatasetObjectLiteralContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public DatasetObjectContext datasetObject() {
+			return GetRuleContext<DatasetObjectContext>(0);
+		}
+		public DatasetObjectLiteralContext(LiteralContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterDatasetObjectLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitDatasetObjectLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitDatasetObjectLiteral(this);
 			else return visitor.VisitChildren(this);
 		}
 	}
@@ -2344,65 +3191,101 @@ public partial class MashdParser : Parser {
 			else return visitor.VisitChildren(this);
 		}
 	}
+	public partial class SchemaObjectLiteralContext : LiteralContext {
+		[System.Diagnostics.DebuggerNonUserCode] public SchemaObjectContext schemaObject() {
+			return GetRuleContext<SchemaObjectContext>(0);
+		}
+		public SchemaObjectLiteralContext(LiteralContext context) { CopyFrom(context); }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterSchemaObjectLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitSchemaObjectLiteral(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitSchemaObjectLiteral(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
 
 	[RuleVersion(0)]
 	public LiteralContext literal() {
 		LiteralContext _localctx = new LiteralContext(Context, State);
-		EnterRule(_localctx, 16, RULE_literal);
+		EnterRule(_localctx, 30, RULE_literal);
 		try {
-			State = 269;
+			State = 347;
 			ErrorHandler.Sync(this);
-			switch (TokenStream.LA(1)) {
-			case BOOLEAN:
+			switch ( Interpreter.AdaptivePredict(TokenStream,22,Context) ) {
+			case 1:
 				_localctx = new BooleanLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 1);
 				{
-				State = 263;
+				State = 339;
 				Match(BOOLEAN);
 				}
 				break;
-			case INTEGER:
+			case 2:
 				_localctx = new IntegerLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 2);
 				{
-				State = 264;
+				State = 340;
 				Match(INTEGER);
 				}
 				break;
-			case DATE:
+			case 3:
 				_localctx = new DateLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 3);
 				{
-				State = 265;
+				State = 341;
 				Match(DATE);
 				}
 				break;
-			case DECIMAL:
+			case 4:
 				_localctx = new DecimalLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 4);
 				{
-				State = 266;
+				State = 342;
 				Match(DECIMAL);
 				}
 				break;
-			case TEXT:
+			case 5:
 				_localctx = new TextLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 5);
 				{
-				State = 267;
+				State = 343;
 				Match(TEXT);
 				}
 				break;
-			case NULL:
-				_localctx = new NullLiteralContext(_localctx);
+			case 6:
+				_localctx = new SchemaObjectLiteralContext(_localctx);
 				EnterOuterAlt(_localctx, 6);
 				{
-				State = 268;
+				State = 344;
+				schemaObject();
+				}
+				break;
+			case 7:
+				_localctx = new DatasetObjectLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 7);
+				{
+				State = 345;
+				datasetObject();
+				}
+				break;
+			case 8:
+				_localctx = new NullLiteralContext(_localctx);
+				EnterOuterAlt(_localctx, 8);
+				{
+				State = 346;
 				Match(NULL);
 				}
 				break;
-			default:
-				throw new NoViableAltException(this);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2447,15 +3330,15 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public KeyValuePairContext keyValuePair() {
 		KeyValuePairContext _localctx = new KeyValuePairContext(Context, State);
-		EnterRule(_localctx, 18, RULE_keyValuePair);
+		EnterRule(_localctx, 32, RULE_keyValuePair);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 271;
+			State = 349;
 			Match(ID);
-			State = 272;
-			Match(T__36);
-			State = 273;
+			State = 350;
+			Match(T__8);
+			State = 351;
 			expression(0);
 			}
 		}
@@ -2503,29 +3386,94 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public ActualParametersContext actualParameters() {
 		ActualParametersContext _localctx = new ActualParametersContext(Context, State);
-		EnterRule(_localctx, 20, RULE_actualParameters);
+		EnterRule(_localctx, 34, RULE_actualParameters);
 		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 275;
+			State = 353;
 			expression(0);
-			State = 280;
+			State = 358;
 			ErrorHandler.Sync(this);
 			_la = TokenStream.LA(1);
-			while (_la==T__6) {
+			while (_la==T__7) {
 				{
 				{
-				State = 276;
-				Match(T__6);
-				State = 277;
+				State = 354;
+				Match(T__7);
+				State = 355;
 				expression(0);
 				}
 				}
-				State = 282;
+				State = 360;
 				ErrorHandler.Sync(this);
 				_la = TokenStream.LA(1);
 			}
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			ErrorHandler.ReportError(this, re);
+			ErrorHandler.Recover(this, re);
+		}
+		finally {
+			ExitRule();
+		}
+		return _localctx;
+	}
+
+	public partial class FunctionCallContext : ParserRuleContext {
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ActualParametersContext actualParameters() {
+			return GetRuleContext<ActualParametersContext>(0);
+		}
+		public FunctionCallContext(ParserRuleContext parent, int invokingState)
+			: base(parent, invokingState)
+		{
+		}
+		public override int RuleIndex { get { return RULE_functionCall; } }
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void EnterRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.EnterFunctionCall(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override void ExitRule(IParseTreeListener listener) {
+			IMashdListener typedListener = listener as IMashdListener;
+			if (typedListener != null) typedListener.ExitFunctionCall(this);
+		}
+		[System.Diagnostics.DebuggerNonUserCode]
+		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
+			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
+			if (typedVisitor != null) return typedVisitor.VisitFunctionCall(this);
+			else return visitor.VisitChildren(this);
+		}
+	}
+
+	[RuleVersion(0)]
+	public FunctionCallContext functionCall() {
+		FunctionCallContext _localctx = new FunctionCallContext(Context, State);
+		EnterRule(_localctx, 36, RULE_functionCall);
+		int _la;
+		try {
+			EnterOuterAlt(_localctx, 1);
+			{
+			State = 361;
+			Match(ID);
+			State = 362;
+			Match(T__2);
+			State = 364;
+			ErrorHandler.Sync(this);
+			_la = TokenStream.LA(1);
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 9006924384698440L) != 0)) {
+				{
+				State = 363;
+				actualParameters();
+				}
+			}
+
+			State = 366;
+			Match(T__3);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2572,20 +3520,20 @@ public partial class MashdParser : Parser {
 	[RuleVersion(0)]
 	public MethodChainContext methodChain() {
 		MethodChainContext _localctx = new MethodChainContext(Context, State);
-		EnterRule(_localctx, 22, RULE_methodChain);
+		EnterRule(_localctx, 38, RULE_methodChain);
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 283;
+			State = 368;
 			functionCall();
-			State = 286;
+			State = 371;
 			ErrorHandler.Sync(this);
-			switch ( Interpreter.AdaptivePredict(TokenStream,17,Context) ) {
+			switch ( Interpreter.AdaptivePredict(TokenStream,25,Context) ) {
 			case 1:
 				{
-				State = 284;
-				Match(T__17);
-				State = 285;
+				State = 369;
+				Match(T__14);
+				State = 370;
 				methodChain();
 				}
 				break;
@@ -2603,740 +3551,15 @@ public partial class MashdParser : Parser {
 		return _localctx;
 	}
 
-	public partial class FunctionCallContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public ActualParametersContext actualParameters() {
-			return GetRuleContext<ActualParametersContext>(0);
-		}
-		public FunctionCallContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_functionCall; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterFunctionCall(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitFunctionCall(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitFunctionCall(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public FunctionCallContext functionCall() {
-		FunctionCallContext _localctx = new FunctionCallContext(Context, State);
-		EnterRule(_localctx, 24, RULE_functionCall);
-		int _la;
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 288;
-			Match(ID);
-			State = 289;
-			Match(T__2);
-			State = 291;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 2287828610712141832L) != 0)) {
-				{
-				State = 290;
-				actualParameters();
-				}
-			}
-
-			State = 293;
-			Match(T__3);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class SchemaObjectContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertiesContext schemaProperties() {
-			return GetRuleContext<SchemaPropertiesContext>(0);
-		}
-		public SchemaObjectContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_schemaObject; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterSchemaObject(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitSchemaObject(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitSchemaObject(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public SchemaObjectContext schemaObject() {
-		SchemaObjectContext _localctx = new SchemaObjectContext(Context, State);
-		EnterRule(_localctx, 26, RULE_schemaObject);
-		int _la;
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 295;
-			Match(T__15);
-			State = 297;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if (_la==ID) {
-				{
-				State = 296;
-				schemaProperties();
-				}
-			}
-
-			State = 299;
-			Match(T__16);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class SchemaPropertiesContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertyContext[] schemaProperty() {
-			return GetRuleContexts<SchemaPropertyContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaPropertyContext schemaProperty(int i) {
-			return GetRuleContext<SchemaPropertyContext>(i);
-		}
-		public SchemaPropertiesContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_schemaProperties; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterSchemaProperties(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitSchemaProperties(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitSchemaProperties(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public SchemaPropertiesContext schemaProperties() {
-		SchemaPropertiesContext _localctx = new SchemaPropertiesContext(Context, State);
-		EnterRule(_localctx, 28, RULE_schemaProperties);
-		int _la;
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 301;
-			schemaProperty();
-			State = 306;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			while (_la==T__6) {
-				{
-				{
-				State = 302;
-				Match(T__6);
-				State = 303;
-				schemaProperty();
-				}
-				}
-				State = 308;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class SchemaPropertyContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaFieldPropertyContext[] schemaFieldProperty() {
-			return GetRuleContexts<SchemaFieldPropertyContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaFieldPropertyContext schemaFieldProperty(int i) {
-			return GetRuleContext<SchemaFieldPropertyContext>(i);
-		}
-		public SchemaPropertyContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_schemaProperty; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterSchemaProperty(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitSchemaProperty(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitSchemaProperty(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public SchemaPropertyContext schemaProperty() {
-		SchemaPropertyContext _localctx = new SchemaPropertyContext(Context, State);
-		EnterRule(_localctx, 30, RULE_schemaProperty);
-		int _la;
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 309;
-			Match(ID);
-			State = 310;
-			Match(T__36);
-			State = 311;
-			Match(T__15);
-			State = 312;
-			schemaFieldProperty();
-			State = 317;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			while (_la==T__6) {
-				{
-				{
-				State = 313;
-				Match(T__6);
-				State = 314;
-				schemaFieldProperty();
-				}
-				}
-				State = 319;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
-			}
-			State = 320;
-			Match(T__16);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class SchemaFieldPropertyContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public TypeContext type() {
-			return GetRuleContext<TypeContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
-		public SchemaFieldPropertyContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_schemaFieldProperty; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterSchemaFieldProperty(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitSchemaFieldProperty(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitSchemaFieldProperty(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public SchemaFieldPropertyContext schemaFieldProperty() {
-		SchemaFieldPropertyContext _localctx = new SchemaFieldPropertyContext(Context, State);
-		EnterRule(_localctx, 32, RULE_schemaFieldProperty);
-		try {
-			State = 328;
-			ErrorHandler.Sync(this);
-			switch (TokenStream.LA(1)) {
-			case T__37:
-				EnterOuterAlt(_localctx, 1);
-				{
-				State = 322;
-				Match(T__37);
-				State = 323;
-				Match(T__36);
-				State = 324;
-				type();
-				}
-				break;
-			case T__38:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 325;
-				Match(T__38);
-				State = 326;
-				Match(T__36);
-				State = 327;
-				Match(TEXT);
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class DatasetObjectContext : ParserRuleContext {
-		public DatasetObjectContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_datasetObject; } }
-	 
-		public DatasetObjectContext() { }
-		public virtual void CopyFrom(DatasetObjectContext context) {
-			base.CopyFrom(context);
-		}
-	}
-	public partial class DatasetObjectExpressionContext : DatasetObjectContext {
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertiesContext datasetProperties() {
-			return GetRuleContext<DatasetPropertiesContext>(0);
-		}
-		public DatasetObjectExpressionContext(DatasetObjectContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetObjectExpression(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetObjectExpression(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetObjectExpression(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public DatasetObjectContext datasetObject() {
-		DatasetObjectContext _localctx = new DatasetObjectContext(Context, State);
-		EnterRule(_localctx, 34, RULE_datasetObject);
-		int _la;
-		try {
-			_localctx = new DatasetObjectExpressionContext(_localctx);
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 330;
-			Match(T__15);
-			State = 332;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 69269232549888L) != 0)) {
-				{
-				State = 331;
-				datasetProperties();
-				}
-			}
-
-			State = 334;
-			Match(T__16);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class DatasetPropertiesContext : ParserRuleContext {
-		public DatasetPropertiesContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_datasetProperties; } }
-	 
-		public DatasetPropertiesContext() { }
-		public virtual void CopyFrom(DatasetPropertiesContext context) {
-			base.CopyFrom(context);
-		}
-	}
-	public partial class DatasetPropertyListContext : DatasetPropertiesContext {
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertyContext[] datasetProperty() {
-			return GetRuleContexts<DatasetPropertyContext>();
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetPropertyContext datasetProperty(int i) {
-			return GetRuleContext<DatasetPropertyContext>(i);
-		}
-		public DatasetPropertyListContext(DatasetPropertiesContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetPropertyList(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetPropertyList(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetPropertyList(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public DatasetPropertiesContext datasetProperties() {
-		DatasetPropertiesContext _localctx = new DatasetPropertiesContext(Context, State);
-		EnterRule(_localctx, 36, RULE_datasetProperties);
-		int _la;
-		try {
-			_localctx = new DatasetPropertyListContext(_localctx);
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 336;
-			datasetProperty();
-			State = 341;
-			ErrorHandler.Sync(this);
-			_la = TokenStream.LA(1);
-			while (_la==T__6) {
-				{
-				{
-				State = 337;
-				Match(T__6);
-				State = 338;
-				datasetProperty();
-				}
-				}
-				State = 343;
-				ErrorHandler.Sync(this);
-				_la = TokenStream.LA(1);
-			}
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class DatasetPropertyContext : ParserRuleContext {
-		public DatasetPropertyContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_datasetProperty; } }
-	 
-		public DatasetPropertyContext() { }
-		public virtual void CopyFrom(DatasetPropertyContext context) {
-			base.CopyFrom(context);
-		}
-	}
-	public partial class DatasetSkipContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTEGER() { return GetToken(MashdParser.INTEGER, 0); }
-		public DatasetSkipContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetSkip(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetSkip(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetSkip(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class DatabaseQueryContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
-		public DatabaseQueryContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatabaseQuery(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatabaseQuery(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatabaseQuery(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class DatasetSchemaContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(MashdParser.ID, 0); }
-		public DatasetSchemaContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetSchema(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetSchema(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetSchema(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class DatasetAdapterContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
-		public DatasetAdapterContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetAdapter(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetAdapter(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetAdapter(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class CsvDelimiterContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
-		public CsvDelimiterContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterCsvDelimiter(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitCsvDelimiter(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitCsvDelimiter(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-	public partial class DatasetSourceContext : DatasetPropertyContext {
-		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT() { return GetToken(MashdParser.TEXT, 0); }
-		public DatasetSourceContext(DatasetPropertyContext context) { CopyFrom(context); }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDatasetSource(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDatasetSource(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDatasetSource(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public DatasetPropertyContext datasetProperty() {
-		DatasetPropertyContext _localctx = new DatasetPropertyContext(Context, State);
-		EnterRule(_localctx, 38, RULE_datasetProperty);
-		try {
-			State = 362;
-			ErrorHandler.Sync(this);
-			switch (TokenStream.LA(1)) {
-			case T__39:
-				_localctx = new DatasetAdapterContext(_localctx);
-				EnterOuterAlt(_localctx, 1);
-				{
-				State = 344;
-				Match(T__39);
-				State = 345;
-				Match(T__36);
-				State = 346;
-				Match(TEXT);
-				}
-				break;
-			case T__40:
-				_localctx = new DatasetSourceContext(_localctx);
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 347;
-				Match(T__40);
-				State = 348;
-				Match(T__36);
-				State = 349;
-				Match(TEXT);
-				}
-				break;
-			case T__41:
-				_localctx = new DatasetSchemaContext(_localctx);
-				EnterOuterAlt(_localctx, 3);
-				{
-				State = 350;
-				Match(T__41);
-				State = 351;
-				Match(T__36);
-				State = 352;
-				Match(ID);
-				}
-				break;
-			case T__42:
-				_localctx = new CsvDelimiterContext(_localctx);
-				EnterOuterAlt(_localctx, 4);
-				{
-				State = 353;
-				Match(T__42);
-				State = 354;
-				Match(T__36);
-				State = 355;
-				Match(TEXT);
-				}
-				break;
-			case T__43:
-				_localctx = new DatabaseQueryContext(_localctx);
-				EnterOuterAlt(_localctx, 5);
-				{
-				State = 356;
-				Match(T__43);
-				State = 357;
-				Match(T__36);
-				State = 358;
-				Match(TEXT);
-				}
-				break;
-			case T__44:
-				_localctx = new DatasetSkipContext(_localctx);
-				EnterOuterAlt(_localctx, 6);
-				{
-				State = 359;
-				Match(T__44);
-				State = 360;
-				Match(T__36);
-				State = 361;
-				Match(INTEGER);
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
 	public partial class TypeContext : ParserRuleContext {
-		[System.Diagnostics.DebuggerNonUserCode] public SchemaContext schema() {
-			return GetRuleContext<SchemaContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public DatasetContext dataset() {
-			return GetRuleContext<DatasetContext>(0);
-		}
-		[System.Diagnostics.DebuggerNonUserCode] public MashdContext mashd() {
-			return GetRuleContext<MashdContext>(0);
-		}
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOOLEAN_TYPE() { return GetToken(MashdParser.BOOLEAN_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode INTEGER_TYPE() { return GetToken(MashdParser.INTEGER_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DATE_TYPE() { return GetToken(MashdParser.DATE_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DECIMAL_TYPE() { return GetToken(MashdParser.DECIMAL_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode TEXT_TYPE() { return GetToken(MashdParser.TEXT_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode SCHEMA_TYPE() { return GetToken(MashdParser.SCHEMA_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode DATASET_TYPE() { return GetToken(MashdParser.DATASET_TYPE, 0); }
+		[System.Diagnostics.DebuggerNonUserCode] public ITerminalNode MASHD_TYPE() { return GetToken(MashdParser.MASHD_TYPE, 0); }
 		public TypeContext(ParserRuleContext parent, int invokingState)
 			: base(parent, invokingState)
 		{
@@ -3364,206 +3587,19 @@ public partial class MashdParser : Parser {
 	public TypeContext type() {
 		TypeContext _localctx = new TypeContext(Context, State);
 		EnterRule(_localctx, 40, RULE_type);
-		try {
-			State = 372;
-			ErrorHandler.Sync(this);
-			switch (TokenStream.LA(1)) {
-			case T__45:
-				EnterOuterAlt(_localctx, 1);
-				{
-				State = 364;
-				Match(T__45);
-				}
-				break;
-			case T__46:
-				EnterOuterAlt(_localctx, 2);
-				{
-				State = 365;
-				Match(T__46);
-				}
-				break;
-			case T__47:
-				EnterOuterAlt(_localctx, 3);
-				{
-				State = 366;
-				Match(T__47);
-				}
-				break;
-			case T__48:
-				EnterOuterAlt(_localctx, 4);
-				{
-				State = 367;
-				Match(T__48);
-				}
-				break;
-			case T__49:
-				EnterOuterAlt(_localctx, 5);
-				{
-				State = 368;
-				Match(T__49);
-				}
-				break;
-			case T__50:
-				EnterOuterAlt(_localctx, 6);
-				{
-				State = 369;
-				schema();
-				}
-				break;
-			case T__51:
-				EnterOuterAlt(_localctx, 7);
-				{
-				State = 370;
-				dataset();
-				}
-				break;
-			case T__52:
-				EnterOuterAlt(_localctx, 8);
-				{
-				State = 371;
-				mashd();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class SchemaContext : ParserRuleContext {
-		public SchemaContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_schema; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterSchema(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitSchema(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitSchema(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public SchemaContext schema() {
-		SchemaContext _localctx = new SchemaContext(Context, State);
-		EnterRule(_localctx, 42, RULE_schema);
+		int _la;
 		try {
 			EnterOuterAlt(_localctx, 1);
 			{
-			State = 374;
-			Match(T__50);
+			State = 373;
+			_la = TokenStream.LA(1);
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 70093866270720L) != 0)) ) {
+			ErrorHandler.RecoverInline(this);
 			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class DatasetContext : ParserRuleContext {
-		public DatasetContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_dataset; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterDataset(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitDataset(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitDataset(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public DatasetContext dataset() {
-		DatasetContext _localctx = new DatasetContext(Context, State);
-		EnterRule(_localctx, 44, RULE_dataset);
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 376;
-			Match(T__51);
+			else {
+				ErrorHandler.ReportMatch(this);
+			    Consume();
 			}
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			ErrorHandler.ReportError(this, re);
-			ErrorHandler.Recover(this, re);
-		}
-		finally {
-			ExitRule();
-		}
-		return _localctx;
-	}
-
-	public partial class MashdContext : ParserRuleContext {
-		public MashdContext(ParserRuleContext parent, int invokingState)
-			: base(parent, invokingState)
-		{
-		}
-		public override int RuleIndex { get { return RULE_mashd; } }
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void EnterRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.EnterMashd(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override void ExitRule(IParseTreeListener listener) {
-			IMashdListener typedListener = listener as IMashdListener;
-			if (typedListener != null) typedListener.ExitMashd(this);
-		}
-		[System.Diagnostics.DebuggerNonUserCode]
-		public override TResult Accept<TResult>(IParseTreeVisitor<TResult> visitor) {
-			IMashdVisitor<TResult> typedVisitor = visitor as IMashdVisitor<TResult>;
-			if (typedVisitor != null) return typedVisitor.VisitMashd(this);
-			else return visitor.VisitChildren(this);
-		}
-	}
-
-	[RuleVersion(0)]
-	public MashdContext mashd() {
-		MashdContext _localctx = new MashdContext(Context, State);
-		EnterRule(_localctx, 46, RULE_mashd);
-		try {
-			EnterOuterAlt(_localctx, 1);
-			{
-			State = 378;
-			Match(T__52);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3579,163 +3615,165 @@ public partial class MashdParser : Parser {
 
 	public override bool Sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 7: return expression_sempred((ExpressionContext)_localctx, predIndex);
+		case 14: return expression_sempred((ExpressionContext)_localctx, predIndex);
 		}
 		return true;
 	}
 	private bool expression_sempred(ExpressionContext _localctx, int predIndex) {
 		switch (predIndex) {
-		case 0: return Precpred(Context, 16);
-		case 1: return Precpred(Context, 15);
-		case 2: return Precpred(Context, 14);
-		case 3: return Precpred(Context, 13);
-		case 4: return Precpred(Context, 12);
-		case 5: return Precpred(Context, 11);
-		case 6: return Precpred(Context, 10);
-		case 7: return Precpred(Context, 9);
-		case 8: return Precpred(Context, 8);
-		case 9: return Precpred(Context, 7);
-		case 10: return Precpred(Context, 6);
-		case 11: return Precpred(Context, 5);
-		case 12: return Precpred(Context, 4);
-		case 13: return Precpred(Context, 3);
-		case 14: return Precpred(Context, 2);
-		case 15: return Precpred(Context, 24);
-		case 16: return Precpred(Context, 23);
-		case 17: return Precpred(Context, 22);
-		case 18: return Precpred(Context, 21);
+		case 0: return Precpred(Context, 17);
+		case 1: return Precpred(Context, 16);
+		case 2: return Precpred(Context, 15);
+		case 3: return Precpred(Context, 14);
+		case 4: return Precpred(Context, 13);
+		case 5: return Precpred(Context, 12);
+		case 6: return Precpred(Context, 11);
+		case 7: return Precpred(Context, 10);
+		case 8: return Precpred(Context, 9);
+		case 9: return Precpred(Context, 8);
+		case 10: return Precpred(Context, 7);
+		case 11: return Precpred(Context, 6);
+		case 12: return Precpred(Context, 5);
+		case 13: return Precpred(Context, 4);
+		case 14: return Precpred(Context, 3);
+		case 15: return Precpred(Context, 2);
+		case 16: return Precpred(Context, 26);
+		case 17: return Precpred(Context, 25);
+		case 18: return Precpred(Context, 23);
+		case 19: return Precpred(Context, 22);
 		}
 		return true;
 	}
 
 	private static int[] _serializedATN = {
-		4,1,63,381,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+		4,1,55,376,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
 		7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
-		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,2,21,7,21,
-		2,22,7,22,2,23,7,23,1,0,1,0,1,0,5,0,52,8,0,10,0,12,0,55,9,0,1,0,1,0,1,
-		1,1,1,1,1,1,1,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
-		1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,90,8,2,1,3,1,3,
-		1,3,1,3,1,3,1,3,5,3,98,8,3,10,3,12,3,101,9,3,3,3,103,8,3,1,4,1,4,1,4,1,
-		4,1,4,3,4,110,8,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,
-		1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,
-		4,1,4,1,4,1,4,1,4,1,4,3,4,148,8,4,1,5,1,5,1,5,1,5,1,5,1,5,1,5,1,5,3,5,
-		158,8,5,3,5,160,8,5,1,6,1,6,5,6,164,8,6,10,6,12,6,167,9,6,1,6,1,6,1,7,
-		1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,
-		7,1,7,5,7,191,8,7,10,7,12,7,194,9,7,3,7,196,8,7,1,7,3,7,199,8,7,1,7,1,
-		7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,
-		1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,
-		7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,
-		1,7,1,7,1,7,1,7,5,7,259,8,7,10,7,12,7,262,9,7,1,8,1,8,1,8,1,8,1,8,1,8,
-		3,8,270,8,8,1,9,1,9,1,9,1,9,1,10,1,10,1,10,5,10,279,8,10,10,10,12,10,282,
-		9,10,1,11,1,11,1,11,3,11,287,8,11,1,12,1,12,1,12,3,12,292,8,12,1,12,1,
-		12,1,13,1,13,3,13,298,8,13,1,13,1,13,1,14,1,14,1,14,5,14,305,8,14,10,14,
-		12,14,308,9,14,1,15,1,15,1,15,1,15,1,15,1,15,5,15,316,8,15,10,15,12,15,
-		319,9,15,1,15,1,15,1,16,1,16,1,16,1,16,1,16,1,16,3,16,329,8,16,1,17,1,
-		17,3,17,333,8,17,1,17,1,17,1,18,1,18,1,18,5,18,340,8,18,10,18,12,18,343,
-		9,18,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,1,19,
-		1,19,1,19,1,19,1,19,1,19,3,19,363,8,19,1,20,1,20,1,20,1,20,1,20,1,20,1,
-		20,1,20,3,20,373,8,20,1,21,1,21,1,22,1,22,1,23,1,23,1,23,0,1,14,24,0,2,
-		4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,0,0,431,
-		0,53,1,0,0,0,2,58,1,0,0,0,4,89,1,0,0,0,6,102,1,0,0,0,8,147,1,0,0,0,10,
-		149,1,0,0,0,12,161,1,0,0,0,14,198,1,0,0,0,16,269,1,0,0,0,18,271,1,0,0,
-		0,20,275,1,0,0,0,22,283,1,0,0,0,24,288,1,0,0,0,26,295,1,0,0,0,28,301,1,
-		0,0,0,30,309,1,0,0,0,32,328,1,0,0,0,34,330,1,0,0,0,36,336,1,0,0,0,38,362,
-		1,0,0,0,40,372,1,0,0,0,42,374,1,0,0,0,44,376,1,0,0,0,46,378,1,0,0,0,48,
-		52,3,2,1,0,49,52,3,4,2,0,50,52,3,8,4,0,51,48,1,0,0,0,51,49,1,0,0,0,51,
-		50,1,0,0,0,52,55,1,0,0,0,53,51,1,0,0,0,53,54,1,0,0,0,54,56,1,0,0,0,55,
-		53,1,0,0,0,56,57,5,0,0,1,57,1,1,0,0,0,58,59,5,1,0,0,59,60,5,56,0,0,60,
-		61,5,2,0,0,61,3,1,0,0,0,62,63,3,40,20,0,63,64,5,57,0,0,64,65,5,3,0,0,65,
-		66,3,6,3,0,66,67,5,4,0,0,67,68,3,12,6,0,68,90,1,0,0,0,69,70,3,42,21,0,
-		70,71,5,57,0,0,71,72,5,5,0,0,72,73,3,26,13,0,73,74,5,2,0,0,74,90,1,0,0,
-		0,75,76,3,44,22,0,76,77,5,57,0,0,77,78,5,5,0,0,78,79,3,34,17,0,79,80,5,
-		2,0,0,80,90,1,0,0,0,81,82,3,46,23,0,82,83,5,57,0,0,83,84,5,5,0,0,84,85,
-		3,34,17,0,85,86,5,6,0,0,86,87,3,34,17,0,87,88,5,2,0,0,88,90,1,0,0,0,89,
-		62,1,0,0,0,89,69,1,0,0,0,89,75,1,0,0,0,89,81,1,0,0,0,90,5,1,0,0,0,91,92,
-		3,40,20,0,92,99,5,57,0,0,93,94,5,7,0,0,94,95,3,40,20,0,95,96,5,57,0,0,
-		96,98,1,0,0,0,97,93,1,0,0,0,98,101,1,0,0,0,99,97,1,0,0,0,99,100,1,0,0,
-		0,100,103,1,0,0,0,101,99,1,0,0,0,102,91,1,0,0,0,102,103,1,0,0,0,103,7,
-		1,0,0,0,104,148,3,10,5,0,105,106,3,40,20,0,106,109,5,57,0,0,107,108,5,
-		5,0,0,108,110,3,14,7,0,109,107,1,0,0,0,109,110,1,0,0,0,110,111,1,0,0,0,
-		111,112,5,2,0,0,112,148,1,0,0,0,113,114,5,57,0,0,114,115,5,5,0,0,115,116,
-		3,14,7,0,116,117,5,2,0,0,117,148,1,0,0,0,118,119,5,57,0,0,119,120,5,8,
-		0,0,120,121,3,14,7,0,121,122,5,2,0,0,122,148,1,0,0,0,123,124,5,57,0,0,
-		124,125,5,9,0,0,125,126,3,14,7,0,126,127,5,2,0,0,127,148,1,0,0,0,128,129,
-		5,57,0,0,129,130,5,10,0,0,130,131,3,14,7,0,131,132,5,2,0,0,132,148,1,0,
-		0,0,133,134,5,57,0,0,134,135,5,11,0,0,135,136,3,14,7,0,136,137,5,2,0,0,
-		137,148,1,0,0,0,138,139,5,57,0,0,139,140,5,12,0,0,140,141,3,14,7,0,141,
-		142,5,2,0,0,142,148,1,0,0,0,143,144,5,13,0,0,144,145,3,14,7,0,145,146,
-		5,2,0,0,146,148,1,0,0,0,147,104,1,0,0,0,147,105,1,0,0,0,147,113,1,0,0,
-		0,147,118,1,0,0,0,147,123,1,0,0,0,147,128,1,0,0,0,147,133,1,0,0,0,147,
-		138,1,0,0,0,147,143,1,0,0,0,148,9,1,0,0,0,149,150,5,14,0,0,150,151,5,3,
-		0,0,151,152,3,14,7,0,152,153,5,4,0,0,153,159,3,12,6,0,154,157,5,15,0,0,
-		155,158,3,12,6,0,156,158,3,10,5,0,157,155,1,0,0,0,157,156,1,0,0,0,158,
-		160,1,0,0,0,159,154,1,0,0,0,159,160,1,0,0,0,160,11,1,0,0,0,161,165,5,16,
-		0,0,162,164,3,8,4,0,163,162,1,0,0,0,164,167,1,0,0,0,165,163,1,0,0,0,165,
-		166,1,0,0,0,166,168,1,0,0,0,167,165,1,0,0,0,168,169,5,17,0,0,169,13,1,
-		0,0,0,170,171,6,7,-1,0,171,199,3,16,8,0,172,199,5,57,0,0,173,174,5,3,0,
-		0,174,175,3,14,7,0,175,176,5,4,0,0,176,199,1,0,0,0,177,199,3,24,12,0,178,
-		179,5,19,0,0,179,199,3,14,7,20,180,181,5,20,0,0,181,199,3,14,7,19,182,
-		183,5,21,0,0,183,199,3,14,7,18,184,185,5,22,0,0,185,199,3,14,7,17,186,
-		195,5,16,0,0,187,192,3,18,9,0,188,189,5,7,0,0,189,191,3,18,9,0,190,188,
-		1,0,0,0,191,194,1,0,0,0,192,190,1,0,0,0,192,193,1,0,0,0,193,196,1,0,0,
-		0,194,192,1,0,0,0,195,187,1,0,0,0,195,196,1,0,0,0,196,197,1,0,0,0,197,
-		199,5,17,0,0,198,170,1,0,0,0,198,172,1,0,0,0,198,173,1,0,0,0,198,177,1,
-		0,0,0,198,178,1,0,0,0,198,180,1,0,0,0,198,182,1,0,0,0,198,184,1,0,0,0,
-		198,186,1,0,0,0,199,260,1,0,0,0,200,201,10,16,0,0,201,202,5,23,0,0,202,
-		259,3,14,7,17,203,204,10,15,0,0,204,205,5,24,0,0,205,259,3,14,7,16,206,
-		207,10,14,0,0,207,208,5,25,0,0,208,259,3,14,7,15,209,210,10,13,0,0,210,
-		211,5,26,0,0,211,259,3,14,7,14,212,213,10,12,0,0,213,214,5,21,0,0,214,
-		259,3,14,7,13,215,216,10,11,0,0,216,217,5,27,0,0,217,259,3,14,7,12,218,
-		219,10,10,0,0,219,220,5,28,0,0,220,259,3,14,7,11,221,222,10,9,0,0,222,
-		223,5,29,0,0,223,259,3,14,7,10,224,225,10,8,0,0,225,226,5,30,0,0,226,259,
-		3,14,7,9,227,228,10,7,0,0,228,229,5,31,0,0,229,259,3,14,7,8,230,231,10,
-		6,0,0,231,232,5,32,0,0,232,259,3,14,7,7,233,234,10,5,0,0,234,235,5,33,
-		0,0,235,259,3,14,7,6,236,237,10,4,0,0,237,238,5,34,0,0,238,259,3,14,7,
-		5,239,240,10,3,0,0,240,241,5,35,0,0,241,259,3,14,7,4,242,243,10,2,0,0,
-		243,244,5,36,0,0,244,245,3,14,7,0,245,246,5,37,0,0,246,247,3,14,7,3,247,
-		259,1,0,0,0,248,249,10,24,0,0,249,250,5,18,0,0,250,259,5,57,0,0,251,252,
-		10,23,0,0,252,253,5,18,0,0,253,259,3,22,11,0,254,255,10,22,0,0,255,259,
-		5,19,0,0,256,257,10,21,0,0,257,259,5,20,0,0,258,200,1,0,0,0,258,203,1,
-		0,0,0,258,206,1,0,0,0,258,209,1,0,0,0,258,212,1,0,0,0,258,215,1,0,0,0,
-		258,218,1,0,0,0,258,221,1,0,0,0,258,224,1,0,0,0,258,227,1,0,0,0,258,230,
-		1,0,0,0,258,233,1,0,0,0,258,236,1,0,0,0,258,239,1,0,0,0,258,242,1,0,0,
-		0,258,248,1,0,0,0,258,251,1,0,0,0,258,254,1,0,0,0,258,256,1,0,0,0,259,
-		262,1,0,0,0,260,258,1,0,0,0,260,261,1,0,0,0,261,15,1,0,0,0,262,260,1,0,
-		0,0,263,270,5,58,0,0,264,270,5,54,0,0,265,270,5,60,0,0,266,270,5,55,0,
-		0,267,270,5,56,0,0,268,270,5,59,0,0,269,263,1,0,0,0,269,264,1,0,0,0,269,
-		265,1,0,0,0,269,266,1,0,0,0,269,267,1,0,0,0,269,268,1,0,0,0,270,17,1,0,
-		0,0,271,272,5,57,0,0,272,273,5,37,0,0,273,274,3,14,7,0,274,19,1,0,0,0,
-		275,280,3,14,7,0,276,277,5,7,0,0,277,279,3,14,7,0,278,276,1,0,0,0,279,
-		282,1,0,0,0,280,278,1,0,0,0,280,281,1,0,0,0,281,21,1,0,0,0,282,280,1,0,
-		0,0,283,286,3,24,12,0,284,285,5,18,0,0,285,287,3,22,11,0,286,284,1,0,0,
-		0,286,287,1,0,0,0,287,23,1,0,0,0,288,289,5,57,0,0,289,291,5,3,0,0,290,
-		292,3,20,10,0,291,290,1,0,0,0,291,292,1,0,0,0,292,293,1,0,0,0,293,294,
-		5,4,0,0,294,25,1,0,0,0,295,297,5,16,0,0,296,298,3,28,14,0,297,296,1,0,
-		0,0,297,298,1,0,0,0,298,299,1,0,0,0,299,300,5,17,0,0,300,27,1,0,0,0,301,
-		306,3,30,15,0,302,303,5,7,0,0,303,305,3,30,15,0,304,302,1,0,0,0,305,308,
-		1,0,0,0,306,304,1,0,0,0,306,307,1,0,0,0,307,29,1,0,0,0,308,306,1,0,0,0,
-		309,310,5,57,0,0,310,311,5,37,0,0,311,312,5,16,0,0,312,317,3,32,16,0,313,
-		314,5,7,0,0,314,316,3,32,16,0,315,313,1,0,0,0,316,319,1,0,0,0,317,315,
-		1,0,0,0,317,318,1,0,0,0,318,320,1,0,0,0,319,317,1,0,0,0,320,321,5,17,0,
-		0,321,31,1,0,0,0,322,323,5,38,0,0,323,324,5,37,0,0,324,329,3,40,20,0,325,
-		326,5,39,0,0,326,327,5,37,0,0,327,329,5,56,0,0,328,322,1,0,0,0,328,325,
-		1,0,0,0,329,33,1,0,0,0,330,332,5,16,0,0,331,333,3,36,18,0,332,331,1,0,
-		0,0,332,333,1,0,0,0,333,334,1,0,0,0,334,335,5,17,0,0,335,35,1,0,0,0,336,
-		341,3,38,19,0,337,338,5,7,0,0,338,340,3,38,19,0,339,337,1,0,0,0,340,343,
-		1,0,0,0,341,339,1,0,0,0,341,342,1,0,0,0,342,37,1,0,0,0,343,341,1,0,0,0,
-		344,345,5,40,0,0,345,346,5,37,0,0,346,363,5,56,0,0,347,348,5,41,0,0,348,
-		349,5,37,0,0,349,363,5,56,0,0,350,351,5,42,0,0,351,352,5,37,0,0,352,363,
-		5,57,0,0,353,354,5,43,0,0,354,355,5,37,0,0,355,363,5,56,0,0,356,357,5,
-		44,0,0,357,358,5,37,0,0,358,363,5,56,0,0,359,360,5,45,0,0,360,361,5,37,
-		0,0,361,363,5,54,0,0,362,344,1,0,0,0,362,347,1,0,0,0,362,350,1,0,0,0,362,
-		353,1,0,0,0,362,356,1,0,0,0,362,359,1,0,0,0,363,39,1,0,0,0,364,373,5,46,
-		0,0,365,373,5,47,0,0,366,373,5,48,0,0,367,373,5,49,0,0,368,373,5,50,0,
-		0,369,373,3,42,21,0,370,373,3,44,22,0,371,373,3,46,23,0,372,364,1,0,0,
-		0,372,365,1,0,0,0,372,366,1,0,0,0,372,367,1,0,0,0,372,368,1,0,0,0,372,
-		369,1,0,0,0,372,370,1,0,0,0,372,371,1,0,0,0,373,41,1,0,0,0,374,375,5,51,
-		0,0,375,43,1,0,0,0,376,377,5,52,0,0,377,45,1,0,0,0,378,379,5,53,0,0,379,
-		47,1,0,0,0,27,51,53,89,99,102,109,147,157,159,165,192,195,198,258,260,
-		269,280,286,291,297,306,317,328,332,341,362,372
+		2,15,7,15,2,16,7,16,2,17,7,17,2,18,7,18,2,19,7,19,2,20,7,20,1,0,1,0,1,
+		0,5,0,46,8,0,10,0,12,0,49,9,0,1,0,1,0,1,1,1,1,1,1,1,1,1,2,1,2,1,2,1,2,
+		1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,
+		2,1,2,1,2,1,2,3,2,82,8,2,1,3,1,3,3,3,86,8,3,1,3,1,3,1,4,1,4,1,4,5,4,93,
+		8,4,10,4,12,4,96,9,4,1,5,1,5,1,5,1,5,1,5,1,5,5,5,104,8,5,10,5,12,5,107,
+		9,5,1,5,1,5,1,6,1,6,1,6,1,6,1,6,1,6,3,6,117,8,6,1,7,1,7,3,7,121,8,7,1,
+		7,1,7,1,8,1,8,1,8,5,8,128,8,8,10,8,12,8,131,9,8,1,9,1,9,1,9,1,9,1,9,1,
+		9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,3,9,154,
+		8,9,1,10,1,10,1,10,1,10,1,10,1,10,5,10,162,8,10,10,10,12,10,165,9,10,3,
+		10,167,8,10,1,11,1,11,1,11,1,11,1,11,3,11,174,8,11,1,11,1,11,1,11,1,11,
+		1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,
+		1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,
+		1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,1,11,3,11,217,8,11,1,12,1,12,1,
+		12,1,12,1,12,1,12,1,12,1,12,3,12,227,8,12,3,12,229,8,12,1,13,1,13,5,13,
+		233,8,13,10,13,12,13,236,9,13,1,13,1,13,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,5,14,264,8,14,10,14,12,14,267,9,14,3,14,269,8,14,1,
+		14,3,14,272,8,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,
+		1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,5,14,335,8,14,10,14,12,14,338,
+		9,14,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,15,3,15,348,8,15,1,16,1,16,1,
+		16,1,16,1,17,1,17,1,17,5,17,357,8,17,10,17,12,17,360,9,17,1,18,1,18,1,
+		18,3,18,365,8,18,1,18,1,18,1,19,1,19,1,19,3,19,372,8,19,1,20,1,20,1,20,
+		0,1,28,21,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,0,
+		1,1,0,38,45,428,0,47,1,0,0,0,2,52,1,0,0,0,4,81,1,0,0,0,6,83,1,0,0,0,8,
+		89,1,0,0,0,10,97,1,0,0,0,12,116,1,0,0,0,14,118,1,0,0,0,16,124,1,0,0,0,
+		18,153,1,0,0,0,20,166,1,0,0,0,22,216,1,0,0,0,24,218,1,0,0,0,26,230,1,0,
+		0,0,28,271,1,0,0,0,30,347,1,0,0,0,32,349,1,0,0,0,34,353,1,0,0,0,36,361,
+		1,0,0,0,38,368,1,0,0,0,40,373,1,0,0,0,42,46,3,2,1,0,43,46,3,4,2,0,44,46,
+		3,22,11,0,45,42,1,0,0,0,45,43,1,0,0,0,45,44,1,0,0,0,46,49,1,0,0,0,47,45,
+		1,0,0,0,47,48,1,0,0,0,48,50,1,0,0,0,49,47,1,0,0,0,50,51,5,0,0,1,51,1,1,
+		0,0,0,52,53,5,1,0,0,53,54,5,50,0,0,54,55,5,2,0,0,55,3,1,0,0,0,56,57,3,
+		40,20,0,57,58,5,52,0,0,58,59,5,3,0,0,59,60,3,20,10,0,60,61,5,4,0,0,61,
+		62,3,26,13,0,62,82,1,0,0,0,63,64,5,43,0,0,64,65,5,52,0,0,65,66,5,5,0,0,
+		66,67,3,28,14,0,67,68,5,2,0,0,68,82,1,0,0,0,69,70,5,44,0,0,70,71,5,52,
+		0,0,71,72,5,5,0,0,72,73,3,28,14,0,73,74,5,2,0,0,74,82,1,0,0,0,75,76,5,
+		45,0,0,76,77,5,52,0,0,77,78,5,5,0,0,78,79,3,28,14,0,79,80,5,2,0,0,80,82,
+		1,0,0,0,81,56,1,0,0,0,81,63,1,0,0,0,81,69,1,0,0,0,81,75,1,0,0,0,82,5,1,
+		0,0,0,83,85,5,6,0,0,84,86,3,8,4,0,85,84,1,0,0,0,85,86,1,0,0,0,86,87,1,
+		0,0,0,87,88,5,7,0,0,88,7,1,0,0,0,89,94,3,10,5,0,90,91,5,8,0,0,91,93,3,
+		10,5,0,92,90,1,0,0,0,93,96,1,0,0,0,94,92,1,0,0,0,94,95,1,0,0,0,95,9,1,
+		0,0,0,96,94,1,0,0,0,97,98,5,52,0,0,98,99,5,9,0,0,99,100,5,6,0,0,100,105,
+		3,12,6,0,101,102,5,8,0,0,102,104,3,12,6,0,103,101,1,0,0,0,104,107,1,0,
+		0,0,105,103,1,0,0,0,105,106,1,0,0,0,106,108,1,0,0,0,107,105,1,0,0,0,108,
+		109,5,7,0,0,109,11,1,0,0,0,110,111,5,52,0,0,111,112,5,9,0,0,112,117,3,
+		40,20,0,113,114,5,52,0,0,114,115,5,9,0,0,115,117,5,50,0,0,116,110,1,0,
+		0,0,116,113,1,0,0,0,117,13,1,0,0,0,118,120,5,6,0,0,119,121,3,16,8,0,120,
+		119,1,0,0,0,120,121,1,0,0,0,121,122,1,0,0,0,122,123,5,7,0,0,123,15,1,0,
+		0,0,124,129,3,18,9,0,125,126,5,8,0,0,126,128,3,18,9,0,127,125,1,0,0,0,
+		128,131,1,0,0,0,129,127,1,0,0,0,129,130,1,0,0,0,130,17,1,0,0,0,131,129,
+		1,0,0,0,132,133,5,52,0,0,133,134,5,9,0,0,134,154,5,50,0,0,135,136,5,52,
+		0,0,136,137,5,9,0,0,137,154,5,50,0,0,138,139,5,52,0,0,139,140,5,9,0,0,
+		140,154,5,52,0,0,141,142,5,52,0,0,142,143,5,9,0,0,143,154,5,50,0,0,144,
+		145,5,52,0,0,145,146,5,9,0,0,146,154,5,50,0,0,147,148,5,52,0,0,148,149,
+		5,9,0,0,149,154,5,46,0,0,150,151,5,52,0,0,151,152,5,9,0,0,152,154,5,46,
+		0,0,153,132,1,0,0,0,153,135,1,0,0,0,153,138,1,0,0,0,153,141,1,0,0,0,153,
+		144,1,0,0,0,153,147,1,0,0,0,153,150,1,0,0,0,154,19,1,0,0,0,155,156,3,40,
+		20,0,156,163,5,52,0,0,157,158,5,8,0,0,158,159,3,40,20,0,159,160,5,52,0,
+		0,160,162,1,0,0,0,161,157,1,0,0,0,162,165,1,0,0,0,163,161,1,0,0,0,163,
+		164,1,0,0,0,164,167,1,0,0,0,165,163,1,0,0,0,166,155,1,0,0,0,166,167,1,
+		0,0,0,167,21,1,0,0,0,168,217,3,24,12,0,169,170,3,40,20,0,170,173,5,52,
+		0,0,171,172,5,5,0,0,172,174,3,28,14,0,173,171,1,0,0,0,173,174,1,0,0,0,
+		174,175,1,0,0,0,175,176,5,2,0,0,176,217,1,0,0,0,177,178,5,52,0,0,178,179,
+		5,5,0,0,179,180,3,28,14,0,180,181,5,2,0,0,181,217,1,0,0,0,182,183,5,52,
+		0,0,183,184,5,10,0,0,184,185,3,28,14,0,185,186,5,2,0,0,186,217,1,0,0,0,
+		187,188,5,52,0,0,188,189,5,11,0,0,189,190,3,28,14,0,190,191,5,2,0,0,191,
+		217,1,0,0,0,192,193,5,52,0,0,193,194,5,12,0,0,194,195,3,28,14,0,195,196,
+		5,2,0,0,196,217,1,0,0,0,197,198,5,52,0,0,198,199,5,13,0,0,199,200,3,28,
+		14,0,200,201,5,2,0,0,201,217,1,0,0,0,202,203,5,52,0,0,203,204,5,14,0,0,
+		204,205,3,28,14,0,205,206,5,2,0,0,206,217,1,0,0,0,207,208,3,28,14,0,208,
+		209,5,15,0,0,209,210,3,38,19,0,210,211,5,2,0,0,211,217,1,0,0,0,212,213,
+		5,16,0,0,213,214,3,28,14,0,214,215,5,2,0,0,215,217,1,0,0,0,216,168,1,0,
+		0,0,216,169,1,0,0,0,216,177,1,0,0,0,216,182,1,0,0,0,216,187,1,0,0,0,216,
+		192,1,0,0,0,216,197,1,0,0,0,216,202,1,0,0,0,216,207,1,0,0,0,216,212,1,
+		0,0,0,217,23,1,0,0,0,218,219,5,17,0,0,219,220,5,3,0,0,220,221,3,28,14,
+		0,221,222,5,4,0,0,222,228,3,26,13,0,223,226,5,18,0,0,224,227,3,26,13,0,
+		225,227,3,24,12,0,226,224,1,0,0,0,226,225,1,0,0,0,227,229,1,0,0,0,228,
+		223,1,0,0,0,228,229,1,0,0,0,229,25,1,0,0,0,230,234,5,6,0,0,231,233,3,22,
+		11,0,232,231,1,0,0,0,233,236,1,0,0,0,234,232,1,0,0,0,234,235,1,0,0,0,235,
+		237,1,0,0,0,236,234,1,0,0,0,237,238,5,7,0,0,238,27,1,0,0,0,239,240,6,14,
+		-1,0,240,272,3,30,15,0,241,272,5,52,0,0,242,243,5,3,0,0,243,244,3,28,14,
+		0,244,245,5,4,0,0,245,272,1,0,0,0,246,272,3,36,18,0,247,248,3,40,20,0,
+		248,249,5,15,0,0,249,250,3,38,19,0,250,272,1,0,0,0,251,252,5,19,0,0,252,
+		272,3,28,14,21,253,254,5,20,0,0,254,272,3,28,14,20,255,256,5,21,0,0,256,
+		272,3,28,14,19,257,258,5,22,0,0,258,272,3,28,14,18,259,268,5,6,0,0,260,
+		265,3,32,16,0,261,262,5,8,0,0,262,264,3,32,16,0,263,261,1,0,0,0,264,267,
+		1,0,0,0,265,263,1,0,0,0,265,266,1,0,0,0,266,269,1,0,0,0,267,265,1,0,0,
+		0,268,260,1,0,0,0,268,269,1,0,0,0,269,270,1,0,0,0,270,272,5,7,0,0,271,
+		239,1,0,0,0,271,241,1,0,0,0,271,242,1,0,0,0,271,246,1,0,0,0,271,247,1,
+		0,0,0,271,251,1,0,0,0,271,253,1,0,0,0,271,255,1,0,0,0,271,257,1,0,0,0,
+		271,259,1,0,0,0,272,336,1,0,0,0,273,274,10,17,0,0,274,275,5,23,0,0,275,
+		335,3,28,14,18,276,277,10,16,0,0,277,278,5,24,0,0,278,335,3,28,14,17,279,
+		280,10,15,0,0,280,281,5,25,0,0,281,335,3,28,14,16,282,283,10,14,0,0,283,
+		284,5,26,0,0,284,335,3,28,14,15,285,286,10,13,0,0,286,287,5,21,0,0,287,
+		335,3,28,14,14,288,289,10,12,0,0,289,290,5,27,0,0,290,335,3,28,14,13,291,
+		292,10,11,0,0,292,293,5,28,0,0,293,335,3,28,14,12,294,295,10,10,0,0,295,
+		296,5,29,0,0,296,335,3,28,14,11,297,298,10,9,0,0,298,299,5,30,0,0,299,
+		335,3,28,14,10,300,301,10,8,0,0,301,302,5,31,0,0,302,335,3,28,14,9,303,
+		304,10,7,0,0,304,305,5,32,0,0,305,335,3,28,14,8,306,307,10,6,0,0,307,308,
+		5,33,0,0,308,335,3,28,14,7,309,310,10,5,0,0,310,311,5,34,0,0,311,335,3,
+		28,14,6,312,313,10,4,0,0,313,314,5,35,0,0,314,335,3,28,14,5,315,316,10,
+		3,0,0,316,317,5,36,0,0,317,318,3,28,14,0,318,319,5,9,0,0,319,320,3,28,
+		14,4,320,335,1,0,0,0,321,322,10,2,0,0,322,323,5,37,0,0,323,335,3,28,14,
+		3,324,325,10,26,0,0,325,326,5,15,0,0,326,335,5,52,0,0,327,328,10,25,0,
+		0,328,329,5,15,0,0,329,335,3,38,19,0,330,331,10,23,0,0,331,335,5,19,0,
+		0,332,333,10,22,0,0,333,335,5,20,0,0,334,273,1,0,0,0,334,276,1,0,0,0,334,
+		279,1,0,0,0,334,282,1,0,0,0,334,285,1,0,0,0,334,288,1,0,0,0,334,291,1,
+		0,0,0,334,294,1,0,0,0,334,297,1,0,0,0,334,300,1,0,0,0,334,303,1,0,0,0,
+		334,306,1,0,0,0,334,309,1,0,0,0,334,312,1,0,0,0,334,315,1,0,0,0,334,321,
+		1,0,0,0,334,324,1,0,0,0,334,327,1,0,0,0,334,330,1,0,0,0,334,332,1,0,0,
+		0,335,338,1,0,0,0,336,334,1,0,0,0,336,337,1,0,0,0,337,29,1,0,0,0,338,336,
+		1,0,0,0,339,348,5,48,0,0,340,348,5,46,0,0,341,348,5,51,0,0,342,348,5,47,
+		0,0,343,348,5,50,0,0,344,348,3,6,3,0,345,348,3,14,7,0,346,348,5,49,0,0,
+		347,339,1,0,0,0,347,340,1,0,0,0,347,341,1,0,0,0,347,342,1,0,0,0,347,343,
+		1,0,0,0,347,344,1,0,0,0,347,345,1,0,0,0,347,346,1,0,0,0,348,31,1,0,0,0,
+		349,350,5,52,0,0,350,351,5,9,0,0,351,352,3,28,14,0,352,33,1,0,0,0,353,
+		358,3,28,14,0,354,355,5,8,0,0,355,357,3,28,14,0,356,354,1,0,0,0,357,360,
+		1,0,0,0,358,356,1,0,0,0,358,359,1,0,0,0,359,35,1,0,0,0,360,358,1,0,0,0,
+		361,362,5,52,0,0,362,364,5,3,0,0,363,365,3,34,17,0,364,363,1,0,0,0,364,
+		365,1,0,0,0,365,366,1,0,0,0,366,367,5,4,0,0,367,37,1,0,0,0,368,371,3,36,
+		18,0,369,370,5,15,0,0,370,372,3,38,19,0,371,369,1,0,0,0,371,372,1,0,0,
+		0,372,39,1,0,0,0,373,374,7,0,0,0,374,41,1,0,0,0,26,45,47,81,85,94,105,
+		116,120,129,153,163,166,173,216,226,228,234,265,268,271,334,336,347,358,
+		364,371
 	};
 
 	public static readonly ATN _ATN =

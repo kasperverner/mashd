@@ -1,5 +1,5 @@
-﻿using Mashd.Frontend.SemanticAnalysis;
 using Antlr4.Runtime;
+using Mashd.Frontend.SemanticAnalysis;
 using Antlr4.Runtime.Tree;
 using Mashd.Backend;
 using Mashd.Backend.Errors;

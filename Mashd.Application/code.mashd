@@ -1,4 +1,28 @@
-﻿Schema operationSchema = Schema {
+﻿Schema patientSchema = {
+  patientId: {
+    type: Integer,
+    name: "patient_id"
+  },
+  firstName: {
+    type: Text,
+    name: "fst_name"
+  },
+  lastName: {
+    type: Text,
+    name: "lst_name"
+  },
+  birthYear: {
+    type: Integer,
+    name: "birth_year"
+  },
+  vaccinated: {
+    type: Boolean,
+    name: "had_vaccination"
+  }
+};
+
+
+Schema operationSchema = {
   operationId: {
     type: Integer,
     name: "Operation-ID"
@@ -25,17 +49,17 @@
   }
 };
 
-Dataset operationData = Dataset {
+Dataset operationData = {
   adapter: "csv",
   schema: operationSchema,
-  file: "../patientdata/operations.csv",
+  source: "../patientdata/operations.csv",
   delimiter: ","
 };
 
-Dataset patientData = Dataset {
+Dataset patientData = {
   adapter: "postgresql",
   schema: patientSchema,
-  connectionString: "postgresql://supervisor1:secretpassword123@localhost:5432/patientdata",
+  source: "postgresql://supervisor1:secretpassword123@localhost:5432/patientdata",
   query: "SELECT * FROM patients"
 };
 
@@ -63,11 +87,11 @@ Boolean ageBirthYearMatch(Integer birthYear, Integer age) {
   return match;
 }
 
-Mashd mash = patientData & operationData;
+Mashd name = patientData & operationData;
 
 Decimal threshold = 0.85;
 
-mash
+name
   .match(patientData.vaccinated, operationData.vaccinated)
   .fuzzyMatch(combinedFullname(patientData.firstName, patientData.lastName), operationData.patientName, threshold)
   .functionMatch(ageBirthYearMatch, patientData.birthYear, operationData.age)
@@ -79,5 +103,5 @@ mash
     operationDate: toISODate(operationData.date)
   });
 
-Dataset mergedDataSet = mash.join();
+Dataset mergedDataSet = name.join();
 mergedDataSet.toFile("merged_output.csv");

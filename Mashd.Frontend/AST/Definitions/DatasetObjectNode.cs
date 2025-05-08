@@ -17,6 +17,7 @@ public class DatasetObjectNode : ExpressionNode
     }
 
     public Dictionary<string, DatasetProperty> Properties { get; }
+    public SchemaDefinitionNode? ResolvedSchema { get; set; }
 
     public DatasetObjectNode(int line, int column, string text, Dictionary<string, DatasetProperty> properties)
         : base(line, column, text)

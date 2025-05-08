@@ -3,13 +3,50 @@ grammar Mashd;
 program         : (importStatement | definition | statement)* EOF 
                 ;
 
-importStatement : 'import' TEXT ';'                                         # ImportDeclaration
+importStatement : 'import' TEXT ';'                                           # ImportDeclaration
                 ;
 
-definition      : type ID '(' formalParameters ')' block                    # FunctionDefinition
-                | schema ID '=' schemaObject ';'                            # SchemaDefinition
-                | dataset ID '=' datasetObject ';'                          # DatasetDefinition
-                | mashd ID '=' datasetObject '&' datasetObject ';'          # MashdDefinition
+definition      : type ID '(' formalParameters ')' block                      # FunctionDefinition
+                | SCHEMA_TYPE ID '=' expression ';'                              # SchemaDefinition
+                | DATASET_TYPE ID '=' expression ';'                             # DatasetDefinition                                
+                | MASHD_TYPE ID '=' expression ';'                               # MashdDefinition
+                ;
+
+//Schema                
+schemaObject
+                : '{' schemaProperties? '}'               
+                ;       
+
+schemaProperties
+                : schemaProperty (',' schemaProperty)*            
+                ;
+
+schemaProperty
+                : ID ':' '{' schemaFieldProperty (',' schemaFieldProperty)* '}'  
+                ;
+                    
+schemaFieldProperty
+                : ID ':' type                           # SchemaType
+                | ID ':' TEXT                           # SchemaName
+                ;
+                
+//Dataset
+datasetObject
+                : '{' datasetProperties? '}'   # DatasetObjectExpression
+                ;
+
+datasetProperties
+                : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
+                ;
+
+datasetProperty
+                : ID ':' TEXT                           # DatasetAdapter
+                | ID ':' TEXT                           # DatasetSource
+                | ID ':' ID                             # DatasetSchema
+                | ID ':' TEXT                           # CsvDelimiter
+                | ID ':' TEXT                           # DatabaseQuery
+                | ID ':' INTEGER                        # DatasetSkip
+                | ID ':' INTEGER                        # DatasetLimit
                 ;
 
 formalParameters 
@@ -23,8 +60,9 @@ statement       : if                                                        # If
                 | ID '-=' expression ';'                                    # SubtractAssignment
                 | ID '*=' expression ';'                                    # MultiplyAssignment
                 | ID '/=' expression ';'                                    # DivisionAssignment
-                | ID '??=' expression ';'                                   # NullCoalescingAssignment 
-                | 'return' expression ';'                                   # ReturnStatement
+                | ID '??=' expression ';'                                   # NullCoalescingAssignment
+                | expression '.' methodChain ';'                            # MethodCallStatement
+                | 'return' expression ';'                                   # ReturnStatement                
                 ;
 
 if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfDefinition
@@ -33,12 +71,13 @@ if              : 'if' '(' expression ')' block ('else' (block | if))?     # IfD
 block           : '{' statement* '}'                                        # BlockDefinition
                 ;
 
-expression      : literal                                                   # LiteralExpression                                 
+expression      : literal                                                   # LiteralExpression
                 | ID                                                        # IdentifierExpression
                 | '(' expression ')'                                        # ParenExpression
                 | functionCall                                              # FunctionCallExpression
                 | expression '.' ID                                         # PropertyAccessExpression
-                | expression '.' methodChain                                # MethodChainExpression
+                | expression '.' methodChain                                # MethodCallExpression
+                | type '.' methodChain                                      # TypeMethodCallExpression
                 | expression '++'                                           # PostIncrementExpression
                 | expression '--'                                           # PostDecrementExpression
                 | '++' expression                                           # PreIncrementExpression
@@ -60,8 +99,11 @@ expression      : literal                                                   # Li
                 | expression '&&' expression                                # LogicalAndExpression
                 | expression '||' expression                                # LogicalOrExpression
                 | expression '?' expression ':' expression                  # TernaryExpression
+                | expression '&' expression                                 # DatasetCombineExpression
                 | '{' (keyValuePair (',' keyValuePair)*)? '}'               # ObjectExpression    
                 ;
+
+
 
 literal
                 : BOOLEAN                                                   # BooleanLiteral
@@ -69,6 +111,8 @@ literal
                 | DATE                                                      # DateLiteral
                 | DECIMAL                                                   # DecimalLiteral
                 | TEXT                                                      # TextLiteral
+                | schemaObject                                              # SchemaObjectLiteral
+                | datasetObject                                             # DatasetObjectLiteral
                 | NULL                                                      # NullLiteral
                 ;
 
@@ -78,73 +122,40 @@ keyValuePair    : ID ':' expression
 actualParameters
                 : expression (',' expression)*
                 ;
-
-methodChain     : functionCall ('.' methodChain)?
-                ;
-                
+              
 functionCall    : ID '(' actualParameters? ')'
                 ;
 
-//Schema                
-schemaObject
-                : '{' schemaProperties? '}'               
+methodChain     : functionCall ('.' methodChain)?
                 ;       
 
-schemaProperties
-                : schemaProperty (',' schemaProperty)*            
+type            : BOOLEAN_TYPE | INTEGER_TYPE | DATE_TYPE | DECIMAL_TYPE | TEXT_TYPE | SCHEMA_TYPE | DATASET_TYPE | MASHD_TYPE
                 ;
 
-schemaProperty
-                : ID ':' '{' schemaFieldProperty (',' schemaFieldProperty)* '}'  
-                ;    
-schemaFieldProperty
-                : 'type' ':' type
-                | 'name' ':' TEXT
-                ;
-                
-//Dataset
-datasetObject
-                : '{' datasetProperties? '}'   # DatasetObjectExpression
-                ;
-
-datasetProperties
-                : datasetProperty (',' datasetProperty)*  # DatasetPropertyList
-                ;
-
-datasetProperty
-                : 'adapter' ':' TEXT                      # DatasetAdapter
-                | 'source' ':' TEXT                       # DatasetSource
-                | 'schema' ':' ID                         # DatasetSchema
-                | 'delimiter' ':' TEXT                    # CsvDelimiter
-                | 'query' ':' TEXT                        # DatabaseQuery
-                | 'skip' ':' INTEGER                      # DatasetSkip
-                ;
-
-
-type            : 'Boolean' | 'Integer' | 'Date' | 'Decimal' | 'Text' | schema | dataset | mashd
-                ;
-
-schema          : 'Schema'                
-                ;
-                
-dataset         : 'Dataset' 
-                ;
-                
-mashd           : 'Mashd' 
-                ;
 
 // Lexer Rules
+BOOLEAN_TYPE    : 'Boolean' ;
+INTEGER_TYPE    : 'Integer' ;
+DATE_TYPE       : 'Date' ;
+DECIMAL_TYPE    : 'Decimal' ;
+TEXT_TYPE       : 'Text' ;
+SCHEMA_TYPE     : 'Schema' ;
+DATASET_TYPE    : 'Dataset' ;
+MASHD_TYPE      : 'Mashd' ;
+
 INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
-TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
-ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
-
 BOOLEAN         : 'true' | 'false' ;
+
 NULL            : 'null' ;
+
+TEXT            : '"' (~["\r\n\\] | '\\' .)* '"' ;
 
 DATE            : '\'' ISO8601Date '\'' 
                 | '"' ISO8601Date '"'
                 ;
+
+ID              : [a-zA-Z_][a-zA-Z0-9_]* ;
 
 // Whitespace and comments
 WS              : [ \t\r\n]+ -> skip

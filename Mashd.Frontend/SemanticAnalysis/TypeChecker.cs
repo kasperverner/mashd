@@ -21,6 +21,9 @@ public class TypeChecker : IAstVisitor<SymbolType>
         foreach (var fn in node.Definitions.OfType<FunctionDefinitionNode>())
             fn.Accept(this);
 
+        foreach (var ds in node.Definitions.OfType<DatasetDefinitionNode>())
+            ds.Accept(this);
+
         // Type-check top-level statements
         foreach (var stmt in node.Statements)
             stmt.Accept(this);
@@ -62,17 +65,51 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check the schemas object node's properties and structure
+        node.ObjectNode.Accept(this);
+
+        node.InferredType = SymbolType.Schema;
+        return SymbolType.Schema;
     }
 
     public SymbolType VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check the dataset object node's properties and structure
+        if (node.ObjectNode != null)
+        {
+            node.ObjectNode.Accept(this);
+        }
+
+        node.InferredType = SymbolType.Dataset;
+        return SymbolType.Dataset;
     }
 
     public SymbolType VisitMashdDefinitionNode(MashdDefinitionNode node)
     {
-        throw new NotImplementedException();
+        // Check the left and right expressions
+        var leftType = node.Left.Accept(this);
+        var rightType = node.Right.Accept(this);
+
+        // Both sides should be datasets for a valid mashd operation
+        if (leftType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
+            );
+        }
+
+        if (rightType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
+            );
+        }
+
+        // The result of a mashd operation is a Mashd type
+        node.InferredType = SymbolType.Mashd;
+        return SymbolType.Mashd;
     }
 
     public SymbolType VisitReturnNode(ReturnNode node)
@@ -117,8 +154,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
             var initType = node.Expression.Accept(this);
             if (initType != node.DeclaredType)
             {
-                errorReporter.Report.TypeCheck(node,
-                    $"Cannot assign {initType} to variable of type {node.DeclaredType}");
+                errorReporter.Report.TypeCheck(node, $"Cannot assign {initType} to variable of type {node.DeclaredType}");
             }
         }
 
@@ -354,8 +390,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
             // Nullish coalescing
             case OpType.NullishCoalescing:
-                throw new NotImplementedException(
-                    $"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
+                throw new NotImplementedException($"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
                 break;
             default:
                 errorReporter.Report.TypeCheck(node, $"Unsupported binary operator");
@@ -368,18 +403,28 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
-        throw new NotImplementedException(
-            $"Line {node.Line}:{node.Column}: Property access expression not implemented");
+        var objectType = node.Left.Accept(this);
+        if (objectType != SymbolType.Schema && objectType != SymbolType.Dataset)
+        {
+            errorReporter.Report.TypeCheck(node, $"Property access requires Schema or Dataset");
+        }
+
+        // TODO: Check if the property exists in the schema or dataset
+        // TODO: Check if the return type is of the correct type
+
+        return node.InferredType;
     }
 
     public SymbolType VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Method chain expression not implemented");
-    }
+        // Visit the left side
+        var leftType = node.Left?.Accept(this) ?? SymbolType.Unknown;
 
-    public SymbolType VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
-    {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset combination not implemented");
+        // TODO: Check if the method is valid for the left type
+        // TODO: Visit the next method in the chain if any
+
+        node.InferredType = leftType;
+        return leftType;
     }
 
     public SymbolType VisitObjectExpressionNode(ObjectExpressionNode node)
@@ -395,12 +440,121 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitSchemaObjectNode(SchemaObjectNode objectNode)
     {
-        throw new NotImplementedException($"Line {objectNode.Line}:{objectNode.Column}: Schema not implemented");
+        // Check for invalid field types
+        foreach (var (fieldKey, field) in objectNode.Fields)
+        {
+            SymbolType resolvedType = TryResolveType(field.Type);
+            if (!IsBasicType(resolvedType))
+            {
+                errorReporter.Report.TypeCheck(
+                    objectNode,
+                    $"Unknown type '{field.Type}' in field '{fieldKey}'"
+                );
+            }
+        }
+
+        objectNode.InferredType = SymbolType.Schema;
+        return SymbolType.Schema;
     }
 
     public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Dataset not implemented");
+        var validNames = new[] { "adapter", "source", "schema", "delimiter", "query", "skip" };
+        var requiredNames = new[] { "adapter", "source", "schema" };
+        var allowedAdapters = new[] { "csv", "sql", "postgresql",  }; // TODO: Change to actual adapters
+
+        // collect all keys as lowercase for uniform comparison
+        var keys = node.Properties.Values
+            .Select(p => p.Key.ToLower())
+            .ToList();
+
+        // 1) required‑missing
+        foreach (var req in requiredNames)
+        {
+            if (!keys.Contains(req, StringComparer.OrdinalIgnoreCase))
+            {
+                errorReporter.Report.TypeCheck(node, $"Required property '{req}' is missing");
+            }
+        }
+
+        // 2) unknown keys
+        foreach (var key in keys.Distinct())
+        {
+            if (!validNames.Contains(key, StringComparer.OrdinalIgnoreCase))
+            {
+                errorReporter.Report.TypeCheck(node,$"Unknown property '{key}' in dataset");
+            }
+
+        }
+
+        // 3) duplicate keys
+        var dupes = keys
+            .GroupBy(k => k)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key);
+        foreach (var dup in dupes)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Duplicate property '{dup}' in dataset");
+        }
+
+        // 4) per‑property semantic/type checks
+        foreach (var property in node.Properties.Values)
+        {
+            var key = property.Key;
+            var value = property.Value;
+
+            switch (key.ToLower())
+            {
+                case "adapter":
+                    if (value is string adapterText)
+                    {
+                        if (!allowedAdapters.Contains(adapterText, StringComparer.OrdinalIgnoreCase))
+                        {
+                            errorReporter.Report.TypeCheck(node,
+                                $"Unsupported adapter '{adapterText}'. Allowed: {string.Join(", ", allowedAdapters)}");
+                        }
+                    }
+                    else
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property 'adapter' must be a string literal");
+                    }
+
+                    break;
+
+                case "schema":
+                    if (node.ResolvedSchema == null)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Referenced schema was not resolved");
+                    }
+
+                    break;
+
+                case "skip":
+                    var skipType = InferPropertyType(value);
+                    if (skipType != SymbolType.Integer)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property 'skip' must be an Integer");
+                    }
+
+                    break;
+
+                case "source":
+                case "delimiter":
+                case "query":
+                    var t = InferPropertyType(value);
+                    if (t != SymbolType.Text)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property '{key}' must be Text");
+                    }
+
+                    break;
+            }
+        }
+
+        node.InferredType = SymbolType.Dataset;
+        return SymbolType.Dataset;
     }
 
     // Helper methods
@@ -463,5 +617,33 @@ public class TypeChecker : IAstVisitor<SymbolType>
     public void Check(AstNode node)
     {
         node.Accept(this);
+    }
+
+    private SymbolType TryResolveType(string typeName)
+    {
+        return typeName.ToLower() switch
+        {
+            "integer" => SymbolType.Integer,
+            "decimal" => SymbolType.Decimal,
+            "text" => SymbolType.Text,
+            "boolean" => SymbolType.Boolean,
+            "date" => SymbolType.Date,
+            _ => SymbolType.Unknown
+        };
+    }
+
+    private SymbolType InferPropertyType(object value)
+    {
+        return value switch
+        {
+            int => SymbolType.Integer,
+            decimal => SymbolType.Decimal,
+            double => SymbolType.Decimal,
+            float => SymbolType.Decimal,
+            string => SymbolType.Text,
+            bool => SymbolType.Boolean,
+            DateTime => SymbolType.Date,
+            _ => SymbolType.Unknown
+        };
     }
 }

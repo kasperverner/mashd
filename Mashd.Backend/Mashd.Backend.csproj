@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Mashd.Frontend/Mashd.Frontend.csproj" />
-    <ProjectReference Include="../Mashd.Data/Mashd.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>
