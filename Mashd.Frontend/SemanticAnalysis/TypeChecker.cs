@@ -1,7 +1,7 @@
 ﻿using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
-using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
+using Mashd.Frontend.AST.Expressions;
 
 namespace Mashd.Frontend.SemanticAnalysis;
 
@@ -9,7 +9,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
 {
     private readonly ErrorReporter errorReporter;
     private readonly Stack<SymbolType> _returnTypeStack = new Stack<SymbolType>();
-    private readonly List<int> _returnCounts = new List<int>();
 
     public TypeChecker(ErrorReporter errorReporter)
     {
@@ -47,20 +46,20 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         // Remember the declared return type
         _returnTypeStack.Push(node.DeclaredType);
-        // Remember the number of return statements seen
-        _returnCounts.Add(0);
 
         // Type-check the body
         node.Body.Accept(this);
 
-        if (_returnCounts[^1] == 0)
+        // Check if every path in the body returns
+        if (!BlockAlwaysReturns(node.Body))
         {
-            errorReporter.Report.TypeCheck(node, $"Function '{node.Identifier}' has no return statement");
+            errorReporter.Report.TypeCheck(node,
+                $"Function '{{node.Identifier}}' may exit without returning on some paths");
         }
+        
+        _returnTypeStack.Pop();
 
         node.InferredType = node.DeclaredType;
-        _returnTypeStack.Pop();
-        _returnCounts.RemoveAt(_returnCounts.Count - 1);
         return node.DeclaredType;
     }
 
@@ -126,9 +125,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Return type {exprType} does not match expected type {expected}");
         }
-
-        _returnCounts[_returnCounts.Count - 1]++;
-
+        
         node.InferredType = exprType;
         return exprType;
     }
@@ -157,8 +154,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
             var initType = node.Expression.Accept(this);
             if (initType != node.DeclaredType)
             {
-                errorReporter.Report.TypeCheck(node,
-                    $"Cannot assign {initType} to variable of type {node.DeclaredType}");
+                errorReporter.Report.TypeCheck(node, $"Cannot assign {initType} to variable of type {node.DeclaredType}");
             }
         }
 
@@ -394,8 +390,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
             // Nullish coalescing
             case OpType.NullishCoalescing:
-                throw new NotImplementedException(
-                    $"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
+                throw new NotImplementedException($"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
                 break;
             default:
                 errorReporter.Report.TypeCheck(node, $"Unsupported binary operator");
@@ -572,6 +567,51 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         return type == SymbolType.Integer || type == SymbolType.Decimal || type == SymbolType.Text ||
                type == SymbolType.Boolean || type == SymbolType.Date;
+    }
+
+    private bool StatementAlwaysReturns(StatementNode stmt)
+    {
+        switch (stmt)
+        {
+            case ReturnNode _:
+            {
+                return true;
+            }
+
+            // An if-statement only always returns if:
+            //  (a) it has an else branch, and
+            //  (b) both the then-block and the else-block always return.
+            case IfNode ifs:
+            {
+                if (!ifs.HasElse)
+                {
+                    return false;
+                }
+                
+                bool thenReturns = BlockAlwaysReturns(ifs.ThenBlock);
+                bool elseReturns = BlockAlwaysReturns(ifs.ElseBlock!);
+
+                return thenReturns && elseReturns;
+                
+            }
+            default:
+            {
+                return false;
+            }
+        }
+    }
+
+    private bool BlockAlwaysReturns(BlockNode block)
+    {
+        foreach (var stmt in block.Statements)
+        {
+            if (StatementAlwaysReturns(stmt))
+            {
+                return true; // once a return is hit, subsequent stmts unreachable
+            }
+        }
+
+        return false;
     }
 
     public void Check(AstNode node)
