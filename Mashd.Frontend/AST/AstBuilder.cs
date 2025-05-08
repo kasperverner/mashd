@@ -5,16 +5,15 @@ using Mashd.Frontend.AST.Definitions;
 
 namespace Mashd.Frontend.AST;
 
-
 public class AstBuilder : MashdBaseVisitor<AstNode>
 {
     private readonly ErrorReporter errorReporter;
-    
+
     public AstBuilder(ErrorReporter errorReporter)
     {
         this.errorReporter = errorReporter;
     }
-    
+
     // Program Node
     public override AstNode VisitProgram(MashdParser.ProgramContext context)
     {
@@ -58,15 +57,15 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     }
 
     // Import Node
-    
+
     public override AstNode VisitImportDeclaration(MashdParser.ImportDeclarationContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        
+
         // Remove surrounding quotes
         string rawText = context.TEXT().GetText();
         string importPath = rawText.Trim('"');
-        
+
         return new ImportNode(importPath, line, column, text);
     }
 
@@ -74,99 +73,113 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitFunctionDefinition(MashdParser.FunctionDefinitionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        
+
         SymbolType returnType = ParseVariableType(context.type().GetText());
         string functionName = context.ID().GetText();
-        
-        var parameters = Visit (context.formalParameters()) as FormalParameterListNode;
-        
-        var body = Visit (context.block()) as BlockNode;
-        
+
+        var parameters = Visit(context.formalParameters()) as FormalParameterListNode;
+
+        var body = Visit(context.block()) as BlockNode;
+
         return new FunctionDefinitionNode(functionName, returnType, parameters, body, line, column, text);
     }
 
     public override AstNode VisitSchemaDefinition(MashdParser.SchemaDefinitionContext context)
     {
         var identifier = context.ID().GetText();
-        
+
         var schemaObject = Visit(context.expression()) as SchemaObjectNode;
-        
+
         var (line, column, text) = ExtractNodeInfo(context);
-        
+
         return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
     }
 
     public override AstNode VisitDatasetDefinition(MashdParser.DatasetDefinitionContext context)
     {
         var identifier = context.ID().GetText();
-        
+
         var (line, column, text) = ExtractNodeInfo(context);
 
         var node = Visit(context.expression()) switch
         {
             DatasetObjectNode datasetObject => new DatasetDefinitionNode(identifier, datasetObject, line, column, text),
-            MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column, text),
+            MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
+                text),
             _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
         };
-        
+
         return node;
     }
-    
+
     public override AstNode VisitMashdDefinition(MashdParser.MashdDefinitionContext context)
     {
         var identifier = context.ID().GetText();
 
         var combineNode = Visit(context.expression()) as BinaryNode;
 
-        return new MashdDefinitionNode(identifier, combineNode.Left, combineNode.Right, combineNode.Line, combineNode.Column, combineNode.Text);
+        return new MashdDefinitionNode(identifier, combineNode.Left, combineNode.Right, combineNode.Line,
+            combineNode.Column, combineNode.Text);
     }
 
 
     // Expression Nodes
-    
-    public override AstNode VisitDatasetObjectExpression(MashdParser.DatasetObjectExpressionContext context)
+
+    public override AstNode VisitDatasetObjectExpression(MashdParser.DatasetObjectExpressionContext ctx)
     {
         var properties = new Dictionary<string, DatasetObjectNode.DatasetProperty>();
-
-        if (context.datasetProperties() != null)
+        var list = ctx.datasetProperties() as MashdParser.DatasetPropertyListContext;
+        if (list != null)
         {
-            foreach (var child in context.datasetProperties().children)
+            foreach (var propCtx in list.datasetProperty())
             {
-                switch (child)
+                var key = propCtx.GetChild(0).GetText();
+                switch (propCtx)
                 {
-                    case MashdParser.DatasetAdapterContext adapterCtx:
-                        properties["adapter"] = new DatasetObjectNode.DatasetProperty("adapter", adapterCtx.TEXT().GetText().Trim('"'));
+                    case MashdParser.DatasetAdapterContext a:
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, a.TEXT().GetText().Trim('"'));
                         break;
-                    case MashdParser.DatasetSourceContext sourceCtx:
-                        properties["source"] = new DatasetObjectNode.DatasetProperty("source", sourceCtx.TEXT().GetText().Trim('"'));
+                    case MashdParser.DatasetSourceContext s:
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, s.TEXT().GetText().Trim('"'));
                         break;
-                    case MashdParser.DatasetSchemaContext schemaCtx:
-                        properties["schema"] = new DatasetObjectNode.DatasetProperty("schema", schemaCtx.ID());
-                        break;
-                    case MashdParser.CsvDelimiterContext delimCtx:
-                        properties["delimiter"] = new DatasetObjectNode.DatasetProperty("delimiter", delimCtx.TEXT().GetText().Trim('"'));
-                        break;
-                    case MashdParser.DatabaseQueryContext queryCtx:
-                        properties["query"] = new DatasetObjectNode.DatasetProperty("query", queryCtx.TEXT().GetText().Trim('"'));
-                        break;
-                    case MashdParser.DatasetSkipContext skipCtx:
+                    case MashdParser.DatasetSchemaContext sch:
                     {
-                        int skipValue = int.Parse(skipCtx.INTEGER().GetText());
-                        properties["skip"] = new DatasetObjectNode.DatasetProperty("skip", skipValue);
+                        var schemaName = sch.ID(1).GetText();
+                        properties[key] = new DatasetObjectNode.DatasetProperty(
+                            key, new IdentifierNode(schemaName, sch.Start.Line, sch.Start.Column, sch.GetText())
+                        );
                         break;
                     }
+                    case MashdParser.CsvDelimiterContext d:
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, d.TEXT().GetText().Trim('"'));
+                        break;
+                    case MashdParser.DatasetSkipContext sk:
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, int.Parse(sk.INTEGER().GetText()));
+                        break;
+                    case MashdParser.DatasetLimitContext lim:
+                        properties[key] =
+                            new DatasetObjectNode.DatasetProperty(key, int.Parse(lim.INTEGER().GetText()));
+                        break;
+                    case MashdParser.DatabaseQueryContext q:
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, q.TEXT().GetText().Trim('"'));
+                        break;
+                    default:
+                        var raw = propCtx.GetChild(2).GetText();
+                        properties[key] = new DatasetObjectNode.DatasetProperty(key, raw);
+                        break;
                 }
             }
         }
-        
+
         return new DatasetObjectNode(
-            context.Start.Line,
-            context.Start.Column,
-            context.GetText(),
+            ctx.Start.Line,
+            ctx.Start.Column,
+            ctx.GetText(),
             properties
         );
     }
-    
+
+
     public override AstNode VisitSchemaObject(MashdParser.SchemaObjectContext context)
     {
         var fields = new Dictionary<string, SchemaField>();
@@ -182,7 +195,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
                 foreach (var child in property.children)
                 {
                     switch (child)
-                
+
                     {
                         case MashdParser.SchemaTypeContext typeCtx:
                             fieldType = typeCtx.type().GetText();
@@ -190,13 +203,13 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
                         case MashdParser.SchemaNameContext nameCtx:
                             fieldDisplayName = nameCtx.TEXT().GetText().Trim('"');
                             break;
-                    }    
+                    }
                 }
-                
+
                 fields[fieldName] = new SchemaField(fieldType, fieldDisplayName);
             }
         }
-        
+
         var (line, column, text) = ExtractNodeInfo(context);
 
         return new SchemaObjectNode(fields, line, column, text);
@@ -206,7 +219,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         var functionName = context.ID().GetText();
         var arguments = new List<ExpressionNode>();
-        
+
         if (context.actualParameters() != null)
         {
             foreach (var argCtx in context.actualParameters().expression())
@@ -215,44 +228,46 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
                 arguments.Add(arg);
             }
         }
-        
+
         var (line, column, text) = ExtractNodeInfo(context);
-        
+
         return new FunctionCallNode(functionName, arguments, line, column, text);
     }
-    
+
     public override ExpressionNode VisitMethodCallExpression(MashdParser.MethodCallExpressionContext context)
     {
         var target = Visit(context.expression())! as ExpressionNode;
         var methodChain = BuildMethodChain(context.methodChain());
 
         var (line, column, text) = ExtractNodeInfo(context);
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
+        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
+            line, column, text);
     }
-    
+
     public override ExpressionNode VisitTypeMethodCallExpression(MashdParser.TypeMethodCallExpressionContext context)
     {
         var target = VisitTypeLiteral(context.type());
-        
+
         var methodChain = BuildMethodChain(context.methodChain());
 
         var (line, column, text) = ExtractNodeInfo(context);
-        
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
+
+        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
+            line, column, text);
     }
 
     public override AstNode VisitObjectExpression(MashdParser.ObjectExpressionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
         var pairs = new List<ObjectExpressionNode.KeyValuePair>();
-    
+
         foreach (var pairCtx in context.keyValuePair())
         {
             var key = pairCtx.ID().GetText();
             var value = Visit(pairCtx.expression()) as ExpressionNode;
             pairs.Add(new ObjectExpressionNode.KeyValuePair(key, value));
         }
-    
+
         return new ObjectExpressionNode(pairs, line, column, text);
     }
 
@@ -260,9 +275,9 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         var left = Visit(context.expression()) as ExpressionNode;
         string property = context.ID().GetText();
-    
+
         var (line, column, text) = ExtractNodeInfo(context);
-    
+
         return new PropertyAccessExpressionNode(left, property, line, column, text);
     }
 
@@ -287,9 +302,9 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitFunctionCallExpression(MashdParser.FunctionCallExpressionContext context)
     {
         string functionName = context.functionCall().ID().GetText();
-        
+
         var arguments = new List<ExpressionNode>();
-        
+
         if (context.functionCall().actualParameters() != null)
         {
             foreach (var argCtx in context.functionCall().actualParameters().expression())
@@ -298,10 +313,11 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
                 arguments.Add(arg);
             }
         }
+
         var (line, column, text) = ExtractNodeInfo(context);
         return new FunctionCallNode(functionName, arguments, line, column, text);
     }
-    
+
     public override ExpressionNode VisitDatasetCombineExpression(MashdParser.DatasetCombineExpressionContext context)
     {
         var left = Visit(context.expression(0)) as IdentifierNode;
@@ -430,7 +446,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         string intText = context.INTEGER().GetText();
-        
+
         int value = int.Parse(intText);
         return new LiteralNode(value, line, column, text, SymbolType.Integer);
     }
@@ -480,7 +496,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitNullLiteral(MashdParser.NullLiteralContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        
+
         return new LiteralNode(null, line, column, text, SymbolType.Void);
     }
 
@@ -488,7 +504,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return Visit(context.schemaObject());
     }
-    
+
     public override AstNode VisitDatasetObjectLiteral(MashdParser.DatasetObjectLiteralContext context)
     {
         return Visit(context.datasetObject());
@@ -560,11 +576,12 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitMethodCallStatement(MashdParser.MethodCallStatementContext context)
     {
         var target = Visit(context.expression()) as ExpressionNode;
-        
+
         var methodChain = BuildMethodChain(context.methodChain());
 
         var (line, column, text) = ExtractNodeInfo(context);
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next, line, column, text);
+        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
+            line, column, text);
     }
 
     // Coalescing Assignment Nodes
@@ -626,7 +643,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new BlockNode(statements, line, column, text);
     }
-    
+
     public override AstNode VisitParameterList(MashdParser.ParameterListContext context)
     {
         // List to hold individual parameter nodes.
@@ -657,13 +674,13 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return (context.Start.Line, context.Start.Column, context.GetText());
     }
-    
+
     private ExpressionNode VisitTypeLiteral(MashdParser.TypeContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
         string typeText = context.GetText();
         SymbolType type = ParseVariableType(typeText);
-        
+
         return new LiteralNode(type, line, column, text, type);
     }
 
@@ -700,12 +717,12 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new BinaryNode(left, right, op, context.Start.Line, context.Start.Column, context.GetText());
     }
-    
+
     private MethodChainExpressionNode BuildMethodChain(MashdParser.MethodChainContext context)
     {
         var methodCall = context.functionCall();
         var methodName = methodCall.ID().GetText();
-    
+
         var arguments = new List<ExpressionNode>();
         if (methodCall.actualParameters() != null)
         {
@@ -726,8 +743,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         {
             next = BuildMethodChain(context.methodChain());
         }
-        
+
         return new MethodChainExpressionNode(null!, methodName, arguments, next, line, column, text);
     }
-
 }

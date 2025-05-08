@@ -15,9 +15,6 @@ public class MashdInterpreter
     private CommonTokenStream? Tokens { get; set; }
     private IParseTree? Tree { get; set; }
     private AstNode? Ast { get; set; }
-    
-    private SymbolTable? Symbols { get; set; }
-    
     public MashdInterpreter(string input)
     {
         Input = input;
@@ -78,8 +75,6 @@ public class MashdInterpreter
         Resolver resolver = new Resolver(errorReporter);
         resolver.Resolve((ProgramNode)Ast);
         
-        Symbols = resolver.GlobalScope;
-        
         CheckErrors(ErrorType.NameResolution);
         return this;
     }
@@ -89,7 +84,7 @@ public class MashdInterpreter
         {
             throw new InvalidOperationException("AstBuilder must be run before TypeChecker.");
         }
-        TypeChecker typeChecker = new TypeChecker(errorReporter, Symbols);
+        TypeChecker typeChecker = new TypeChecker(errorReporter);
         typeChecker.Check((ProgramNode)Ast);
         
         CheckErrors(ErrorType.TypeCheck);

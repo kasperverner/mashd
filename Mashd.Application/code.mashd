@@ -1,4 +1,28 @@
-﻿Schema operationSchema = {
+﻿Schema patientSchema = {
+  patientId: {
+    type: Integer,
+    name: "patient_id"
+  },
+  firstName: {
+    type: Text,
+    name: "fst_name"
+  },
+  lastName: {
+    type: Text,
+    name: "lst_name"
+  },
+  birthYear: {
+    type: Integer,
+    name: "birth_year"
+  },
+  vaccinated: {
+    type: Boolean,
+    name: "had_vaccination"
+  }
+};
+
+
+Schema operationSchema = {
   operationId: {
     type: Integer,
     name: "Operation-ID"

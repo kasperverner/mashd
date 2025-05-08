@@ -11,18 +11,19 @@ public class TypeChecker : IAstVisitor<SymbolType>
     private readonly Stack<SymbolType> _returnTypeStack = new Stack<SymbolType>();
     private readonly List<int> _returnCounts = new List<int>();
 
-    private readonly SymbolTable symbolTable;
-
-    public TypeChecker(ErrorReporter errorReporter, SymbolTable symbolTable)
+    public TypeChecker(ErrorReporter errorReporter)
     {
         this.errorReporter = errorReporter;
-        this.symbolTable = symbolTable;
     }
+
     public SymbolType VisitProgramNode(ProgramNode node)
     {
         // Type-check all top-level functions
         foreach (var fn in node.Definitions.OfType<FunctionDefinitionNode>())
             fn.Accept(this);
+
+        foreach (var ds in node.Definitions.OfType<DatasetDefinitionNode>())
+            ds.Accept(this);
 
         // Type-check top-level statements
         foreach (var stmt in node.Statements)
@@ -48,7 +49,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         _returnTypeStack.Push(node.DeclaredType);
         // Remember the number of return statements seen
         _returnCounts.Add(0);
-        
+
         // Type-check the body
         node.Body.Accept(this);
 
@@ -56,7 +57,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Function '{node.Identifier}' has no return statement");
         }
-        
+
         node.InferredType = node.DeclaredType;
         _returnTypeStack.Pop();
         _returnCounts.RemoveAt(_returnCounts.Count - 1);
@@ -75,8 +76,11 @@ public class TypeChecker : IAstVisitor<SymbolType>
     public SymbolType VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
         // Check the dataset object node's properties and structure
-        node.ObjectNode.Accept(this);
-        
+        if (node.ObjectNode != null)
+        {
+            node.ObjectNode.Accept(this);
+        }
+
         node.InferredType = SymbolType.Dataset;
         return SymbolType.Dataset;
     }
@@ -86,7 +90,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         // Check the left and right expressions
         var leftType = node.Left.Accept(this);
         var rightType = node.Right.Accept(this);
-    
+
         // Both sides should be datasets for a valid mashd operation
         if (leftType != SymbolType.Dataset)
         {
@@ -95,7 +99,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 $"Left side of mashd definition '{node.Identifier}' must be a Dataset, but got {leftType}"
             );
         }
-    
+
         if (rightType != SymbolType.Dataset)
         {
             errorReporter.Report.TypeCheck(
@@ -103,7 +107,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 $"Right side of mashd definition '{node.Identifier}' must be a Dataset, but got {rightType}"
             );
         }
-    
+
         // The result of a mashd operation is a Mashd type
         node.InferredType = SymbolType.Mashd;
         return SymbolType.Mashd;
@@ -115,14 +119,14 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Return statement outside of function");
         }
-        
+
         var exprType = node.Expression.Accept(this);
         var expected = _returnTypeStack.Peek();
         if (exprType != expected)
         {
             errorReporter.Report.TypeCheck(node, $"Return type {exprType} does not match expected type {expected}");
         }
-        
+
         _returnCounts[_returnCounts.Count - 1]++;
 
         node.InferredType = exprType;
@@ -153,7 +157,8 @@ public class TypeChecker : IAstVisitor<SymbolType>
             var initType = node.Expression.Accept(this);
             if (initType != node.DeclaredType)
             {
-                errorReporter.Report.TypeCheck(node, $"Cannot assign {initType} to variable of type {node.DeclaredType}");
+                errorReporter.Report.TypeCheck(node,
+                    $"Cannot assign {initType} to variable of type {node.DeclaredType}");
             }
         }
 
@@ -322,7 +327,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Binary operator requires both sides of same type");
         }
-        
+
         var assumedType = left;
 
         switch (node.Operator)
@@ -335,12 +340,14 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 {
                     errorReporter.Report.TypeCheck(node, $"Arithmetic requires numeric operands");
                 }
+
                 break;
             case OpType.Modulo:
                 if (assumedType != SymbolType.Integer)
                 {
                     errorReporter.Report.TypeCheck(node, $"Modulus '%' requires integer operands");
                 }
+
                 break;
             case OpType.Add:
                 if (!IsNumeric(assumedType) && assumedType != SymbolType.Text)
@@ -349,7 +356,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 }
 
                 break;
-            
+
             // Comparisons
             case OpType.LessThan:
             case OpType.LessThanEqual:
@@ -359,6 +366,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 {
                     errorReporter.Report.TypeCheck(node, $"Comparison requires numeric operands");
                 }
+
                 assumedType = SymbolType.Boolean;
                 break;
 
@@ -369,6 +377,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 {
                     errorReporter.Report.TypeCheck(node, $"Equality requires basic type operands");
                 }
+
                 assumedType = SymbolType.Boolean;
                 break;
 
@@ -379,18 +388,20 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 {
                     errorReporter.Report.TypeCheck(node, $"Logical operations requires Boolean operands");
                 }
+
                 assumedType = SymbolType.Boolean;
                 break;
-            
+
             // Nullish coalescing
             case OpType.NullishCoalescing:
-                throw new NotImplementedException($"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
+                throw new NotImplementedException(
+                    $"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
                 break;
             default:
                 errorReporter.Report.TypeCheck(node, $"Unsupported binary operator");
                 break;
         }
-        
+
         node.InferredType = assumedType;
         return node.InferredType;
     }
@@ -405,7 +416,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
         // TODO: Check if the property exists in the schema or dataset
         // TODO: Check if the return type is of the correct type
-        
+
         return node.InferredType;
     }
 
@@ -416,7 +427,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
         // TODO: Check if the method is valid for the left type
         // TODO: Visit the next method in the chain if any
-        
+
         node.InferredType = leftType;
         return leftType;
     }
@@ -446,74 +457,107 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 );
             }
         }
-        
+
         objectNode.InferredType = SymbolType.Schema;
         return SymbolType.Schema;
     }
 
     public SymbolType VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        var validPropertyNames = new List<string> { "adapter", "source", "schema", "delimiter", "query", "skip" };
-        var requiredPropertyNames = new List<string> { "adapter", "source", "schema" };
-        
-        // Check for missing required properties first
-        foreach (var required in requiredPropertyNames)
+        var validNames = new[] { "adapter", "source", "schema", "delimiter", "query", "skip" };
+        var requiredNames = new[] { "adapter", "source", "schema" };
+        var allowedAdapters = new[] { "csv", "sql", "postgresql",  }; // TODO: Change to actual adapters
+
+        // collect all keys as lowercase for uniform comparison
+        var keys = node.Properties.Values
+            .Select(p => p.Key.ToLower())
+            .ToList();
+
+        // 1) required‑missing
+        foreach (var req in requiredNames)
         {
-            if (!node.Properties.ContainsKey(required))
+            if (!keys.Contains(req, StringComparer.OrdinalIgnoreCase))
             {
-                errorReporter.Report.TypeCheck(
-                    node, $"Required property '{required}' missing in dataset"
-                );
+                errorReporter.Report.TypeCheck(node, $"Required property '{req}' is missing");
             }
         }
 
-        // Check for unknown properties
-        foreach (var (propertyKey, property) in node.Properties)
+        // 2) unknown keys
+        foreach (var key in keys.Distinct())
         {
-            if (!validPropertyNames.Contains(propertyKey.ToLower()))
+            if (!validNames.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                errorReporter.Report.TypeCheck(
-                    node, $"Unknown property '{propertyKey}' in dataset"
-                );
-                continue; // Skip further checks for this property
+                errorReporter.Report.TypeCheck(node,$"Unknown property '{key}' in dataset");
             }
-            
-            // Special handling for the 'schema' property (reference to schema)
-            if (propertyKey.ToLower() == "schema")
+
+        }
+
+        // 3) duplicate keys
+        var dupes = keys
+            .GroupBy(k => k)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key);
+        foreach (var dup in dupes)
+        {
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Duplicate property '{dup}' in dataset");
+        }
+
+        // 4) per‑property semantic/type checks
+        foreach (var property in node.Properties.Values)
+        {
+            var key = property.Key;
+            var value = property.Value;
+
+            switch (key.ToLower())
             {
-                if (property.Value is string schemaName)
-                {
-                    // Look up schema in the symbol table to make sure it's defined
-                    if (!symbolTable.TryLookup(schemaName, out var declaration) || !(declaration is SchemaDefinitionNode))
+                case "adapter":
+                    if (value is string adapterText)
                     {
-                        errorReporter.Report.TypeCheck(
-                            node, $"Referenced schema '{schemaName}' is not defined"
-                        );
+                        if (!allowedAdapters.Contains(adapterText, StringComparer.OrdinalIgnoreCase))
+                        {
+                            errorReporter.Report.TypeCheck(node,
+                                $"Unsupported adapter '{adapterText}'. Allowed: {string.Join(", ", allowedAdapters)}");
+                        }
                     }
-                }
-                continue; // Skip further type checks for 'schema' 
-            }
+                    else
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property 'adapter' must be a string literal");
+                    }
 
-            // For other properties, infer and check types
-            SymbolType propertyType = InferPropertyType(property.Value);
-            
-            if (!IsBasicType(propertyType))
-            {
-                errorReporter.Report.TypeCheck(
-                    node, $"Invalid type for property '{propertyKey}' in dataset"
-                );
-            }
-            
-            // Specific validation for 'skip' 
-            if (propertyKey.ToLower() == "skip" && propertyType != SymbolType.Integer)
-            {
-                errorReporter.Report.TypeCheck(
-                    node, $"Property 'skip' must be an Integer"
-                );
+                    break;
+
+                case "schema":
+                    if (node.ResolvedSchema == null)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Referenced schema was not resolved");
+                    }
+
+                    break;
+
+                case "skip":
+                    var skipType = InferPropertyType(value);
+                    if (skipType != SymbolType.Integer)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property 'skip' must be an Integer");
+                    }
+
+                    break;
+
+                case "source":
+                case "delimiter":
+                case "query":
+                    var t = InferPropertyType(value);
+                    if (t != SymbolType.Text)
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property '{key}' must be Text");
+                    }
+
+                    break;
             }
         }
-        
-        // Set and return the inferred type
+
         node.InferredType = SymbolType.Dataset;
         return SymbolType.Dataset;
     }
@@ -523,17 +567,18 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         return type == SymbolType.Integer || type == SymbolType.Decimal;
     }
-    
+
     private bool IsBasicType(SymbolType type)
     {
         return type == SymbolType.Integer || type == SymbolType.Decimal || type == SymbolType.Text ||
                type == SymbolType.Boolean || type == SymbolType.Date;
     }
-    
+
     public void Check(AstNode node)
     {
         node.Accept(this);
     }
+
     private SymbolType TryResolveType(string typeName)
     {
         return typeName.ToLower() switch

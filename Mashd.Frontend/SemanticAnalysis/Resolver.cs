@@ -13,12 +13,12 @@ public struct DummyVoid
 public class Resolver : IAstVisitor<DummyVoid>
 {
     private readonly ErrorReporter _errorReporter;
-    public SymbolTable GlobalScope { get; private set; }
+    private SymbolTable currentScope; // global scope
 
     public Resolver(ErrorReporter errorReporter)
     {
         this._errorReporter = errorReporter;
-        this.GlobalScope = new SymbolTable(errorReporter);
+        this.currentScope = new SymbolTable(errorReporter);
     }
     public DummyVoid VisitProgramNode(ProgramNode node)
     {
@@ -31,7 +31,7 @@ public class Resolver : IAstVisitor<DummyVoid>
         // Register all top-level definitions, aka functions
         foreach (var function in node.Definitions.OfType<FunctionDefinitionNode>())
         {
-            GlobalScope.Add(function.Identifier, function);
+            currentScope.Add(function.Identifier, function);
         }
 
         // Bind each function to its definition
@@ -53,27 +53,26 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
-        Console.WriteLine($"Visiting function definition: {node.Identifier}, it is in global scope: {GlobalScope.IsGlobalScope}");
-        if (!GlobalScope.IsGlobalScope)
+        if (!currentScope.IsGlobalScope)
         {
             _errorReporter.Report.NameResolution(node, "Function cannot be declared inside a block.");
         }
         
         // Enter a new scope for the function
-        node.Symbols = new SymbolTable(_errorReporter, GlobalScope);
-        var outer = GlobalScope;
-        GlobalScope = node.Symbols;
+        node.Symbols = new SymbolTable(_errorReporter, currentScope);
+        var outer = currentScope;
+        currentScope = node.Symbols;
 
         // Register parameters
         foreach (var param in node.ParameterList.Parameters)
         {
-            GlobalScope.Add(param.Identifier, param);
+            currentScope.Add(param.Identifier, param);
         }
 
         Resolve(node.Body);
 
         // Exit the function scope
-        GlobalScope = outer;
+        currentScope = outer;
 
         return DummyVoid.Null;
     }
@@ -81,7 +80,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitSchemaDefinitionNode(SchemaDefinitionNode node)
     {
         // Register the schema definition in the current scope
-        GlobalScope.Add(node.Identifier, node);
+        currentScope.Add(node.Identifier, node);
     
         // Visit the schema object to handle any nested expressions or field references
         if (node.ObjectNode != null)
@@ -95,26 +94,26 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitDatasetDefinitionNode(DatasetDefinitionNode node)
     {
         // Register the dataset definition in the current scope
-        GlobalScope.Add(node.Identifier, node);
-    
-        // Visit the dataset object to handle any nested expressions
+        currentScope.Add(node.Identifier, node);
+
+        // Resolve the object literal inside it
         if (node.ObjectNode != null)
         {
             Resolve(node.ObjectNode);
         }
-        
+
         if (node.MethodNode != null)
         {
             Resolve(node.MethodNode);
         }
-    
+
         return DummyVoid.Null;
     }
 
     public DummyVoid VisitMashdDefinitionNode(MashdDefinitionNode node)
     {
         // Register the mashd definition in the current scope
-        GlobalScope.Add(node.Identifier, node);
+        currentScope.Add(node.Identifier, node);
     
         // Visit left and right expressions to resolve any identifiers
         Resolve(node.Left);
@@ -126,14 +125,14 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitBlockNode(BlockNode node)
     {
         // Enter a new scope for the block
-        node.Symbols = new SymbolTable(_errorReporter, GlobalScope);
-        var outer = GlobalScope;
-        GlobalScope = node.Symbols;
+        node.Symbols = new SymbolTable(_errorReporter, currentScope);
+        var outer = currentScope;
+        currentScope = node.Symbols;
 
         Resolve(node.Statements);
 
         // Exit the block scope
-        GlobalScope = GlobalScope.Parent;
+        currentScope = currentScope.Parent;
 
         return DummyVoid.Null;
     }
@@ -141,7 +140,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitVariableDeclarationNode(VariableDeclarationNode node)
     {
         // Add the variable to the current scope
-        GlobalScope.Add(node.Identifier, node);
+        currentScope.Add(node.Identifier, node);
         if (node.HasInitialization)
         {
             Resolve(node.Expression);
@@ -153,7 +152,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitAssignmentNode(AssignmentNode node)
     {
         // Ensure target was declared
-        if (!GlobalScope.TryLookup(node.Identifier, out var decl))
+        if (!currentScope.TryLookup(node.Identifier, out var decl))
             _errorReporter.Report.NameResolution(node, $"Undefined symbol");
         node.Definition = decl;
 
@@ -164,8 +163,10 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitFunctionCallNode(FunctionCallNode node)
     {
-        if (!GlobalScope.TryLookup(node.FunctionName, out var decl))
+        if (!currentScope.TryLookup(node.FunctionName, out var decl))
+        {
             _errorReporter.Report.NameResolution(node, $"Undefined function '{node.FunctionName}'");
+        }
         node.Definition = decl;
         
         foreach (var arg in node.Arguments)
@@ -186,7 +187,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitIdentifierNode(IdentifierNode node)
     {
         // Check if the identifier is defined in the current scope
-        if (!GlobalScope.TryLookup(node.Name, out var decl))
+        if (!currentScope.TryLookup(node.Name, out var decl))
             _errorReporter.Report.NameResolution(node, $"Undefined symbol '{node.Name}'");
         node.Definition = decl;
 
@@ -309,26 +310,49 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitDatasetObjectNode(DatasetObjectNode node)
     {
-        // Check if any property values need resolution (could be identifiers or expressions)
         foreach (var property in node.Properties.Values)
         {
-            // If property contains expressions, resolve them
-            // For example, if a property value could be an ExpressionNode:
-            if (property.Value is ExpressionNode expr)
+            Console.WriteLine(property.Key + ": " + property.Value);
+        }
+        foreach (var property in node.Properties.Values)
+        {
+        
+            if (property.Key.Equals("schema", StringComparison.OrdinalIgnoreCase))
             {
-                Resolve(expr);
-            }
-            else if (property.Value is string identifier && property.Key.ToLower() == "schema")
-            {
-                // Check if referenced schema exists in scope
-                if (!GlobalScope.TryLookup(identifier, out var decl))
+                if (property.Value is IdentifierNode idNode)
                 {
-                    _errorReporter.Report.NameResolution(node, $"Undefined schema '{identifier}'");
+                    if (!currentScope.TryLookup(idNode.Name, out var decl))
+                    {
+                        _errorReporter.Report.NameResolution(node, $"Undefined schema '{idNode.Name}'");
+                    }
+                    else if (decl is SchemaDefinitionNode schemaDecl)
+                    {
+                        // annotate both the identifier and object node
+                        idNode.Definition = schemaDecl;
+                        node.ResolvedSchema = schemaDecl;
+                    }
+                    else
+                    {
+                        _errorReporter.Report.NameResolution(node, $"Identifier '{idNode.Name}' is not a schema");
+                    }
                 }
-                // Could store the resolved declaration if needed
+                else
+                {
+                    // if someone passed a text literal or integer instead of identifier node
+                    _errorReporter.Report.NameResolution(node, $"Schema property must be an identifier");
+                }
+            }
+            else
+            {
+                // If property contains expressions, resolve them
+                if (property.Value is ExpressionNode expr)
+                {
+                    Resolve(expr);
+                }
+        
             }
         }
-    
+
         return DummyVoid.Null;
     }
 
