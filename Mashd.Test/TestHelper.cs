@@ -1,4 +1,6 @@
 using Antlr4.Runtime.Tree;
+using Mashd.Backend;
+using Antlr4.Runtime;
 
 namespace TestProject1;
 
@@ -17,5 +19,14 @@ public static class TestHelper
         }
             
         return tree.GetText();
+    }
+    
+    public static MashdParser CreateParser(string input)
+    {
+        var parser = new MashdParser(new CommonTokenStream(new MashdLexer(new AntlrInputStream(input))));
+        parser.RemoveErrorListeners();
+        parser.AddErrorListener(new ThrowingErrorListener());
+        parser.ErrorHandler = new BailErrorStrategy();
+        return parser; 
     }
 }
