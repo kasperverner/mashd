@@ -2,28 +2,20 @@ namespace Mashd.Frontend.AST.Expressions;
 
 public class ObjectExpressionNode : ExpressionNode
 {
-    public List<KeyValuePair> Pairs { get; }
+    public Dictionary<string, ExpressionNode> Properties { get; } = new();
 
-    public ObjectExpressionNode(List<KeyValuePair> pairs, int line, int column, string text)
+    public ObjectExpressionNode(int line, int column, string text)
         : base(line, column, text)
     {
-        Pairs = pairs;
+    }
+    
+    public bool TryAddProperty(string key, ExpressionNode value)
+    {
+        return Properties.TryAdd(key, value);
     }
 
     public override T Accept<T>(IAstVisitor<T> visitor)
     {
         return visitor.VisitObjectExpressionNode(this);
-    }
-
-    public class KeyValuePair
-    {
-        public string Key { get; }
-        public ExpressionNode Value { get; }
-
-        public KeyValuePair(string key, ExpressionNode value)
-        {
-            Key = key;
-            Value = value;
-        }
     }
 }

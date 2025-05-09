@@ -48,6 +48,7 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitImportNode(ImportNode node)
     {
+        // TODO: Handle import statements
         throw new NotImplementedException();
     }
     
@@ -177,13 +178,6 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
-
-
-    public DummyVoid VisitCompoundAssignmentNode(CompoundAssignmentNode node)
-    {
-        throw new NotImplementedException();
-    }
-
     public DummyVoid VisitIdentifierNode(IdentifierNode node)
     {
         // Check if the identifier is defined in the current scope
@@ -202,6 +196,11 @@ public class Resolver : IAstVisitor<DummyVoid>
     }
 
     public DummyVoid VisitLiteralNode(LiteralNode node)
+    {
+        return DummyVoid.Null;
+    }
+
+    public DummyVoid VisitTypeLiteralNode(TypeLiteralNode node)
     {
         return DummyVoid.Null;
     }
@@ -253,6 +252,13 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
+    public DummyVoid VisitExpressionStatementNode(ExpressionStatementNode node)
+    {
+        Resolve(node.Expression);
+        
+        return DummyVoid.Null;
+    }
+
     public DummyVoid VisitReturnNode(ReturnNode node)
     {
         Resolve(node.Expression);
@@ -294,7 +300,7 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitObjectExpressionNode(ObjectExpressionNode node)
     {
-        foreach (var pair in node.Pairs)
+        foreach (var pair in node.Properties)
         {
             Resolve(pair.Value);
         }
@@ -312,11 +318,6 @@ public class Resolver : IAstVisitor<DummyVoid>
     {
         foreach (var property in node.Properties.Values)
         {
-            Console.WriteLine(property.Key + ": " + property.Value);
-        }
-        foreach (var property in node.Properties.Values)
-        {
-        
             if (property.Key.Equals("schema", StringComparison.OrdinalIgnoreCase))
             {
                 if (property.Value is IdentifierNode idNode)
@@ -344,12 +345,7 @@ public class Resolver : IAstVisitor<DummyVoid>
             }
             else
             {
-                // If property contains expressions, resolve them
-                if (property.Value is ExpressionNode expr)
-                {
-                    Resolve(expr);
-                }
-        
+                Resolve(property.Value);
             }
         }
 

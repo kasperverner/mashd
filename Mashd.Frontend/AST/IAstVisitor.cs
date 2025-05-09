@@ -20,6 +20,7 @@ public interface IAstVisitor<T>
     // Expressions
     T VisitParenNode(ParenNode node);
     T VisitLiteralNode(LiteralNode node);
+    T VisitTypeLiteralNode(TypeLiteralNode node);
     T VisitUnaryNode(UnaryNode node);
     T VisitBinaryNode(BinaryNode node);
     T VisitIdentifierNode(IdentifierNode node);
@@ -29,11 +30,12 @@ public interface IAstVisitor<T>
     
     T VisitVariableDeclarationNode(VariableDeclarationNode node);
     T VisitAssignmentNode(AssignmentNode node);
-    T VisitCompoundAssignmentNode(CompoundAssignmentNode node);
     
     T VisitIfNode(IfNode node);
     
     T VisitTernaryNode(TernaryNode node);
+    
+    T VisitExpressionStatementNode(ExpressionStatementNode node);
     
     T VisitReturnNode(ReturnNode node);
     
