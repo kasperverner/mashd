@@ -13,6 +13,8 @@ public class MashdInterpreter
 {
     private readonly ErrorReporter errorReporter = new();
     
+    private readonly HashSet<string> _processedFiles = new();
+    
     private string Input;
     private CommonTokenStream? Tokens { get; set; }
     private IParseTree? Tree { get; set; }
@@ -43,6 +45,7 @@ public class MashdInterpreter
         Lex();
         Parse();
         BuildAst();
+        HandleImports();
         Resolve();
         TypeCheck();
         Interpret();
@@ -101,6 +104,56 @@ public class MashdInterpreter
         typeChecker.Check((ProgramNode)Ast);
         
         CheckErrors(ErrorType.TypeCheck);
+        return this;
+    }
+
+    public MashdInterpreter HandleImports()
+    {
+        if (Ast == null)
+        {
+            throw new InvalidOperationException("AstBuilder must be run before handling imports.");
+        }
+
+        foreach (var importNode in Ast.Imports)
+        {
+            var importPath = importNode.Path;
+            if (!File.Exists(importPath))
+            {
+                Console.Error.WriteLine($"Import file not found: {importPath}");
+                continue;
+            }
+
+            if (_processedFiles.Contains(importPath))
+            {
+                // Skip already processed files to prevent circular dependencies
+                continue;
+            }
+
+            _processedFiles.Add(importPath);
+            
+            var importedContent = File.ReadAllText(importPath);
+            var importedInterpreter = new MashdInterpreter(importedContent);
+            
+            // Pass the current processed files to the imported interpreter to avoid reprocessing
+            importedInterpreter._processedFiles.UnionWith(_processedFiles);
+            
+            importedInterpreter.Lex();
+            importedInterpreter.Parse();
+            importedInterpreter.BuildAst();
+            
+            if (importedInterpreter.Ast == null)
+            {
+                Console.Error.WriteLine($"Failed to build AST for imported file: {importPath}");
+                continue;
+            }
+            
+            // Gather the imports from the imported interpreter and add them to the current interpreter
+            _processedFiles.UnionWith(importedInterpreter._processedFiles);
+            
+            // Merge the AST of the imported file into the current AST
+            Ast.Merge(importedInterpreter.Ast);
+        }
+
         return this;
     }
     

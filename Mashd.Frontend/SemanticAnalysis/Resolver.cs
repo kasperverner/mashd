@@ -48,8 +48,7 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitImportNode(ImportNode node)
     {
-        // TODO: Handle import statements
-        throw new NotImplementedException();
+        return DummyVoid.Null;
     }
     
     public DummyVoid VisitFunctionDefinitionNode(FunctionDefinitionNode node)
