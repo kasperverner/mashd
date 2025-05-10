@@ -392,7 +392,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
             case OpType.Inequality:
                 if (!IsBasicType(assumedType))
                 {
-                    errorReporter.Report.TypeCheck(node, $"Equality requires basic type operands");
+                    errorReporter.Report.TypeCheck(node, $"Equality operations requires basic type operands");
                 }
 
                 assumedType = SymbolType.Boolean;

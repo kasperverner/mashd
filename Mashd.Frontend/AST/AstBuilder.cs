@@ -286,7 +286,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             ">" => OpType.GreaterThan,
             ">=" => OpType.GreaterThanEqual,
             "==" => OpType.Equality,
-            "!=" => OpType.Not,
+            "!=" => OpType.Inequality,
             _ => throw new ArgumentException($"Unknown operator: {op}")
         };
 
