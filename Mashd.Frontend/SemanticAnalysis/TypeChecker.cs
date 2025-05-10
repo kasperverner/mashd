@@ -272,6 +272,14 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitLiteralNode(LiteralNode node)
     {
+        if (node.ParsedType == SymbolType.Date)
+        {
+            if (!DateValidator.Validate(node.Value.ToString()))
+            {
+                errorReporter.Report.TypeCheck(node, $"Invalid ISO 8601 date format: {node.Value}");
+            }
+        }
+        
         node.InferredType = node.ParsedType;
         return node.InferredType;
     }
