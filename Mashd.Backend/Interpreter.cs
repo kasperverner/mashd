@@ -5,6 +5,7 @@ using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
+using System.Globalization;
 
 namespace Mashd.Backend;
 
@@ -316,7 +317,12 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitDateLiteralNode(DateLiteralNode node)
     {
-        throw new NotImplementedException();
+        if (DateTime.TryParseExact(node.Text, "yyyy-MM-dd", null, DateTimeStyles.None, out var parsedDate))
+        {
+            return new DateValue(parsedDate);
+        }
+
+        throw new FormatException($"Invalid date format: {node.Text}. Expected ISO 8601 (yyyy-MM-dd).");
     }
 
     public Value VisitObjectExpressionNode(ObjectExpressionNode node)

@@ -63,3 +63,15 @@ public class BooleanValue : Value
         return Raw.ToString();
     }
 }
+
+public class DateValue : Value
+{
+    public DateTime Raw { get; }
+
+    public DateValue(DateTime raw)
+    {
+        Raw = raw;
+    }
+    
+    public override string ToString() => Raw.ToString("yyyy-MM-dd");
+}
