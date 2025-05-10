@@ -1,0 +1,9 @@
+Operation-ID,Patient-Name,Operation-Name,Date,Age,Confirmed-Vaccine
+101,John Doe,Appendectomy,01-15-2023,38,TRUE
+102,Jon Doe,Heart Bypass,03-20-2023,38,TRUE
+103,Michael Johnson,Appendectomy,04-02-2023,51,TRUE
+104,Jane Roe,Tracheostomy,04-12-2023,33,TRUE
+105,Bob Smith,Heart Bypass,02-10-2023,41,FALSE
+106,John Doe,Appendectomy,04-21-2023,38,FALSE
+107,Emily Jones,Appendectomy,05-17-2023,45,TRUE
+108,Michael Johnson,Tracheostomy,06-22-2023,31,FALSE
