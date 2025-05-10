@@ -1,0 +1,6 @@
+patient_id,fst_name,lst_name,birth_year,had_vaccination
+1,John,Doe,1985,TRUE
+2,Jane,Roe,1990,TRUE
+3,Bob,Smith,1982,FALSE
+4,Emily,Jones,1978,TRUE
+5,Michael,Johnson,1992,FALSE
