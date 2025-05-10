@@ -18,14 +18,5 @@ public enum OpType
     NullishCoalescing,
     Negation,
     Not,
-    PostIncrement,
-    PostDecrement,
-    PreIncrement,
-    PreDecrement,
-    AddAssign,
-    SubtractAssign,
-    MultiplyAssign,
-    DivideAssign,
-    NullCoalesceAssign,
     Combine
 }

@@ -88,9 +88,16 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         var identifier = context.ID().GetText();
 
-        var schemaObject = Visit(context.expression()) as SchemaObjectNode;
-
+        var objectNode = Visit(context.expression()) as ObjectExpressionNode;
+        
         var (line, column, text) = ExtractNodeInfo(context);
+
+        if (objectNode is null)
+        {
+            throw new ArgumentException("Expected ObjectExpressionNode, but got null");
+        } 
+        
+        SchemaObjectNode schemaObject = BuildSchemaObject(objectNode);
 
         return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
     }
@@ -103,7 +110,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         var node = Visit(context.expression()) switch
         {
-            DatasetObjectNode datasetObject => new DatasetDefinitionNode(identifier, datasetObject, line, column, text),
+            ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier, BuildDatasetObject(objectExpression), line, column, text),
             MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
                 text),
             _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
@@ -124,97 +131,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
 
     // Expression Nodes
-
-    public override AstNode VisitDatasetObjectExpression(MashdParser.DatasetObjectExpressionContext ctx)
-    {
-        var properties = new Dictionary<string, DatasetObjectNode.DatasetProperty>();
-        var list = ctx.datasetProperties() as MashdParser.DatasetPropertyListContext;
-        if (list != null)
-        {
-            foreach (var propCtx in list.datasetProperty())
-            {
-                var key = propCtx.GetChild(0).GetText();
-                switch (propCtx)
-                {
-                    case MashdParser.DatasetAdapterContext a:
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, a.TEXT().GetText().Trim('"'));
-                        break;
-                    case MashdParser.DatasetSourceContext s:
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, s.TEXT().GetText().Trim('"'));
-                        break;
-                    case MashdParser.DatasetSchemaContext sch:
-                    {
-                        var schemaName = sch.ID(1).GetText();
-                        properties[key] = new DatasetObjectNode.DatasetProperty(
-                            key, new IdentifierNode(schemaName, sch.Start.Line, sch.Start.Column, sch.GetText())
-                        );
-                        break;
-                    }
-                    case MashdParser.CsvDelimiterContext d:
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, d.TEXT().GetText().Trim('"'));
-                        break;
-                    case MashdParser.DatasetSkipContext sk:
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, int.Parse(sk.INTEGER().GetText()));
-                        break;
-                    case MashdParser.DatasetLimitContext lim:
-                        properties[key] =
-                            new DatasetObjectNode.DatasetProperty(key, int.Parse(lim.INTEGER().GetText()));
-                        break;
-                    case MashdParser.DatabaseQueryContext q:
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, q.TEXT().GetText().Trim('"'));
-                        break;
-                    default:
-                        var raw = propCtx.GetChild(2).GetText();
-                        properties[key] = new DatasetObjectNode.DatasetProperty(key, raw);
-                        break;
-                }
-            }
-        }
-
-        return new DatasetObjectNode(
-            ctx.Start.Line,
-            ctx.Start.Column,
-            ctx.GetText(),
-            properties
-        );
-    }
-
-
-    public override AstNode VisitSchemaObject(MashdParser.SchemaObjectContext context)
-    {
-        var fields = new Dictionary<string, SchemaField>();
-
-        if (context.schemaProperties() != null)
-        {
-            foreach (var property in context.schemaProperties().schemaProperty())
-            {
-                var fieldName = property.ID().GetText();
-                string fieldType = null;
-                string fieldDisplayName = null;
-
-                foreach (var child in property.children)
-                {
-                    switch (child)
-
-                    {
-                        case MashdParser.SchemaTypeContext typeCtx:
-                            fieldType = typeCtx.type().GetText();
-                            break;
-                        case MashdParser.SchemaNameContext nameCtx:
-                            fieldDisplayName = nameCtx.TEXT().GetText().Trim('"');
-                            break;
-                    }
-                }
-
-                fields[fieldName] = new SchemaField(fieldType, fieldDisplayName);
-            }
-        }
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        return new SchemaObjectNode(fields, line, column, text);
-    }
-
     public override ExpressionNode VisitFunctionCall(MashdParser.FunctionCallContext context)
     {
         var functionName = context.ID().GetText();
@@ -244,31 +160,22 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             line, column, text);
     }
 
-    public override ExpressionNode VisitTypeMethodCallExpression(MashdParser.TypeMethodCallExpressionContext context)
-    {
-        var target = VisitTypeLiteral(context.type());
-
-        var methodChain = BuildMethodChain(context.methodChain());
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
-            line, column, text);
-    }
-
     public override AstNode VisitObjectExpression(MashdParser.ObjectExpressionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        var pairs = new List<ObjectExpressionNode.KeyValuePair>();
+        var objectNode = new ObjectExpressionNode(line, column, text);
 
         foreach (var pairCtx in context.keyValuePair())
         {
             var key = pairCtx.ID().GetText();
             var value = Visit(pairCtx.expression()) as ExpressionNode;
-            pairs.Add(new ObjectExpressionNode.KeyValuePair(key, value));
+            if (!objectNode.TryAddProperty(key, value))
+            {
+                errorReporter.Add(ErrorType.AstBuilder, objectNode, $"Duplicate key in object expression: {key}");
+            }
         }
 
-        return new ObjectExpressionNode(pairs, line, column, text);
+        return objectNode;
     }
 
     public override AstNode VisitPropertyAccessExpression(MashdParser.PropertyAccessExpressionContext context)
@@ -339,93 +246,64 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return CreateUnaryOperationNode(context.expression(), OpType.Not, context);
     }
-
-    public override AstNode VisitPostIncrementExpression(MashdParser.PostIncrementExpressionContext context)
-    {
-        return CreateUnaryOperationNode(context.expression(), OpType.PostIncrement, context);
-    }
-
-    public override AstNode VisitPostDecrementExpression(MashdParser.PostDecrementExpressionContext context)
-    {
-        return CreateUnaryOperationNode(context.expression(), OpType.PostDecrement, context);
-    }
-
-    public override AstNode VisitPreIncrementExpression(MashdParser.PreIncrementExpressionContext context)
-    {
-        return CreateUnaryOperationNode(context.expression(), OpType.PreIncrement, context);
-    }
-
-    public override AstNode VisitPreDecrementExpression(MashdParser.PreDecrementExpressionContext context)
-    {
-        return CreateUnaryOperationNode(context.expression(), OpType.PreDecrement, context);
-    }
-
+    
     // Binary Operation Nodes
 
-    public override AstNode VisitAdditionExpression(MashdParser.AdditionExpressionContext context)
+    public override AstNode VisitMultiplicativeExpression(MashdParser.MultiplicativeExpressionContext context)
     {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Add, context);
+        var op = context.op.Text;
+        OpType operatorType = op switch
+        {
+            "*" => OpType.Multiply,
+            "/" => OpType.Divide,
+            "%" => OpType.Modulo,
+            _ => throw new ArgumentException($"Unknown operator: {op}")
+        };
+        
+        return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
 
-    public override AstNode VisitSubtractionExpression(MashdParser.SubtractionExpressionContext context)
+    public override AstNode VisitAdditiveExpression(MashdParser.AdditiveExpressionContext context)
     {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Subtract, context);
-    }
+        var op = context.op.Text;
+        OpType operatorType = op switch
+        {
+            "+" => OpType.Add,
+            "-" => OpType.Subtract,
+            _ => throw new ArgumentException($"Unknown operator: {op}")
+        };
 
-    public override AstNode VisitMultiplicationExpression(MashdParser.MultiplicationExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Multiply, context);
+        return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
-
-    public override AstNode VisitDivisionExpression(MashdParser.DivisionExpressionContext context)
+    
+    public override AstNode VisitComparisonExpression(MashdParser.ComparisonExpressionContext context)
     {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Divide, context);
+        var op = context.op.Text;
+        OpType operatorType = op switch
+        {
+            "<" => OpType.LessThan,
+            "<=" => OpType.LessThanEqual,
+            ">" => OpType.GreaterThan,
+            ">=" => OpType.GreaterThanEqual,
+            "==" => OpType.Equality,
+            "!=" => OpType.Inequality,
+            _ => throw new ArgumentException($"Unknown operator: {op}")
+        };
+
+        return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
-
-    public override AstNode VisitModuloExpression(MashdParser.ModuloExpressionContext context)
+    
+    public override AstNode VisitLogicalExpression(MashdParser.LogicalExpressionContext context)
     {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Modulo, context);
-    }
+        var op = context.op.Text;
+        OpType operatorType = op switch
+        {
+            "&&" => OpType.LogicalAnd,
+            "||" => OpType.LogicalOr,
+            _ => throw new ArgumentException($"Unknown operator: {op}")
+        };
 
-    public override AstNode VisitEqualityExpression(MashdParser.EqualityExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Equality, context);
-    }
-
-    public override AstNode VisitInequalityExpression(MashdParser.InequalityExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.Inequality, context);
-    }
-
-    public override AstNode VisitLessThanExpression(MashdParser.LessThanExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.LessThan, context);
-    }
-
-    public override AstNode VisitLessThanEqualExpression(MashdParser.LessThanEqualExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.LessThanEqual, context);
-    }
-
-    public override AstNode VisitGreaterThanExpression(MashdParser.GreaterThanExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.GreaterThan, context);
-    }
-
-    public override AstNode VisitGreaterThanEqualExpression(MashdParser.GreaterThanEqualExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.GreaterThanEqual,
-            context);
-    }
-
-    public override AstNode VisitLogicalOrExpression(MashdParser.LogicalOrExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.LogicalOr, context);
-    }
-
-    public override AstNode VisitLogicalAndExpression(MashdParser.LogicalAndExpressionContext context)
-    {
-        return CreateBinaryOperationNode(context.expression(0), context.expression(1), OpType.LogicalAnd, context);
+        return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
 
     public override AstNode VisitNullishCoalescingExpression(MashdParser.NullishCoalescingExpressionContext context)
@@ -439,6 +317,11 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitLiteralExpression(MashdParser.LiteralExpressionContext context)
     {
         return Visit(context.literal());
+    }
+
+    public override AstNode VisitTypeLitteralExpression(MashdParser.TypeLitteralExpressionContext context)
+    {
+        return VisitTypeLiteral(context.type());
     }
 
     public override AstNode VisitIntegerLiteral(MashdParser.IntegerLiteralContext context)
@@ -498,16 +381,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         return new LiteralNode(null, line, column, text, SymbolType.Void);
-    }
-
-    public override AstNode VisitSchemaObjectLiteral(MashdParser.SchemaObjectLiteralContext context)
-    {
-        return Visit(context.schemaObject());
-    }
-
-    public override AstNode VisitDatasetObjectLiteral(MashdParser.DatasetObjectLiteralContext context)
-    {
-        return Visit(context.datasetObject());
     }
 
     // Statement Nodes
@@ -573,56 +446,17 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new AssignmentNode(name, expression, line, column, text);
     }
 
-    public override AstNode VisitMethodCallStatement(MashdParser.MethodCallStatementContext context)
-    {
-        var target = Visit(context.expression()) as ExpressionNode;
-
-        var methodChain = BuildMethodChain(context.methodChain());
-
-        var (line, column, text) = ExtractNodeInfo(context);
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
-            line, column, text);
-    }
-
-    // Coalescing Assignment Nodes
-    public override AstNode VisitAddAssignment(MashdParser.AddAssignmentContext context)
+    public override AstNode VisitExpressionStatement(MashdParser.ExpressionStatementContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        string identifier = context.ID().GetText();
-        var expression = Visit(context.expression()) as ExpressionNode;
-        return new CompoundAssignmentNode(identifier, OpType.Add, expression, line, column, text);
-    }
-
-    public override AstNode VisitSubtractAssignment(MashdParser.SubtractAssignmentContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string identifier = context.ID().GetText();
-        var expression = Visit(context.expression()) as ExpressionNode;
-        return new CompoundAssignmentNode(identifier, OpType.Subtract, expression, line, column, text);
-    }
-
-    public override AstNode VisitMultiplyAssignment(MashdParser.MultiplyAssignmentContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string identifier = context.ID().GetText();
-        var expression = Visit(context.expression()) as ExpressionNode;
-        return new CompoundAssignmentNode(identifier, OpType.Multiply, expression, line, column, text);
-    }
-
-    public override AstNode VisitDivisionAssignment(MashdParser.DivisionAssignmentContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string identifier = context.ID().GetText();
-        var expression = Visit(context.expression()) as ExpressionNode;
-        return new CompoundAssignmentNode(identifier, OpType.Divide, expression, line, column, text);
-    }
-
-    public override AstNode VisitNullCoalescingAssignment(MashdParser.NullCoalescingAssignmentContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string identifier = context.ID().GetText();
-        var expression = Visit(context.expression()) as ExpressionNode;
-        return new CompoundAssignmentNode(identifier, OpType.NullishCoalescing, expression, line, column, text);
+        
+        
+        return new ExpressionStatementNode(
+            Visit(context.expression()) as ExpressionNode,
+            line,
+            column,
+            text
+        );
     }
 
     // Other Nodes
@@ -745,5 +579,55 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         }
 
         return new MethodChainExpressionNode(null!, methodName, arguments, next, line, column, text);
+    }
+
+    private SchemaObjectNode BuildSchemaObject(ObjectExpressionNode node)
+    {
+        var properties = new Dictionary<string, SchemaField>();
+
+        foreach (var pair in node.Properties)
+        {
+            var key = pair.Key;
+
+            if (pair.Value is not ObjectExpressionNode value)
+            {
+                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected value to be ObjectExpressionNode, but got {pair.Value.GetType()}");
+                continue;
+            }
+
+            var type = value.Properties["type"].Text;
+            var name = value.Properties["name"].Text;
+
+            if (string.IsNullOrEmpty(type))
+            {
+                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected type to be specified in ObjectExpressionNode, but got empty string");
+                continue;
+            }
+            
+            if (string.IsNullOrEmpty(name))
+            {
+                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected name to be specified in ObjectExpressionNode, but got empty string");
+                continue;
+            }
+            
+            properties[key] = new SchemaField(type, name);
+        }
+
+        return new SchemaObjectNode(properties, node.Line, node.Column, node.Text);
+    }
+    
+    private DatasetObjectNode BuildDatasetObject(ObjectExpressionNode node)
+    {
+        var properties = new Dictionary<string, DatasetObjectNode.DatasetProperty>();
+
+        foreach (var pair in node.Properties)
+        {
+            var key = pair.Key;
+            var value = pair.Value;
+
+            properties[key] = new DatasetObjectNode.DatasetProperty(key, value);
+        }
+
+        return new DatasetObjectNode(node.Line, node.Column, node.Text, properties);
     }
 }

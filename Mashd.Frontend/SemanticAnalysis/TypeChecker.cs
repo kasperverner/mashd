@@ -39,7 +39,13 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitFormalParameterListNode(FormalParameterListNode node)
     {
-        throw new NotImplementedException();
+        foreach (var param in node.Parameters)
+        {
+            param.Accept(this);
+        }
+
+        node.InferredType = SymbolType.Unknown;
+        return SymbolType.Unknown;
     }
 
     public SymbolType VisitFunctionDefinitionNode(FunctionDefinitionNode node)
@@ -112,6 +118,30 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return SymbolType.Mashd;
     }
 
+    public SymbolType VisitExpressionStatementNode(ExpressionStatementNode node)
+    {
+        // TODO: Do we allow anything but type literals in expression statements?
+        // Or do we only allow function calls and method chains?
+        
+        // Check if the expression is a valid statement
+        if (node.Expression is TypeLiteralNode typeLiteral)
+        {
+            errorReporter.Report.TypeCheck(node, $"Type literal is not a valid statement expression");
+        }
+        
+        // Check if the expression is a valid statement
+        if (node.Expression is not (MethodChainExpressionNode or FunctionCallNode))
+        {
+            errorReporter.Report.TypeCheck(node, $"Invalid statement expression");
+        }
+
+        node.Expression.Accept(this);
+        
+        // The statement itself has no type
+        node.InferredType = SymbolType.Void;
+        return SymbolType.Void;
+    }
+
     public SymbolType VisitReturnNode(ReturnNode node)
     {
         if (_returnTypeStack.Count == 0)
@@ -144,7 +174,15 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitFormalParameterNode(FormalParameterNode node)
     {
-        throw new NotImplementedException();
+        // Check if the parameter type is valid
+        var paramType = node.DeclaredType;
+        if (paramType == SymbolType.Unknown)
+        {
+            errorReporter.Report.TypeCheck(node, $"Unknown type '{paramType.ToString()}'");
+        }
+
+        node.InferredType = paramType;
+        return paramType;
     }
 
     public SymbolType VisitVariableDeclarationNode(VariableDeclarationNode node)
@@ -165,24 +203,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
     public SymbolType VisitAssignmentNode(AssignmentNode node)
     {
         var targetType = (node.Definition).DeclaredType;
-        var exprType = node.Expression.Accept(this);
-        if (exprType != targetType)
-        {
-            errorReporter.Report.TypeCheck(node, $"Cannot assign {exprType} to {targetType}");
-        }
-
-        node.InferredType = targetType;
-        return targetType;
-    }
-
-    public SymbolType VisitCompoundAssignmentNode(CompoundAssignmentNode node)
-    {
-        var targetType = (node.Definition).DeclaredType;
-        if (targetType != SymbolType.Integer && targetType != SymbolType.Decimal)
-        {
-            errorReporter.Report.TypeCheck(node, $"Compound assignment requires numeric target");
-        }
-
         var exprType = node.Expression.Accept(this);
         if (exprType != targetType)
         {
@@ -216,7 +236,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
         var cond = node.Condition.Accept(this);
         if (cond != SymbolType.Boolean)
         {
-            Console.WriteLine(cond);
             errorReporter.Report.TypeCheck(node, $"Ternary condition must be Boolean");
         }
 
@@ -276,6 +295,18 @@ public class TypeChecker : IAstVisitor<SymbolType>
         return node.InferredType;
     }
 
+    public SymbolType VisitTypeLiteralNode(TypeLiteralNode node)
+    {
+        var type = node.Type;
+        if (type == SymbolType.Unknown)
+        {
+            errorReporter.Report.TypeCheck(node, $"Unknown type '{type.ToString()}'");
+        }
+        
+        node.InferredType = type;
+        return type;
+    }
+
     public SymbolType VisitUnaryNode(UnaryNode node)
     {
         var exprType = node.Operand.Accept(this);
@@ -292,16 +323,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 if (exprType != SymbolType.Boolean)
                 {
                     errorReporter.Report.TypeCheck(node, $"Not '!' requires Boolean operand");
-                }
-
-                break;
-            case OpType.PreIncrement:
-            case OpType.PreDecrement:
-            case OpType.PostIncrement:
-            case OpType.PostDecrement:
-                if (exprType != SymbolType.Integer)
-                {
-                    errorReporter.Report.TypeCheck(node, $"Increment/decrement requires integer operand");
                 }
 
                 break;
@@ -371,7 +392,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
             case OpType.Inequality:
                 if (!IsBasicType(assumedType))
                 {
-                    errorReporter.Report.TypeCheck(node, $"Equality requires basic type operands");
+                    errorReporter.Report.TypeCheck(node, $"Equality operations requires basic type operands");
                 }
 
                 assumedType = SymbolType.Boolean;
@@ -420,16 +441,51 @@ public class TypeChecker : IAstVisitor<SymbolType>
         // Visit the left side
         var leftType = node.Left?.Accept(this) ?? SymbolType.Unknown;
 
-        // TODO: Check if the method is valid for the left type
-        // TODO: Visit the next method in the chain if any
-
+        bool isValid = leftType switch
+        {
+            SymbolType.Integer => node.MethodName == "parse",
+            SymbolType.Decimal => node.MethodName == "parse",
+            SymbolType.Text => node.MethodName == "parse",
+            SymbolType.Boolean => node.MethodName == "parse",
+            SymbolType.Date => node.MethodName == "parse",
+            SymbolType.Dataset => node.MethodName is "toFile" or "toTable",
+            SymbolType.Mashd => node.MethodName is "match" or "fuzzyMatch" or "functionMatch" or "transform" or "join" or "union",
+            _ => false
+        };
+        
+        if (!isValid)
+        {
+            errorReporter.Report.TypeCheck(node, $"Method '{node.MethodName}' is not valid for type '{leftType}'");
+        }
+        
+        // TODO: Validate the arguments of the method call
+        
         node.InferredType = leftType;
         return leftType;
     }
 
     public SymbolType VisitObjectExpressionNode(ObjectExpressionNode node)
     {
-        throw new NotImplementedException($"Line {node.Line}:{node.Column}: Object expression not implemented");
+        // Check for duplicate keys
+        var keys = node.Properties.Select(p => p.Key).ToList();
+        var duplicates = keys.GroupBy(k => k).Where(g => g.Count() > 1).Select(g => g.Key);
+        foreach (var dup in duplicates)
+        {
+            errorReporter.Report.TypeCheck(node, $"Duplicate key '{dup}' in object");
+        }
+
+        // Check the types of the values
+        foreach (var pair in node.Properties)
+        {
+            var valueType = pair.Value.Accept(this);
+            if (valueType == SymbolType.Unknown)
+            {
+                errorReporter.Report.TypeCheck(node, $"Unknown type for key '{pair.Key}'");
+            }
+        }
+
+        node.InferredType = SymbolType.Object;
+        return SymbolType.Object;
     }
 
     public SymbolType VisitDateLiteralNode(DateLiteralNode node)
@@ -508,23 +564,26 @@ public class TypeChecker : IAstVisitor<SymbolType>
             switch (key.ToLower())
             {
                 case "adapter":
-                    if (value is string adapterText)
+                    if (value is not LiteralNode { ParsedType: SymbolType.Text } ln)
                     {
-                        if (!allowedAdapters.Contains(adapterText, StringComparer.OrdinalIgnoreCase))
-                        {
-                            errorReporter.Report.TypeCheck(node,
-                                $"Unsupported adapter '{adapterText}'. Allowed: {string.Join(", ", allowedAdapters)}");
-                        }
-                    }
-                    else
+                        errorReporter.Report.TypeCheck(node, $"Property '{key}' must be Text");
+                    } 
+                    
+                    if (!allowedAdapters.Contains(((LiteralNode)value).Value.ToString(), StringComparer.OrdinalIgnoreCase))
                     {
-                        errorReporter.Report.TypeCheck(node, $"Property 'adapter' must be a string literal");
+                        errorReporter.Report.TypeCheck(node,
+                            $"Unsupported adapter '{value.Text}'. Allowed: {string.Join(", ", allowedAdapters)}");
                     }
 
                     break;
 
                 case "schema":
-                    if (node.ResolvedSchema == null)
+                    if (value is not IdentifierNode { Definition: SchemaDefinitionNode })
+                    {
+                        errorReporter.Report.TypeCheck(node, $"Property '{key}' must be a schema identifier");
+                    }
+                    
+                    if (node.ResolvedSchema is null)
                     {
                         errorReporter.Report.TypeCheck(node, $"Referenced schema was not resolved");
                     }
@@ -532,10 +591,9 @@ public class TypeChecker : IAstVisitor<SymbolType>
                     break;
 
                 case "skip":
-                    var skipType = InferPropertyType(value);
-                    if (skipType != SymbolType.Integer)
+                    if (value is not LiteralNode { ParsedType: SymbolType.Integer })
                     {
-                        errorReporter.Report.TypeCheck(node, $"Property 'skip' must be an Integer");
+                        errorReporter.Report.TypeCheck(node, $"Property '{key}' must be an Integer");
                     }
 
                     break;
@@ -543,8 +601,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 case "source":
                 case "delimiter":
                 case "query":
-                    var t = InferPropertyType(value);
-                    if (t != SymbolType.Text)
+                    if (value is not LiteralNode { ParsedType: SymbolType.Text })
                     {
                         errorReporter.Report.TypeCheck(node, $"Property '{key}' must be Text");
                     }
@@ -628,21 +685,6 @@ public class TypeChecker : IAstVisitor<SymbolType>
             "text" => SymbolType.Text,
             "boolean" => SymbolType.Boolean,
             "date" => SymbolType.Date,
-            _ => SymbolType.Unknown
-        };
-    }
-
-    private SymbolType InferPropertyType(object value)
-    {
-        return value switch
-        {
-            int => SymbolType.Integer,
-            decimal => SymbolType.Decimal,
-            double => SymbolType.Decimal,
-            float => SymbolType.Decimal,
-            string => SymbolType.Text,
-            bool => SymbolType.Boolean,
-            DateTime => SymbolType.Date,
             _ => SymbolType.Unknown
         };
     }

@@ -10,6 +10,7 @@ public enum SymbolType
     Mashd,
     Dataset,
     Schema,
+    Object,
     Void,
     Unknown
 }

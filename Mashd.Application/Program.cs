@@ -28,5 +28,4 @@ public static class Program
         // Interpretation
         interpreter.Interpret();
     }
-    
 }

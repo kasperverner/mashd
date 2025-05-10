@@ -7,9 +7,9 @@ public class DatasetObjectNode : ExpressionNode
     public class DatasetProperty
     {
         public string Key { get; }
-        public object Value { get; }
+        public ExpressionNode Value { get; }
 
-        public DatasetProperty(string key, object value)
+        public DatasetProperty(string key, ExpressionNode value)
         {
             Key = key;
             Value = value;

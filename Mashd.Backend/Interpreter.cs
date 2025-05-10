@@ -108,11 +108,6 @@ public class Interpreter : IAstVisitor<Value>
         return value;
     }
 
-    public Value VisitCompoundAssignmentNode(CompoundAssignmentNode node)
-    {
-        throw new NotImplementedException();
-    }
-
     public Value VisitIfNode(IfNode node)
     {
         var conditionValue = node.Condition.Accept(this);
@@ -143,6 +138,11 @@ public class Interpreter : IAstVisitor<Value>
         throw new TypeMismatchException(node.Condition);
     }
 
+    public Value VisitExpressionStatementNode(ExpressionStatementNode node)
+    {
+        throw new NotImplementedException();
+    }
+
     public Value VisitParenNode(ParenNode node)
     {
         return node.InnerExpression.Accept(this);
@@ -163,6 +163,11 @@ public class Interpreter : IAstVisitor<Value>
             default:
                 throw new NotImplementedException($"Literal type {node.InferredType} not implemented.");
         }
+    }
+
+    public Value VisitTypeLiteralNode(TypeLiteralNode node)
+    {
+        throw new NotImplementedException();
     }
 
     public Value VisitUnaryNode(UnaryNode node)
