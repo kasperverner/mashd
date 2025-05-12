@@ -9,29 +9,23 @@ using Mashd.Frontend.AST;
 namespace Mashd.Application;
 
 
-public class MashdInterpreter
+public class MashdInterpreter(string input)
 {
-    private readonly ErrorReporter errorReporter = new();
-    
+    private readonly ErrorReporter _errorReporter = new();
     private readonly HashSet<string> _processedFiles = new();
-    
-    private string Input;
+
+    private readonly string _input = input;
     private CommonTokenStream? Tokens { get; set; }
-    private IParseTree? Tree { get; set; }
+    private MashdParser.ProgramContext? Context { get; set; }
     public ProgramNode? Ast { get; private set; }
-    
-    public MashdInterpreter(string input)
-    {
-        Input = input;
-    }
     
     public MashdInterpreter Lex()
     {
-        AntlrInputStream inputStream = new AntlrInputStream(Input);
+        AntlrInputStream inputStream = new AntlrInputStream(_input);
         MashdLexer lexer = new MashdLexer(inputStream);
         
         lexer.RemoveErrorListeners();
-        lexer.AddErrorListener(new AntlrLexerErrorListener(errorReporter));
+        lexer.AddErrorListener(new AntlrLexerErrorListener(_errorReporter));
         
         Tokens = new CommonTokenStream(lexer);
         
@@ -40,6 +34,7 @@ public class MashdInterpreter
         return this;
     }
 
+    // TODO: Do we maintain this method as it is not used in the current implementation?
     public void Run()
     {
         Lex();
@@ -60,24 +55,24 @@ public class MashdInterpreter
         MashdParser parser = new MashdParser(Tokens);
         
         parser.RemoveErrorListeners();
-        parser.AddErrorListener(new AntlrParserErrorListener(errorReporter));
+        parser.AddErrorListener(new AntlrParserErrorListener(_errorReporter));
         
-        Tree = parser.program();
+        Context = parser.program();
         
         CheckErrors(ErrorType.Syntactic);
 
-        Console.WriteLine(Tree.ToStringTree(parser));
+        Console.WriteLine(Context.ToStringTree(parser));
         return this;
     }
     
     public MashdInterpreter BuildAst()
     {
-        if (Tree == null)
+        if (Context == null)
         {
             throw new InvalidOperationException("Parser must be run before AstBuilder.");
         }
-        AstBuilder astBuilder = new AstBuilder(errorReporter);
-        Ast = (ProgramNode) astBuilder.Visit(Tree);
+        AstBuilder astBuilder = new AstBuilder(_errorReporter);
+        Ast = (ProgramNode) astBuilder.Visit(Context);
 
         CheckErrors(ErrorType.AstBuilder);
         return this;
@@ -88,7 +83,7 @@ public class MashdInterpreter
         {
             throw new InvalidOperationException("AstBuilder must be run before Resolver.");
         }
-        Resolver resolver = new Resolver(errorReporter);
+        Resolver resolver = new Resolver(_errorReporter);
         resolver.Resolve((ProgramNode)Ast);
         
         CheckErrors(ErrorType.NameResolution);
@@ -100,7 +95,7 @@ public class MashdInterpreter
         {
             throw new InvalidOperationException("AstBuilder must be run before TypeChecker.");
         }
-        TypeChecker typeChecker = new TypeChecker(errorReporter);
+        TypeChecker typeChecker = new TypeChecker(_errorReporter);
         typeChecker.Check((ProgramNode)Ast);
         
         CheckErrors(ErrorType.TypeCheck);
@@ -163,11 +158,14 @@ public class MashdInterpreter
         {
             throw new InvalidOperationException("AstBuilder must be run before Interpreter.");
         }
-        Value result = null;
+        
         try
         {
-            Interpreter interpreter = new Interpreter();
-            result = interpreter.Evaluate((ProgramNode)Ast);
+            var interpreter = new Interpreter();
+            var result = interpreter.Evaluate(Ast);
+            
+            Console.WriteLine("Last line result:");
+            Console.WriteLine(result.ToString());
         }
         catch (RuntimeException ex)
         {
@@ -177,15 +175,13 @@ public class MashdInterpreter
         { 
             throw new Exception("Unexpected error during interpretation", e);
         }
-        Console.WriteLine("Last line result:");
-        Console.WriteLine(result.ToString());
     }
     
     private void CheckErrors(ErrorType phase)
     {
-        if (errorReporter.HasErrors(phase))
+        if (_errorReporter.HasErrors(phase))
         {
-            var errors = errorReporter.Errors;
+            var errors = _errorReporter.Errors;
             throw new FrontendException(phase, errors);
         }
     }

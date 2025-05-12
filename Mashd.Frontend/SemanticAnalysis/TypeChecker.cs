@@ -2,6 +2,7 @@
 using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Expressions;
+using System.Globalization;
 
 namespace Mashd.Frontend.SemanticAnalysis;
 
@@ -295,6 +296,14 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitLiteralNode(LiteralNode node)
     {
+        if (node.ParsedType == SymbolType.Date && node.Value is string dateString)
+        {
+            if (!DateTime.TryParseExact(dateString, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
+            {
+                errorReporter.Report.TypeCheck(node, $"Invalid date format: {dateString}. Expected ISO 8601 (yyyy-MM-dd).");
+            }
+        }
+
         node.InferredType = node.ParsedType;
         return node.InferredType;
     }
