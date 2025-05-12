@@ -84,52 +84,51 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new FunctionDefinitionNode(functionName, returnType, parameters, body, line, column, text);
     }
 
-    public override AstNode VisitSchemaDefinition(MashdParser.SchemaDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var objectNode = Visit(context.expression()) as ObjectExpressionNode;
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        if (objectNode is null)
-        {
-            throw new ArgumentException("Expected ObjectExpressionNode, but got null");
-        }
-
-        SchemaObjectNode schemaObject = BuildSchemaObject(objectNode);
-
-        return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
-    }
-
-    public override AstNode VisitDatasetDefinition(MashdParser.DatasetDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        var node = Visit(context.expression()) switch
-        {
-            ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier,
-                BuildDatasetObject(objectExpression), line, column, text),
-            MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
-                text),
-            _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
-        };
-
-        return node;
-    }
-
-    public override AstNode VisitMashdDefinition(MashdParser.MashdDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var combineNode = Visit(context.expression()) as BinaryNode;
-
-        return new MashdDefinitionNode(identifier, combineNode.Left, combineNode.Right, combineNode.Line,
-            combineNode.Column, combineNode.Text);
-    }
-
+    // public override AstNode VisitSchemaDefinition(MashdParser.SchemaDefinitionContext context)
+    // {
+    //     var identifier = context.ID().GetText();
+    //
+    //     var objectNode = Visit(context.expression()) as ObjectExpressionNode;
+    //
+    //     var (line, column, text) = ExtractNodeInfo(context);
+    //
+    //     if (objectNode is null)
+    //     {
+    //         throw new ArgumentException("Expected ObjectExpressionNode, but got null");
+    //     }
+    //
+    //     SchemaObjectNode schemaObject = BuildSchemaObject(objectNode);
+    //
+    //     return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
+    // }
+    //
+    // public override AstNode VisitDatasetDefinition(MashdParser.DatasetDefinitionContext context)
+    // {
+    //     var identifier = context.ID().GetText();
+    //
+    //     var (line, column, text) = ExtractNodeInfo(context);
+    //
+    //     var node = Visit(context.expression()) switch
+    //     {
+    //         ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier,
+    //             BuildDatasetObject(objectExpression), line, column, text),
+    //         MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
+    //             text),
+    //         _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
+    //     };
+    //
+    //     return node;
+    // }
+    //
+    // public override AstNode VisitMashdDefinition(MashdParser.MashdDefinitionContext context)
+    // {
+    //     var identifier = context.ID().GetText();
+    //
+    //     var combineNode = Visit(context.expression()) as BinaryNode;
+    //
+    //     return new MashdDefinitionNode(identifier, combineNode.Left, combineNode.Right, combineNode.Line,
+    //         combineNode.Column, combineNode.Text);
+    // }
 
     // Expression Nodes
     public override ExpressionNode VisitFunctionCall(MashdParser.FunctionCallContext context)
