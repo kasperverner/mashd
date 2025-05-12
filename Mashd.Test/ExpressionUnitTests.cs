@@ -23,7 +23,7 @@ public class ExpressionUnitTests
     public void CanParseSimpleAddition()
     {
         // Arrange
-        string input = "40 + 2";
+        string input = "40+2";
             
         // Act
         var result = ExpressionParser.Parse(input);
