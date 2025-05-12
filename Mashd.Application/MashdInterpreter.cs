@@ -18,17 +18,17 @@ public class MashdInterpreter(string input)
     private CommonTokenStream? Tokens { get; set; }
     private MashdParser.ProgramContext? Context { get; set; }
     public ProgramNode? Ast { get; private set; }
-    
+
     public MashdInterpreter Lex()
     {
         AntlrInputStream inputStream = new AntlrInputStream(_input);
         MashdLexer lexer = new MashdLexer(inputStream);
-        
+
         lexer.RemoveErrorListeners();
         lexer.AddErrorListener(new AntlrLexerErrorListener(_errorReporter));
-        
+
         Tokens = new CommonTokenStream(lexer);
-        
+
         CheckErrors(ErrorType.Lexical);
 
         return this;
@@ -45,7 +45,7 @@ public class MashdInterpreter(string input)
         TypeCheck();
         Interpret();
     }
-    
+
     public MashdInterpreter Parse()
     {
         if (Tokens is null)
@@ -53,18 +53,18 @@ public class MashdInterpreter(string input)
             throw new InvalidOperationException("Lexer must be run before Parser.");
         }
         MashdParser parser = new MashdParser(Tokens);
-        
+
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new AntlrParserErrorListener(_errorReporter));
-        
+
         Context = parser.program();
-        
+
         CheckErrors(ErrorType.Syntactic);
 
         Console.WriteLine(Context.ToStringTree(parser));
         return this;
     }
-    
+
     public MashdInterpreter BuildAst()
     {
         if (Context == null)
@@ -85,7 +85,7 @@ public class MashdInterpreter(string input)
         }
         Resolver resolver = new Resolver(_errorReporter);
         resolver.Resolve((ProgramNode)Ast);
-        
+
         CheckErrors(ErrorType.NameResolution);
         return this;
     }
@@ -97,7 +97,7 @@ public class MashdInterpreter(string input)
         }
         TypeChecker typeChecker = new TypeChecker(_errorReporter);
         typeChecker.Check((ProgramNode)Ast);
-        
+
         CheckErrors(ErrorType.TypeCheck);
         return this;
     }
@@ -125,45 +125,48 @@ public class MashdInterpreter(string input)
             }
 
             _processedFiles.Add(importPath);
-            
-            var importedContent = File.ReadAllText(importPath);
-            var importedInterpreter = new MashdInterpreter(importedContent);
-            
+
+            // var importedContent = File.ReadAllText(importPath);
+            // var importedInterpreter = new MashdInterpreter(importedContent);
+
+            var importedInterpreter = new MashdInterpreter(importPath);
+
+
             // Pass the current processed files to the imported interpreter to avoid reprocessing
             importedInterpreter._processedFiles.UnionWith(_processedFiles);
-            
+
             importedInterpreter.Lex();
             importedInterpreter.Parse();
             importedInterpreter.BuildAst();
-            
+
             if (importedInterpreter.Ast == null)
             {
                 Console.Error.WriteLine($"Failed to build AST for imported file: {importPath}");
                 continue;
             }
-            
+
             // Gather the imports from the imported interpreter and add them to the current interpreter
             _processedFiles.UnionWith(importedInterpreter._processedFiles);
-            
+
             // Merge the AST of the imported file into the current AST
             Ast.Merge(importedInterpreter.Ast);
         }
 
         return this;
     }
-    
+
     public void Interpret()
     {
         if (Ast == null)
         {
             throw new InvalidOperationException("AstBuilder must be run before Interpreter.");
         }
-        
+
         try
         {
             var interpreter = new Interpreter();
             var result = interpreter.Evaluate(Ast);
-            
+
             Console.WriteLine("Last line result:");
             Console.WriteLine(result.ToString());
         }
@@ -172,11 +175,11 @@ public class MashdInterpreter(string input)
             ReportException(ex);
         }
         catch (Exception e)
-        { 
+        {
             throw new Exception("Unexpected error during interpretation", e);
         }
     }
-    
+
     private void CheckErrors(ErrorType phase)
     {
         if (_errorReporter.HasErrors(phase))
@@ -185,7 +188,7 @@ public class MashdInterpreter(string input)
             throw new FrontendException(phase, errors);
         }
     }
-    
+
     private void ReportException(RuntimeException  ex)
     {
         throw ex;
