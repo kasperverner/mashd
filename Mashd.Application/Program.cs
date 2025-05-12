@@ -16,6 +16,9 @@ public static class Program
         // Ast Construction
         interpreter.BuildAst();
         
+        // Import Handling
+        interpreter.HandleImports();
+        
         // Semantic Analysis stage
         
         // Name Resolution

@@ -7,9 +7,9 @@ namespace Mashd.Frontend.AST;
 
 public class ProgramNode : AstNode
 {
-    public List<ImportNode> Imports { get; }
-    public List<DefinitionNode> Definitions { get; }
-    public List<StatementNode> Statements { get; }
+    public List<ImportNode> Imports { get; private set; }
+    public List<DefinitionNode> Definitions { get; private set; }
+    public List<StatementNode> Statements { get; private set; }
 
     public ProgramNode(List<ImportNode> imports, List<DefinitionNode> definitions, List<StatementNode> statements, int line, int column, string text)
         : base(line, column, text)
@@ -23,5 +23,11 @@ public class ProgramNode : AstNode
     {
         return visitor.VisitProgramNode(this);
     }
-
+    
+    public void Merge(ProgramNode other)
+    {
+        Imports.InsertRange(0, other.Imports);
+        Definitions.InsertRange(0, other.Definitions);
+        Statements.InsertRange(0, other.Statements);
+    }
 }

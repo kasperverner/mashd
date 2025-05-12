@@ -15,6 +15,9 @@
       <None Update="code.mashd">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="schemas.mashd">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
