@@ -27,3 +27,5 @@ bin
 *.njsproj
 *.sw?
 *.DotSettings.user
+ 
+Mashd.sln.DotSettings.user
