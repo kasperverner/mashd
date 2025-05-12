@@ -1,4 +1,7 @@
-﻿namespace TestProject1.Integration;
+﻿using Mashd.Frontend;
+using ET = Mashd.Frontend.ErrorType;
+
+namespace TestProject1.Integration;
 
 public class Functions
 {
@@ -129,7 +132,7 @@ public class Functions
         Assert.Equal(1, TestPipeline.GetInteger(interp, ast, "result1"));
         Assert.Equal(5, TestPipeline.GetInteger(interp, ast, "result5"));
     }
-    
+
     [Fact]
     public void SingleLevelNestedCall()
     {
@@ -148,7 +151,7 @@ public class Functions
         var (interp, ast) = TestPipeline.Run(src);
         Assert.Equal(8, TestPipeline.GetInteger(interp, ast, "result"));
     }
-    
+
     [Fact]
     public void TwoLevelNestedCall()
     {
@@ -161,7 +164,7 @@ public class Functions
         var (interp, ast) = TestPipeline.Run(src);
         Assert.Equal(10, TestPipeline.GetInteger(interp, ast, "result"));
     }
-    
+
     [Fact]
     public void SumOfMultipleFunctionCalls()
     {
@@ -175,7 +178,7 @@ public class Functions
         var (interp, ast) = TestPipeline.Run(src);
         Assert.Equal(6, TestPipeline.GetInteger(interp, ast, "result"));
     }
-    
+
     [Theory]
     [InlineData(1, 2, 3, 6)]
     [InlineData(5, 7, 9, 21)]
@@ -224,6 +227,188 @@ public class Functions
         Assert.Equal(3, TestPipeline.GetInteger(interp, ast, "result"));
     }
 
+    [Fact]
+    public void FunctionWithBranchedPathReturn()
+    {
+        var src = @"
+            Integer foo() {
+                if (true) {
+                    return 1;
+                } else {
+                    return 2;
+                }
+            }
+
+            Integer result = foo();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+        Assert.Equal(1, TestPipeline.GetInteger(interp, ast, "result"));
+    }
+
+    [Fact]
+    public void FunctionWitoutBranchedPathReturn()
+    {
+        var src = @"
+            Integer foo() {
+                if (true) {
+                    return 1;
+                } else {
+                    Integer x = 2;
+                }
+            }
+
+            Integer result = foo();
+        ";
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("without returning on some paths", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
+    public void NoReturnAtAll()
+    {
+        string src = @"
+                // No return anywhere
+                Integer foo() {
+                  Integer x = 10;
+                }
+                Integer result = foo();
+            ";
+
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("without returning on some paths", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
+    public void IfWithoutElse()
+    {
+        string src = @"
+                // return only in the 'then' branch, no else
+                Integer foo() {
+                  if (true) {
+                    return 1;
+                  }
+                  // falls through here with no return
+                }
+                Integer result = foo();
+            ";
+
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("without returning on some paths", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
+    public void NestedIfChain_MissingFinalReturn()
+    {
+        string src = @"
+                Integer foo() {
+                  if (true) {
+                    if (false) {
+                      return 42;
+                    } else {
+                      return 43;
+                    }
+                  }
+                  // outer else falls through without return
+                }
+                Integer result = foo();
+            ";
+
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("without returning on some paths", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
+    public void ReturnAfterSomeStatements_ButMissingAtEnd()
+    {
+        string src = @"
+                Integer foo() {
+                  return 5;
+                  // unreachable code is ignored, but if we comment out above return, there is no return
+                }
+                // Let's simulate by removing that return:
+                Integer bar() {
+                  Integer x = 1;
+                  // no return at all
+                }
+                Integer result = bar();
+            ";
+
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("without returning on some paths", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
+    public void FunctionCall_UndefinedFunction()
+    {
+        string src = "Integer x = foo(1,2);";
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+        Assert.Equal(ET.NameResolution, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains("Undefined function 'foo'", System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    private const string FnDef = @"
+            // A simple function taking (Integer, Text) and returning Text
+            Text foo(Integer a, Text b) {
+                return b;
+            }
+        ";
 
 
+    [Theory]
+    [InlineData("foo(1)", "expects 2 args")]
+    [InlineData("foo(1, \"hello\", \"x\")", "expects 2 args")]
+    [InlineData("foo(\"notInt\", \"hello\")", "Argument 1 has type Text, expected Integer")]
+    [InlineData("foo(123, 456)", "Argument 2 has type Integer, expected Text")]
+    public void FunctionCall_ParameterErrors(string callExpr, string expectedMessage)
+    {
+        // Arrange: build the full program text
+        string src = $@"
+                {FnDef}
+                Text result = {callExpr};
+            ";
+
+        // Act & Assert: full end-to-end
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(ET.TypeCheck, ex.Phase);
+        Assert.Contains(ex.Errors, e =>
+            e.Message.Contains(expectedMessage, System.StringComparison.OrdinalIgnoreCase)
+        );
+    }
 }

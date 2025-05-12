@@ -62,7 +62,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
             errorReporter.Report.TypeCheck(node,
                 $"Function '{{node.Identifier}}' may exit without returning on some paths");
         }
-        
+
         _returnTypeStack.Pop();
 
         node.InferredType = node.DeclaredType;
@@ -122,13 +122,13 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         // TODO: Do we allow anything but type literals in expression statements?
         // Or do we only allow function calls and method chains?
-        
+
         // Check if the expression is a valid statement
         if (node.Expression is TypeLiteralNode typeLiteral)
         {
             errorReporter.Report.TypeCheck(node, $"Type literal is not a valid statement expression");
         }
-        
+
         // Check if the expression is a valid statement
         if (node.Expression is not (MethodChainExpressionNode or FunctionCallNode))
         {
@@ -136,7 +136,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         }
 
         node.Expression.Accept(this);
-        
+
         // The statement itself has no type
         node.InferredType = SymbolType.Void;
         return SymbolType.Void;
@@ -155,7 +155,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Return type {exprType} does not match expected type {expected}");
         }
-        
+
         node.InferredType = exprType;
         return exprType;
     }
@@ -192,7 +192,8 @@ public class TypeChecker : IAstVisitor<SymbolType>
             var initType = node.Expression.Accept(this);
             if (initType != node.DeclaredType)
             {
-                errorReporter.Report.TypeCheck(node, $"Cannot assign {initType} to variable of type {node.DeclaredType}");
+                errorReporter.Report.TypeCheck(node,
+                    $"Cannot assign {initType} to variable of type {node.DeclaredType}");
             }
         }
 
@@ -258,18 +259,21 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
         if (node.Arguments.Count != paramList.Count)
         {
-            errorReporter.Report.TypeCheck(node, $"Function '{fnDecl.Identifier}' expects {paramList.Count} args");
+            errorReporter.Report.TypeCheck(node,
+                $"Function '{fnDecl.Identifier}' expects {paramList.Count} args, but got {node.Arguments.Count} args");
+            node.InferredType = fnDecl.DeclaredType;
+            return node.InferredType;
         }
 
-        for (int i = 0; i < node.Arguments.Count; i++)
+        for (int i = 0; i < paramList.Count; i++)
         {
             var argType = node.Arguments[i].Accept(this);
             var expected = paramList[i].DeclaredType;
             if (argType != expected)
-            {
-                errorReporter.Report.TypeCheck(node, $"Argument {i + 1} has type {argType}, expected {expected}");
-            }
+                errorReporter.Report.TypeCheck(node,
+                    $"Argument {i + 1} has type {argType}, expected {expected}");
         }
+
 
         node.InferredType = fnDecl.DeclaredType;
         return node.InferredType;
@@ -302,7 +306,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             errorReporter.Report.TypeCheck(node, $"Unknown type '{type.ToString()}'");
         }
-        
+
         node.InferredType = type;
         return type;
     }
@@ -411,7 +415,8 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
             // Nullish coalescing
             case OpType.NullishCoalescing:
-                throw new NotImplementedException($"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
+                throw new NotImplementedException(
+                    $"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
                 break;
             default:
                 errorReporter.Report.TypeCheck(node, $"Unsupported binary operator");
@@ -449,17 +454,18 @@ public class TypeChecker : IAstVisitor<SymbolType>
             SymbolType.Boolean => node.MethodName == "parse",
             SymbolType.Date => node.MethodName == "parse",
             SymbolType.Dataset => node.MethodName is "toFile" or "toTable",
-            SymbolType.Mashd => node.MethodName is "match" or "fuzzyMatch" or "functionMatch" or "transform" or "join" or "union",
+            SymbolType.Mashd => node.MethodName is "match" or "fuzzyMatch" or "functionMatch" or "transform" or "join"
+                or "union",
             _ => false
         };
-        
+
         if (!isValid)
         {
             errorReporter.Report.TypeCheck(node, $"Method '{node.MethodName}' is not valid for type '{leftType}'");
         }
-        
+
         // TODO: Validate the arguments of the method call
-        
+
         node.InferredType = leftType;
         return leftType;
     }
@@ -517,7 +523,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         var validNames = new[] { "adapter", "source", "schema", "delimiter", "query", "skip" };
         var requiredNames = new[] { "adapter", "source", "schema" };
-        var allowedAdapters = new[] { "csv", "sql", "postgresql",  }; // TODO: Change to actual adapters
+        var allowedAdapters = new[] { "csv", "sql", "postgresql", }; // TODO: Change to actual adapters
 
         // collect all keys as lowercase for uniform comparison
         var keys = node.Properties.Values
@@ -538,9 +544,8 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             if (!validNames.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
-                errorReporter.Report.TypeCheck(node,$"Unknown property '{key}' in dataset");
+                errorReporter.Report.TypeCheck(node, $"Unknown property '{key}' in dataset");
             }
-
         }
 
         // 3) duplicate keys
@@ -567,9 +572,10 @@ public class TypeChecker : IAstVisitor<SymbolType>
                     if (value is not LiteralNode { ParsedType: SymbolType.Text } ln)
                     {
                         errorReporter.Report.TypeCheck(node, $"Property '{key}' must be Text");
-                    } 
-                    
-                    if (!allowedAdapters.Contains(((LiteralNode)value).Value.ToString(), StringComparer.OrdinalIgnoreCase))
+                    }
+
+                    if (!allowedAdapters.Contains(((LiteralNode)value).Value.ToString(),
+                            StringComparer.OrdinalIgnoreCase))
                     {
                         errorReporter.Report.TypeCheck(node,
                             $"Unsupported adapter '{value.Text}'. Allowed: {string.Join(", ", allowedAdapters)}");
@@ -582,7 +588,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                     {
                         errorReporter.Report.TypeCheck(node, $"Property '{key}' must be a schema identifier");
                     }
-                    
+
                     if (node.ResolvedSchema is null)
                     {
                         errorReporter.Report.TypeCheck(node, $"Referenced schema was not resolved");
@@ -644,12 +650,11 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 {
                     return false;
                 }
-                
+
                 bool thenReturns = BlockAlwaysReturns(ifs.ThenBlock);
                 bool elseReturns = BlockAlwaysReturns(ifs.ElseBlock!);
 
                 return thenReturns && elseReturns;
-                
             }
             default:
             {

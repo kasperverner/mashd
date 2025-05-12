@@ -89,14 +89,14 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var identifier = context.ID().GetText();
 
         var objectNode = Visit(context.expression()) as ObjectExpressionNode;
-        
+
         var (line, column, text) = ExtractNodeInfo(context);
 
         if (objectNode is null)
         {
             throw new ArgumentException("Expected ObjectExpressionNode, but got null");
-        } 
-        
+        }
+
         SchemaObjectNode schemaObject = BuildSchemaObject(objectNode);
 
         return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
@@ -110,7 +110,8 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         var node = Visit(context.expression()) switch
         {
-            ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier, BuildDatasetObject(objectExpression), line, column, text),
+            ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier,
+                BuildDatasetObject(objectExpression), line, column, text),
             MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
                 text),
             _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
@@ -246,7 +247,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return CreateUnaryOperationNode(context.expression(), OpType.Not, context);
     }
-    
+
     // Binary Operation Nodes
 
     public override AstNode VisitMultiplicativeExpression(MashdParser.MultiplicativeExpressionContext context)
@@ -259,7 +260,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             "%" => OpType.Modulo,
             _ => throw new ArgumentException($"Unknown operator: {op}")
         };
-        
+
         return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
 
@@ -275,7 +276,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
-    
+
     public override AstNode VisitComparisonExpression(MashdParser.ComparisonExpressionContext context)
     {
         var op = context.op.Text;
@@ -292,7 +293,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return CreateBinaryOperationNode(context.expression(0), context.expression(1), operatorType, context);
     }
-    
+
     public override AstNode VisitLogicalExpression(MashdParser.LogicalExpressionContext context)
     {
         var op = context.op.Text;
@@ -329,7 +330,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
 
         string intText = context.INTEGER().GetText();
-        
+
         long value = long.Parse(intText);
         return new LiteralNode(value, line, column, text, SymbolType.Integer);
     }
@@ -405,18 +406,33 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitIfDefinition(MashdParser.IfDefinitionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        var condition = Visit(context.expression()) as ExpressionNode;
-        var ifBlock = Visit(context.block(0)) as BlockNode;
+        var condition = (ExpressionNode)Visit(context.expression());
+        var thenBlock = (BlockNode)Visit(context.block(0));
+
         BlockNode elseBlock = null;
         bool hasElse = false;
-        if (context.block().Length > 1)
+
+        var elifCtx = context.@if();
+        if (elifCtx != null)
         {
-            elseBlock = Visit(context.block(1)) as BlockNode;
+            var nestedIf = (IfNode)Visit(elifCtx);
+
+            elseBlock = new BlockNode(
+                new List<StatementNode> { nestedIf },
+                line, column, text
+            );
+            hasElse = true;
+        }
+        
+        else if (context.block().Length > 1)
+        {
+            elseBlock = (BlockNode)Visit(context.block(1));
             hasElse = true;
         }
 
-        return new IfNode(condition, ifBlock, elseBlock, hasElse, line, column, text);
+        return new IfNode(condition, thenBlock, elseBlock, hasElse, line, column, text);
     }
+
 
     public override AstNode VisitTernaryExpression(MashdParser.TernaryExpressionContext context)
     {
@@ -449,8 +465,8 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     public override AstNode VisitExpressionStatement(MashdParser.ExpressionStatementContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
-        
-        
+
+
         return new ExpressionStatementNode(
             Visit(context.expression()) as ExpressionNode,
             line,
@@ -591,7 +607,8 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
             if (pair.Value is not ObjectExpressionNode value)
             {
-                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected value to be ObjectExpressionNode, but got {pair.Value.GetType()}");
+                errorReporter.Add(ErrorType.AstBuilder, node,
+                    $"Expected value to be ObjectExpressionNode, but got {pair.Value.GetType()}");
                 continue;
             }
 
@@ -600,22 +617,24 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
             if (string.IsNullOrEmpty(type))
             {
-                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected type to be specified in ObjectExpressionNode, but got empty string");
+                errorReporter.Add(ErrorType.AstBuilder, node,
+                    $"Expected type to be specified in ObjectExpressionNode, but got empty string");
                 continue;
             }
-            
+
             if (string.IsNullOrEmpty(name))
             {
-                errorReporter.Add(ErrorType.AstBuilder, node, $"Expected name to be specified in ObjectExpressionNode, but got empty string");
+                errorReporter.Add(ErrorType.AstBuilder, node,
+                    $"Expected name to be specified in ObjectExpressionNode, but got empty string");
                 continue;
             }
-            
+
             properties[key] = new SchemaField(type, name);
         }
 
         return new SchemaObjectNode(properties, node.Line, node.Column, node.Text);
     }
-    
+
     private DatasetObjectNode BuildDatasetObject(ObjectExpressionNode node)
     {
         var properties = new Dictionary<string, DatasetObjectNode.DatasetProperty>();

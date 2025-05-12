@@ -1,4 +1,5 @@
 ﻿using Mashd.Backend.Errors;
+using Mashd.Frontend;
 
 namespace TestProject1.Integration;
 
@@ -120,5 +121,25 @@ public class Comparison
                 break;
         }
     }
+    
+    [Theory]
+    [InlineData("Text t = 123;", ErrorType.TypeCheck)]
+    [InlineData("Text t = 123.456;", ErrorType.TypeCheck)]
+    [InlineData("Text t = -33;", ErrorType.TypeCheck)]
+
+    public void Throws_TypeCheck_Error(string src, ErrorType expectedPhase)
+    {
+        // Arrange 
+        var ex = Assert.Throws<FrontendException>(() =>
+            TestPipeline.RunFull(src)
+        );
+
+        Assert.Equal(expectedPhase, ex.Phase);
+
+        Assert.NotEmpty(ex.Errors);
+
+        Assert.Contains("assign", ex.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
+    }
+
     
 }

@@ -20,6 +20,7 @@ public static class TestPipeline
             .Lex()
             .Parse()
             .BuildAst()
+            .HandleImports()
             .Resolve()
             .TypeCheck();
 
@@ -31,6 +32,23 @@ public static class TestPipeline
         interpreter.Evaluate(ast);
 
         return (interpreter, ast);
+    }
+    
+    /// <summary>
+    /// Runs the *entire* pipeline (lex, parse, ast, imports, resolve, typecheck, interpret),
+    /// letting either a FrontendException or a RuntimeException bubble out.
+    /// </summary>
+    public static void RunFull(string source)
+    {
+        var interp = new MashdInterpreter(source)
+            .Lex()
+            .Parse()
+            .BuildAst()
+            .HandleImports()
+            .Resolve()
+            .TypeCheck();
+
+        interp.Interpret();  // may throw RuntimeException
     }
 
     /// <summary>Find the single VariableDeclarationNode with the given identifier.</summary>

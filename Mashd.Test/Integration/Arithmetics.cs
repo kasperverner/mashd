@@ -121,7 +121,7 @@ public class Arithmetics
      [InlineData("Integer", "10 - 7 * 3", -11L)]
      [InlineData("Integer", "(10 - 7) * 3", 9L)]
      [InlineData("Integer", "4 * (10 - 6) / 2", 8L)]
-     [InlineData("Integer", "21 / (2 + 5) * 7", 21L)] // Fails because * has higher precedence than /, needs fix
+     [InlineData("Integer", "21 / (2 + 5) * 7", 21L)]
      
      // deeper nesting
      [InlineData("Integer", "(2 + 3) * (4 + 1)", 25L)]
@@ -129,7 +129,7 @@ public class Arithmetics
      [InlineData("Integer", "(2 + (3 * 4)) + 1", 15L)]
      
      // modulo binds with * and /
-     [InlineData("Integer", "20 % 6 * 2", 4L)] // Fails because * has higher precedence than %, needs fix
+     [InlineData("Integer", "20 % 6 * 2", 4L)]
      [InlineData("Integer", "20 % (6 * 2)", 8L)] // 6*2=12 → 20%12
      
      // mix all four at one level

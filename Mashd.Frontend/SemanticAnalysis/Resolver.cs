@@ -27,22 +27,41 @@ public class Resolver : IAstVisitor<DummyVoid>
         {
             Resolve(import);
         }
+        
+        // interleave defs & stmts by line number
+        var tops = new List<(int, AstNode)>();
+        foreach (var def in node.Definitions)
+            tops.Add((def.Line, def));
+        foreach (var stmt in node.Statements)
+            tops.Add((stmt.Line, stmt));
+        tops.Sort((a,b) => a.Item1.CompareTo(b.Item1));
 
-        // Register all top-level definitions, aka functions
-        foreach (var function in node.Definitions.OfType<FunctionDefinitionNode>())
+        // process each in source order
+        foreach (var (_, item) in tops)
         {
-            currentScope.Add(function.Identifier, function);
+            switch (item)
+            {
+                case FunctionDefinitionNode fn:
+                    // 1) register function name
+                    currentScope.Add(fn.Identifier, fn);
+                    // 2) resolve its body in a nested scope
+                    Resolve(fn);
+                    break;
+
+                case VariableDeclarationNode vd:
+                    // 1) register variable name
+                    currentScope.Add(vd.Identifier, vd);
+                    // 2) resolve initializer expression if any
+                    Resolve(vd);
+                    break;
+
+                default:
+                    // a non‐declaration statement
+                    Resolve(item);
+                    break;
+            }
         }
-
-        // Bind each function to its definition
-        foreach (var definition in node.Definitions)
-        {
-            Resolve(definition);
-        }
-
-        // Register all top-level statements
-        Resolve(node.Statements);
-
+        
         return DummyVoid.Null;
     }
 
@@ -139,8 +158,11 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitVariableDeclarationNode(VariableDeclarationNode node)
     {
-        // Add the variable to the current scope
-        currentScope.Add(node.Identifier, node);
+        // Add the variable to the current scope, if it wasn't already registered at the top-level
+        if (!currentScope.IsGlobalScope)
+        {
+            currentScope.Add(node.Identifier, node);
+        }
         if (node.HasInitialization)
         {
             Resolve(node.Expression);

@@ -40,7 +40,7 @@ public class IfElse
     
     [Theory]
     [InlineData(0, 1)]   // first branch
-    [InlineData(1, 2)]   // second branch // Doesn't correctly build AST with if else chain'ing
+    [InlineData(1, 2)]   // second branch 
     [InlineData(2, 3)]   // third branch
     [InlineData(5, 5)]   // no branch → stays the same
     public void ElseIfChain_OnlyFirstMatchingBranchExecutes(int initial, int expected)

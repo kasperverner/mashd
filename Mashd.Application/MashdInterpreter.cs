@@ -174,10 +174,8 @@ public class MashdInterpreter
             ReportException(ex);
         }
         catch (Exception e)
-        {
-            Console.Error.WriteLine("Unexpected error during interpretation:");
-            Console.Error.WriteLine(e.Message);
-            Environment.Exit(1);
+        { 
+            throw new Exception("Unexpected error during interpretation", e);
         }
         Console.WriteLine("Last line result:");
         Console.WriteLine(result.ToString());
@@ -187,19 +185,13 @@ public class MashdInterpreter
     {
         if (errorReporter.HasErrors(phase))
         {
-            Console.Error.WriteLine("Errors:");
-            foreach (var e in errorReporter.Errors)
-            {
-                Console.Error.WriteLine(e);
-            }
-            Environment.Exit(1);
+            var errors = errorReporter.Errors;
+            throw new FrontendException(phase, errors);
         }
     }
     
     private void ReportException(RuntimeException  ex)
     {
-        Console.Error.WriteLine("Error during interpretation:");
-        Console.Error.WriteLine(ex.Message);
-        Environment.Exit(1);
+        throw ex;
     }
 }
