@@ -23,3 +23,4 @@ public class TypeMismatchException : RuntimeException
     public TypeMismatchException(AstNode node)
         : base(node, RuntimeErrorType.TypeMismatch) { }
 }
+

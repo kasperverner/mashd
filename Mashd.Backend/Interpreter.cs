@@ -168,7 +168,7 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitTypeLiteralNode(TypeLiteralNode node)
     {
-        throw new NotImplementedException();
+        return new TypeValue(node.InferredType);
     }
 
     public Value VisitUnaryNode(UnaryNode node)
@@ -317,8 +317,106 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException();
+        var leftVal = node.Left.Accept(this);
+
+        if (leftVal is TypeValue tv && node.MethodName == "parse" && node.Next == null)
+        {
+            if (node.Arguments.Count != 1)
+            {
+                throw new Exception("parse() requires exactly one argument");
+            }
+
+            var argVal = node.Arguments[0].Accept(this);
+            return InvokeStaticParse(tv, argVal, node);
+        }
+
+        Value current = leftVal;
+        var chain = node;
+        while (chain != null)
+        {
+            var argValues = chain.Arguments
+                .Select(a => a.Accept(this))
+                .ToList();
+
+            current = InvokeInstanceMethod(current, chain.MethodName, argValues, chain);
+            chain = chain.Next;
+        }
+
+        return current;
     }
+
+    private Value InvokeStaticParse(TypeValue tv, Value arg, MethodChainExpressionNode node)
+    {
+        switch (tv.Type)
+        {
+            case SymbolType.Integer:
+                switch (arg)
+                {
+                    case TextValue t: return new IntegerValue(long.Parse(t.Raw));
+                    case DecimalValue d: return new IntegerValue((long)d.Raw);
+                    case IntegerValue i: return i;
+                    default:
+                        throw new Exception($"Integer.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Decimal:
+                switch (arg)
+                {
+                    case TextValue t: return new DecimalValue(double.Parse(t.Raw));
+                    case IntegerValue i: return new DecimalValue(i.Raw);
+                    case DecimalValue d: return d;
+                    default:
+                        throw new Exception($"Decimal.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Text:
+                // Anything can become text via ToString()
+                return new TextValue(arg.ToString());
+
+            case SymbolType.Boolean:
+                switch (arg)
+                {
+                    case TextValue t: return new BooleanValue(bool.Parse(t.Raw));
+                    case BooleanValue b: return b;
+                    default:
+                        throw new Exception($"Boolean.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Date:
+                throw new NotImplementedException();
+
+            default:
+                throw new Exception($"Type '{tv.Type}' has no static parse()");
+        }
+    }
+
+    private Value InvokeInstanceMethod(Value target, string methodName, List<Value> args, MethodChainExpressionNode node)
+    {
+        switch (target)
+        {
+            // example: dataset.toFile("out.csv")
+            case DatasetValue ds when methodName == "toFile":
+                var path = (args.Single() as TextValue)?.Raw ??
+                           throw new Exception(
+                               "toFile requires a string path"); //throw new RuntimeException("toFile requires a string path");
+                ds.ToFile(path);
+                return ds;
+
+            case DatasetValue ds when methodName == "toTable":
+                ds.ToTable();
+                return ds;
+
+            // mashd DSL methods
+            case MashdValue mv when methodName == "match":
+            // return mv.fuzzyMatch(args[0], args[1]);
+            //fuzzyMatch, functionMatch, transform, join, union, etc.
+
+            default:
+                throw new Exception("Invalid method call");
+            //throw new RuntimeException($"Cannot call '{methodName}' on value of type '{target.GetType().Name}'");
+        }
+    }
+
 
     public Value VisitDateLiteralNode(DateLiteralNode node)
     {

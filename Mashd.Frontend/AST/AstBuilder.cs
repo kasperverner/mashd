@@ -322,7 +322,13 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
     public override AstNode VisitTypeLitteralExpression(MashdParser.TypeLitteralExpressionContext context)
     {
-        return VisitTypeLiteral(context.type());
+        var (line, column, text) = ExtractNodeInfo(context);
+        string typeText = context.GetText();
+        SymbolType type = ParseVariableType(typeText);
+        
+        Console.WriteLine("Type: " + type);
+
+        return new TypeLiteralNode(type, line, column, text, type);
     }
 
     public override AstNode VisitIntegerLiteral(MashdParser.IntegerLiteralContext context)
@@ -353,7 +359,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string rawText = context.TEXT().GetText();
         string value = rawText.Trim('"');
         var (line, column, text) = ExtractNodeInfo(context);
-
         return new LiteralNode(value, line, column, text, SymbolType.Text);
     }
 
@@ -524,16 +529,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return (context.Start.Line, context.Start.Column, context.GetText());
     }
-
-    private ExpressionNode VisitTypeLiteral(MashdParser.TypeContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string typeText = context.GetText();
-        SymbolType type = ParseVariableType(typeText);
-
-        return new LiteralNode(type, line, column, text, type);
-    }
-
+    
     private SymbolType ParseVariableType(string typeText)
     {
         return typeText switch

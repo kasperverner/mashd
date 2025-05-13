@@ -6,5 +6,6 @@ public enum RuntimeErrorType
     DivisionByZero,
     UndefinedVariable,
     TypeMismatch,
+    InvalidOperation
 
 }
