@@ -1,6 +1,11 @@
 ﻿using System;
 using Mashd.Backend;
 using Mashd.Backend.BuiltInMethods;
+using Mashd.Frontend;
+using Antlr4.Runtime;
+using Mashd.Frontend.AST;
+using Mashd.Frontend.AST.Statements;
+using Mashd.Frontend.SemanticAnalysis;
 
 namespace TestProject1;
 
@@ -16,10 +21,10 @@ public class DateTests
         var expectedDate = new DateTime(year, month, day);
         
         // Act
-        var dateValue = new DateValue(DateTime.Parse(dateString));
+        var dateValue = Date.parse(dateString);
         
         // Assert
-        Assert.Equal(expectedDate, dateValue.Raw);
+        Assert.Equal(expectedDate, dateValue.Value);
     }
     
     [Fact]
@@ -27,9 +32,9 @@ public class DateTests
     {
         // Arrange
         string invalidDateString = "2023-13-01"; // Invalid month
-        
+
         // Act & Assert
-        Assert.Throws<FormatException>(() => new DateValue(DateTime.Parse(invalidDateString)));
+        Assert.Throws<FormatException>(() => Date.parse(invalidDateString));
     }
     
     [Theory]
@@ -42,12 +47,13 @@ public class DateTests
         var expectedDate = new DateTime(year, month, day);
 
         // Act
-        var parsedDate = Date.Parse(dateString, format);
+        var parsedDate = Date.parse(dateString, format);
 
         // Assert
-        Assert.Equal(expectedDate, parsedDate);
+        Assert.Equal(expectedDate, parsedDate.Value);
     }
 
+    
     [Theory]
     [InlineData("2023-13-01", null)] // Invalid ISO 8601 date
     [InlineData("01-32-2023", "MM-dd-yyyy")] // Invalid custom format
@@ -55,17 +61,17 @@ public class DateTests
     public void DateParse_InvalidDates_ShouldThrowFormatException(string dateString, string format)
     {
         // Act & Assert
-        Assert.Throws<FormatException>(() => Date.Parse(dateString, format));
+        Assert.Throws<FormatException>(() => Date.parse(dateString, format));
     }
 
     [Fact]
     public void DateParse_NullOrEmptyInput_ShouldThrowArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => Date.Parse(null));
-        Assert.Throws<ArgumentException>(() => Date.Parse(""));
+        Assert.Throws<ArgumentException>(() => Date.parse(null));
+        Assert.Throws<ArgumentException>(() => Date.parse(""));
     }
-    
+
     [Fact]
     public void DateParse_ShouldHandleISO8601WithTimeAndZone()
     {
@@ -74,12 +80,12 @@ public class DateTests
         var expectedDate = DateTime.Parse("2020-07-10T15:00:00.000Z").ToUniversalTime();
 
         // Act
-        var parsedDate = Date.Parse(input);
+        var parsedDate = Date.parse(input);
 
         // Assert
-        Assert.Equal(expectedDate, parsedDate);
+        Assert.Equal(expectedDate, parsedDate.Value);
     }
-    
+
     [Theory]
     [InlineData("2023-10-01T15:30:00", null, 2023, 10, 1, 15, 30, 0)] // ISO 8601 with time
     [InlineData("2023-10-01T15:30:00.123", null, 2023, 10, 1, 15, 30, 0, 123)] // ISO 8601 with milliseconds
@@ -87,36 +93,36 @@ public class DateTests
     [InlineData("2023-10-01T15:30:00+02:00", null, 2023, 10, 1, 13, 30, 0)] // ISO 8601 with offset
     [InlineData("15:30:00", "HH:mm:ss", 1, 1, 1, 15, 30, 0)] // Custom time-only format
     public void DateParse_ValidTimeFormats_ShouldReturnCorrectDate(
-        string dateString, 
-        string format, 
-        int year, 
-        int month, 
-        int day, 
-        int hour, 
-        int minute, 
-        int second, 
+        string dateString,
+        string format,
+        int year,
+        int month,
+        int day,
+        int hour,
+        int minute,
+        int second,
         int millisecond = 0)
     {
         // Arrange
         var expectedDate = new DateTime(year, month, day, hour, minute, second, millisecond, DateTimeKind.Utc);
 
         // Act
-        var parsedDate = Date.Parse(dateString, format);
+        var parsedDate = Date.parse(dateString, format);
 
         // Assert
-        Assert.Equal(expectedDate, parsedDate);
+        Assert.Equal(expectedDate, parsedDate.Value);
     }
 
     [Theory]
-    [InlineData("25:30:00", "HH:mm:ss")] 
-    [InlineData("15:61:00", "HH:mm:ss")] 
-    [InlineData("15:30:61", "HH:mm:ss")] 
-    [InlineData("invalid-time", "HH:mm:ss")] 
+    [InlineData("25:30:00", "HH:mm:ss")]
+    [InlineData("15:61:00", "HH:mm:ss")]
+    [InlineData("15:30:61", "HH:mm:ss")]
+    [InlineData("invalid-time", "HH:mm:ss")]
     public void DateParse_InvalidTimeFormats_ShouldThrowFormatException(string dateString, string format)
     {
         // Act & Assert
-        Assert.Throws<FormatException>(() => Date.Parse(dateString, format));
+        Assert.Throws<FormatException>(() => Date.parse(dateString, format));
     }
-    
+   
 }
 

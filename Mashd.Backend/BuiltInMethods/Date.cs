@@ -2,32 +2,59 @@
 
 namespace Mashd.Backend.BuiltInMethods;
 
-public static class Date
+public class Date
 {
-    public static DateTime Parse(string dateString, string format = null)
+    public DateTime Value { get; }
+
+    private Date(DateTime value)
+    {
+        Value = value;
+    }
+    public static Date parse(string dateString, string format = null)
     {
         if (string.IsNullOrWhiteSpace(dateString))
         {
             throw new ArgumentException("The date string cannot be null or empty.", nameof(dateString));
         }
 
-        if (string.IsNullOrEmpty(format))
-        {
-            // Default to ISO 8601 parsing
-            if (DateTime.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result))
-            {
-                return result;
-            }
-        }
-        else
-        {
-            // Use the provided format
-            if (DateTime.TryParseExact(dateString, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
-            {
-                return result;
-            }
-        }
+        // Time-only format special case
+        bool isTimeOnlyFormat = !string.IsNullOrEmpty(format) && 
+                                !format.Contains("y") && !format.Contains("M") && !format.Contains("d");
 
-        throw new FormatException($"The date string '{dateString}' is not in a valid format.");
+        try
+        {
+            DateTime result;
+
+            if (string.IsNullOrEmpty(format))
+            {
+                // Default parsing (handles ISO 8601)
+                result = DateTime.Parse(dateString, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+            }
+            else
+            {
+                // Parse with specific format
+                result = DateTime.ParseExact(dateString, format, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal);
+
+                // For time-only formats, use a base date of 0001-01-01
+                if (isTimeOnlyFormat)
+                {
+                    result = new DateTime(1, 1, 1, result.Hour, result.Minute, result.Second,
+                        result.Millisecond, DateTimeKind.Utc);
+                }
+            }
+
+            return new Date(result);
+        }
+        catch (FormatException)
+        {
+            throw new FormatException($"The date string '{dateString}' is not in a valid format.");
+        }
+        catch (ArgumentException)
+        {
+            throw new ArgumentException($"The date string '{dateString}' is not valid.");
+        }
     }
+    
 }

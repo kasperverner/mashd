@@ -6,6 +6,7 @@ using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
 using System.Globalization;
+using Mashd.Backend.BuiltInMethods;
 
 namespace Mashd.Backend;
 
@@ -161,6 +162,8 @@ public class Interpreter : IAstVisitor<Value>
                 return new TextValue((string)node.Value);
             case SymbolType.Boolean:
                 return new BooleanValue((bool)node.Value);
+            case SymbolType.Date:
+                return new DateValue((DateTime)node.Value);
             default:
                 throw new NotImplementedException($"Literal type {node.InferredType} not implemented.");
         }
@@ -321,9 +324,9 @@ public class Interpreter : IAstVisitor<Value>
 
         if (leftVal is TypeValue tv && node.MethodName == "parse" && node.Next == null)
         {
-            if (node.Arguments.Count != 1)
+            if (node.Arguments.Count < 1 || node.Arguments.Count > 2)
             {
-                throw new Exception("parse() requires exactly one argument");
+                throw new Exception("parse() requires exactly one ore two arguments");
             }
 
             var argVal = node.Arguments[0].Accept(this);
@@ -383,7 +386,29 @@ public class Interpreter : IAstVisitor<Value>
                 }
 
             case SymbolType.Date:
-                throw new NotImplementedException();
+            {
+                if (arg is not TextValue text1)
+                    throw new Exception($"Date.parse() requires the first argument to be a string");
+                if (node.Arguments.Count == 1)
+                {
+                  // iso 8601 format parsing
+                  var parsed = Date.parse(text1.Raw);
+                  return new DateValue(parsed.Value);
+                }
+                else if (node.Arguments.Count == 2)
+                {
+                    var arg2 = node.Arguments[1].Accept(this);
+                    if (arg2 is not TextValue text2)
+                        throw new Exception("Date.parse() second argument must be a string format descriptor");
+                    
+                    var parsed = Date.parse(text1.Raw, text2.Raw);
+                    return new DateValue(parsed.Value);
+                }
+                else
+                {
+                    throw new Exception("Date.parse() requires 1 or 2 string arguments");
+                }
+            }
 
             default:
                 throw new Exception($"Type '{tv.Type}' has no static parse()");

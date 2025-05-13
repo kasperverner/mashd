@@ -473,7 +473,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
                              || tl.Type == SymbolType.Decimal
                              || tl.Type == SymbolType.Text
                              || tl.Type == SymbolType.Boolean
-                             || tl.Type == SymbolType.Date)
+                             || tl.Type == SymbolType.Date && (node.Arguments.Count == 1 || node.Arguments.Count == 2))
                 => true,
 
             // DATASET instance methods
