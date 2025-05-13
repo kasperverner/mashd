@@ -94,7 +94,7 @@ public class Interpreter : IAstVisitor<Value>
         }
         else
         {
-            // default uninitialized integer to 0, TBD implement properly
+            // default uninitialized integer to 0, TODO implement properly
             value = new IntegerValue(0L);
         }
 
@@ -224,7 +224,7 @@ public class Interpreter : IAstVisitor<Value>
             case OpType.GreaterThanEqual:
             case OpType.Equality:
             case OpType.Inequality:
-                return EvaluateComparison(node.Operator, leftVal, rightVal);
+                return EvaluateComparison(node.Operator, leftVal, rightVal, node);
 
             // Logical & Coalesce (if needed)
             case OpType.LogicalAnd:
@@ -323,7 +323,7 @@ public class Interpreter : IAstVisitor<Value>
         {
             if (node.Arguments.Count != 1)
             {
-                throw new Exception("parse() requires exactly one argument");
+                throw new ParseArityException(node, expected: 1, actual: node.Arguments.Count);
             }
 
             var argVal = node.Arguments[0].Accept(this);
@@ -356,7 +356,7 @@ public class Interpreter : IAstVisitor<Value>
                     case DecimalValue d: return new IntegerValue((long)d.Raw);
                     case IntegerValue i: return i;
                     default:
-                        throw new Exception($"Integer.parse() cannot accept {arg.GetType().Name}");
+                        throw new InvalidParseArgumentException(node, tv.Type, arg);
                 }
 
             case SymbolType.Decimal:
@@ -366,12 +366,19 @@ public class Interpreter : IAstVisitor<Value>
                     case IntegerValue i: return new DecimalValue(i.Raw);
                     case DecimalValue d: return d;
                     default:
-                        throw new Exception($"Decimal.parse() cannot accept {arg.GetType().Name}");
+                        throw new InvalidParseArgumentException(node, tv.Type, arg);
                 }
 
             case SymbolType.Text:
-                // Anything can become text via ToString()
-                return new TextValue(arg.ToString());
+                switch (arg)
+                {
+                    case TextValue t: return new TextValue(t.Raw);
+                    case IntegerValue i: return new TextValue(i.Raw.ToString());
+                    case DecimalValue d: return new TextValue(d.Raw.ToString());
+                    case BooleanValue b: return new TextValue(b.Raw.ToString());
+                    default:
+                        throw new InvalidParseArgumentException(node, tv.Type, arg);
+                }
 
             case SymbolType.Boolean:
                 switch (arg)
@@ -379,14 +386,14 @@ public class Interpreter : IAstVisitor<Value>
                     case TextValue t: return new BooleanValue(bool.Parse(t.Raw));
                     case BooleanValue b: return b;
                     default:
-                        throw new Exception($"Boolean.parse() cannot accept {arg.GetType().Name}");
+                        throw new InvalidParseArgumentException(node, tv.Type, arg);
                 }
 
             case SymbolType.Date:
                 throw new NotImplementedException();
 
             default:
-                throw new Exception($"Type '{tv.Type}' has no static parse()");
+                throw new MethodNotFoundException(node, "parse", typeof(TypeValue));
         }
     }
 
@@ -394,11 +401,9 @@ public class Interpreter : IAstVisitor<Value>
     {
         switch (target)
         {
-            // example: dataset.toFile("out.csv")
+            // Dataset methods
             case DatasetValue ds when methodName == "toFile":
-                var path = (args.Single() as TextValue)?.Raw ??
-                           throw new Exception(
-                               "toFile requires a string path"); //throw new RuntimeException("toFile requires a string path");
+                var path = (args.Single() as TextValue)?.Raw ?? throw new InvalidFilePathException(node);
                 ds.ToFile(path);
                 return ds;
 
@@ -406,13 +411,19 @@ public class Interpreter : IAstVisitor<Value>
                 ds.ToTable();
                 return ds;
 
-            // mashd DSL methods
+            // Mashd methods
             case MashdValue mv when methodName == "match":
-            // return mv.fuzzyMatch(args[0], args[1]);
-            //fuzzyMatch, functionMatch, transform, join, union, etc.
-
+                throw new NotImplementedException();
+            case MashdValue mv when methodName == "fuzzyMatch":
+                throw new NotImplementedException();
+            case MashdValue mv when methodName == "functionMatch":
+                throw new NotImplementedException();
+            case MashdValue mv when methodName == "join":
+                throw new NotImplementedException();
+            case MashdValue mv when methodName == "union":
+                throw new NotImplementedException();
             default:
-                throw new Exception("Invalid method call");
+                throw new MethodNotFoundException(node, methodName, target.GetType());
             //throw new RuntimeException($"Cannot call '{methodName}' on value of type '{target.GetType().Name}'");
         }
     }
@@ -425,7 +436,7 @@ public class Interpreter : IAstVisitor<Value>
             return new DateValue(parsedDate);
         }
 
-        throw new FormatException($"Invalid date format: {node.Text}. Expected ISO 8601 (yyyy-MM-dd).");
+        throw new DateFormatException(node, node.Text);
     }
 
     public Value VisitObjectExpressionNode(ObjectExpressionNode node)
@@ -509,7 +520,7 @@ public class Interpreter : IAstVisitor<Value>
             $"Arithmetic {op} not implemented for types {leftVal.GetType()} and {rightVal.GetType()}.");
     }
 
-    private Value EvaluateComparison(OpType op, Value leftVal, Value rightVal)
+    private Value EvaluateComparison(OpType op, Value leftVal, Value rightVal, AstNode location)
     {
         // Numeric comparisons
         if (leftVal is IntegerValue li && rightVal is IntegerValue ri)
@@ -523,7 +534,10 @@ public class Interpreter : IAstVisitor<Value>
                     OpType.GreaterThanEqual => li.Raw >= ri.Raw,
                     OpType.Equality => li.Raw == ri.Raw,
                     OpType.Inequality => li.Raw != ri.Raw,
-                    _ => throw new InvalidOperationException()
+                    _ => throw new OperationNotSupportedException(
+                        location,
+                        $"Comparison '{op}' not supported on Integer"
+                    )
                 }
             );
         }
@@ -539,7 +553,10 @@ public class Interpreter : IAstVisitor<Value>
                     OpType.GreaterThanEqual => lf.Raw >= rf.Raw,
                     OpType.Equality => lf.Raw == rf.Raw,
                     OpType.Inequality => lf.Raw != rf.Raw,
-                    _ => throw new InvalidOperationException()
+                    _ => throw new OperationNotSupportedException(
+                        location,
+                        $"Comparison '{op}' not supported on Decimal"
+                    )
                 }
             );
         }
@@ -547,16 +564,28 @@ public class Interpreter : IAstVisitor<Value>
         // Text comparisons: only ==, !=
         if (leftVal is TextValue ls && rightVal is TextValue rs)
         {
-            return new BooleanValue(
-                op == OpType.Equality ? ls.Raw == rs.Raw : ls.Raw != rs.Raw
+            if (op is OpType.Equality or OpType.Inequality)
+            {
+                return new BooleanValue(op == OpType.Equality ? ls.Raw == rs.Raw : ls.Raw != rs.Raw);
+            }
+
+            throw new OperationNotSupportedException(
+                location,
+                $"Comparison '{op}' not supported on Text"
             );
         }
 
         // Boolean comparisons: only ==, !=
         if (leftVal is BooleanValue lb && rightVal is BooleanValue rb)
         {
-            return new BooleanValue(
-                op == OpType.Equality ? lb.Raw == rb.Raw : lb.Raw != rb.Raw
+            if (op is OpType.Equality or OpType.Inequality)
+            {
+                return new BooleanValue(op == OpType.Equality ? lb.Raw == rb.Raw : lb.Raw != rb.Raw);
+            }
+
+            throw new OperationNotSupportedException(
+                location,
+                $"Comparison '{op}' not supported on Boolean"
             );
         }
 
