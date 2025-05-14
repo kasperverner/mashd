@@ -12,10 +12,8 @@ public interface IAstVisitor<T>
     T VisitFormalParameterNode(FormalParameterNode node);
     T VisitFormalParameterListNode(FormalParameterListNode node);
     
+    // Definitions
     T VisitFunctionDefinitionNode(FunctionDefinitionNode node);
-    T VisitSchemaDefinitionNode(SchemaDefinitionNode node); 
-    T VisitDatasetDefinitionNode(DatasetDefinitionNode node);
-    T VisitMashdDefinitionNode(MashdDefinitionNode node);
     
     // Expressions
     T VisitParenNode(ParenNode node);
@@ -26,8 +24,8 @@ public interface IAstVisitor<T>
     T VisitIdentifierNode(IdentifierNode node);
     
     T VisitFunctionCallNode(FunctionCallNode node);
-    // Statements
     
+    // Statements
     T VisitVariableDeclarationNode(VariableDeclarationNode node);
     T VisitAssignmentNode(AssignmentNode node);
     
@@ -46,8 +44,4 @@ public interface IAstVisitor<T>
     T VisitDateLiteralNode(DateLiteralNode node);
     
     T VisitObjectExpressionNode(ObjectExpressionNode node);
-    
-    T VisitSchemaObjectNode(SchemaObjectNode objectNode);
-    
-    T VisitDatasetObjectNode(DatasetObjectNode node);
 }

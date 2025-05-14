@@ -28,38 +28,20 @@ public class Resolver : IAstVisitor<DummyVoid>
             Resolve(import);
         }
         
-        // interleave defs & stmts by line number
-        var tops = new List<(int, AstNode)>();
-        foreach (var def in node.Definitions)
-            tops.Add((def.Line, def));
-        foreach (var stmt in node.Statements)
-            tops.Add((stmt.Line, stmt));
-        tops.Sort((a,b) => a.Item1.CompareTo(b.Item1));
-
-        // process each in source order
-        foreach (var (_, item) in tops)
+        foreach (var definition in node.Definitions)
         {
-            switch (item)
-            {
-                case FunctionDefinitionNode fn:
-                    // 1) register function name
-                    currentScope.Add(fn.Identifier, fn);
-                    // 2) resolve its body in a nested scope
-                    Resolve(fn);
-                    break;
-
-                case VariableDeclarationNode vd:
-                    // 1) register variable name
-                    currentScope.Add(vd.Identifier, vd);
-                    // 2) resolve initializer expression if any
-                    Resolve(vd);
-                    break;
-
-                default:
-                    // a non‐declaration statement
-                    Resolve(item);
-                    break;
-            }
+            if (definition is FunctionDefinitionNode functionDefinition)
+                currentScope.Add(functionDefinition.Identifier, functionDefinition);
+            
+            Resolve(definition);
+        }
+        
+        foreach (var statement in node.Statements)
+        {
+            if (statement is VariableDeclarationNode variableDeclaration)
+                currentScope.Add(variableDeclaration.Identifier, variableDeclaration);
+            
+            Resolve(statement);
         }
         
         return DummyVoid.Null;
@@ -96,51 +78,6 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
-    public DummyVoid VisitSchemaDefinitionNode(SchemaDefinitionNode node)
-    {
-        // Register the schema definition in the current scope
-        currentScope.Add(node.Identifier, node);
-    
-        // Visit the schema object to handle any nested expressions or field references
-        if (node.ObjectNode != null)
-        {
-            Resolve(node.ObjectNode);
-        }
-    
-        return DummyVoid.Null;
-    }
-
-    public DummyVoid VisitDatasetDefinitionNode(DatasetDefinitionNode node)
-    {
-        // Register the dataset definition in the current scope
-        currentScope.Add(node.Identifier, node);
-
-        // Resolve the object literal inside it
-        if (node.ObjectNode != null)
-        {
-            Resolve(node.ObjectNode);
-        }
-
-        if (node.MethodNode != null)
-        {
-            Resolve(node.MethodNode);
-        }
-
-        return DummyVoid.Null;
-    }
-
-    public DummyVoid VisitMashdDefinitionNode(MashdDefinitionNode node)
-    {
-        // Register the mashd definition in the current scope
-        currentScope.Add(node.Identifier, node);
-    
-        // Visit left and right expressions to resolve any identifiers
-        Resolve(node.Left);
-        Resolve(node.Right);
-    
-        return DummyVoid.Null;
-    }
-
     public DummyVoid VisitBlockNode(BlockNode node)
     {
         // Enter a new scope for the block
@@ -163,7 +100,8 @@ public class Resolver : IAstVisitor<DummyVoid>
         {
             currentScope.Add(node.Identifier, node);
         }
-        if (node.HasInitialization)
+        
+        if (node.Expression != null)
         {
             Resolve(node.Expression);
         }
@@ -286,14 +224,6 @@ public class Resolver : IAstVisitor<DummyVoid>
         return DummyVoid.Null;
     }
 
-    public DummyVoid VisitDatasetCombineExpressionNode(MashdDefinitionNode node)
-    {
-        Resolve(node.Left);
-        Resolve(node.Right);
-        
-        return DummyVoid.Null;
-    }
-
     public DummyVoid VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
         Resolve(node.Left);
@@ -325,51 +255,6 @@ public class Resolver : IAstVisitor<DummyVoid>
         {
             Resolve(pair.Value);
         }
-        return DummyVoid.Null;
-    }
-
-    public DummyVoid VisitSchemaObjectNode(SchemaObjectNode objectNode)
-    {
-        // No need to resolve further for simple schema objects
-        // If there were expressions in field values, we would resolve them here
-        return DummyVoid.Null;
-    }
-
-    public DummyVoid VisitDatasetObjectNode(DatasetObjectNode node)
-    {
-        foreach (var property in node.Properties.Values)
-        {
-            if (property.Key.Equals("schema", StringComparison.OrdinalIgnoreCase))
-            {
-                if (property.Value is IdentifierNode idNode)
-                {
-                    if (!currentScope.TryLookup(idNode.Name, out var decl))
-                    {
-                        _errorReporter.Report.NameResolution(node, $"Undefined schema '{idNode.Name}'");
-                    }
-                    else if (decl is SchemaDefinitionNode schemaDecl)
-                    {
-                        // annotate both the identifier and object node
-                        idNode.Definition = schemaDecl;
-                        node.ResolvedSchema = schemaDecl;
-                    }
-                    else
-                    {
-                        _errorReporter.Report.NameResolution(node, $"Identifier '{idNode.Name}' is not a schema");
-                    }
-                }
-                else
-                {
-                    // if someone passed a text literal or integer instead of identifier node
-                    _errorReporter.Report.NameResolution(node, $"Schema property must be an identifier");
-                }
-            }
-            else
-            {
-                Resolve(property.Value);
-            }
-        }
-
         return DummyVoid.Null;
     }
 

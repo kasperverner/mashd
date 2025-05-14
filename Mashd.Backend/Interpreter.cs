@@ -1,31 +1,32 @@
-﻿using System.Linq.Expressions;
-using Mashd.Backend.Errors;
+﻿using Mashd.Backend.Errors;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
 using System.Globalization;
+using System.Linq.Expressions;
+using Mashd.Backend.Adapters;
 
 namespace Mashd.Backend;
 
 public class Interpreter : IAstVisitor<Value>
 {
+    // Tolerance for floating-point comparisons
+    private const double TOLERANCE = 1e-10;
+
     // Runtime store: map each declaration to its current Value
-    private readonly Dictionary<IDeclaration, Value> _values = new Dictionary<IDeclaration, Value>();
+    private readonly Dictionary<IDeclaration, Value> _values = new();
 
     // Expose values for testing or inspection
     public IReadOnlyDictionary<IDeclaration, Value> Values => _values;
 
     // New: store function definitions
-    private readonly Dictionary<FunctionDefinitionNode, FunctionDefinitionNode> _functions
-        = new Dictionary<FunctionDefinitionNode, FunctionDefinitionNode>();
+    private readonly Dictionary<FunctionDefinitionNode, FunctionDefinitionNode> _functions = new();
 
     // New: an activation record stack for parameters/locals
-    private readonly Stack<Dictionary<IDeclaration, Value>> _callStack
-        = new Stack<Dictionary<IDeclaration, Value>>();
-
-
+    private readonly Stack<Dictionary<IDeclaration, Value>> _callStack = new();
+    
     public Value VisitProgramNode(ProgramNode node)
     {
         // Phase 1: register every function
@@ -36,7 +37,7 @@ public class Interpreter : IAstVisitor<Value>
             }
 
         // Phase 2: run everything (function definitions return null)
-        Value last = null;
+        Value last = new NullValue();
         foreach (var stmt in node.Statements)
         {
             last = stmt.Accept(this);
@@ -47,7 +48,7 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitImportNode(ImportNode node)
     {
-        throw new NotImplementedException();
+        return new NullValue();
     }
 
     public Value VisitFunctionCallNode(FunctionCallNode node)
@@ -87,45 +88,199 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitVariableDeclarationNode(VariableDeclarationNode node)
     {
-        Value value;
-        if (node.HasInitialization)
+        var value = node switch
         {
-            value = node.Expression.Accept(this);
-        }
-        else
-        {
-            // default uninitialized integer to 0, TBD implement properly
-            value = new IntegerValue(0L);
-        }
-
+            { DeclaredType: SymbolType.Dataset, Expression: ObjectExpressionNode } => HandleDatasetImport(node),
+            // TODO: Implement after method chain
+            // { DeclaredType: SymbolType.Dataset, Expression: MethodChainExpressionNode } => HandleDatasetFromMethodChain(node),
+            { Expression: not null } => node.Expression.Accept(this),
+            _ => new NullValue()
+        };
+        
         _values[node] = value;
         return value;
+    }
+
+    private DatasetValue HandleDatasetImport(VariableDeclarationNode node)
+    {
+        var value = node.Expression?.Accept(this);
+        
+        if (value is not ObjectValue objectValue)
+            throw new ParseException("Invalid dataset object value.", node.Line, node.Column);
+        
+        var dataset = BuildDatasetFromObject(node, objectValue);
+        ValidateDatasetProperties(node, dataset);
+        LoadDatasetData(dataset);
+        ValidateDatasetData(node, dataset);
+        
+        return dataset;
+    }
+
+    private DatasetValue BuildDatasetFromObject(VariableDeclarationNode node, ObjectValue value)
+    {
+        var properties = new Dictionary<string, string>();
+        foreach (var (key, val) in value.Raw)
+            if (val is TextValue textValue)
+                properties[key] = textValue.Raw;
+
+        if (!properties.TryGetValue("source", out var source))
+            throw new ParseException($"Dataset {node.Identifier} missing 'source' property.", node.Line, node.Column);
+
+        if (!properties.TryGetValue("adapter", out var adapter))
+            throw new ParseException($"Dataset {node.Identifier} missing 'adapter' property.", node.Line, node.Column);
+
+        if (!value.Raw.TryGetValue("schema", out var schemaObject))
+            throw new ParseException($"Dataset {node.Identifier} missing 'schema' property.", node.Line, node.Column);
+
+        var schema = BuildSchemaFromObject(schemaObject);
+        
+        var query = properties.GetValueOrDefault("query");
+        var delimiter = properties.GetValueOrDefault("delimiter");
+        
+        return new DatasetValue(schema, source, adapter, query, delimiter);
+    }
+
+    private SchemaValue BuildSchemaFromObject(Value value)
+    {
+        if (value is not ObjectValue objectValue)
+            throw new ArgumentException("Invalid object value for schema.");
+        
+        var fields = new Dictionary<string, SchemaFieldValue>();
+
+        foreach (var (identifier, fieldValue) in objectValue.Raw)
+        {
+            if (fieldValue is not ObjectValue fieldObjectValue) continue;
+            
+            var name = fieldObjectValue.Raw.GetValueOrDefault("name");
+            var type = fieldObjectValue.Raw.GetValueOrDefault("type");
+                
+            if (name is not TextValue textValue || type is not TypeValue typeValue)
+                throw new ArgumentException("Invalid object value for schema field.");
+                
+            fields[identifier] = new SchemaFieldValue(typeValue.Raw, textValue.Raw);
+        }
+
+        return new SchemaValue(fields);
+    }
+
+    private void ValidateDatasetProperties(VariableDeclarationNode node, DatasetValue dataset)
+    {
+        if (dataset.Adapter is "sqlserver" or "postgresql" && string.IsNullOrWhiteSpace(dataset.Query))
+        {
+            throw new ParseException($"Dataset {dataset.Source} missing 'query' property.", node.Line, node.Column);
+        }
+        
+        if (dataset.Adapter is "csv" && string.IsNullOrWhiteSpace(dataset.Delimiter))
+        {
+            throw new ParseException($"Dataset {dataset.Source} missing 'delimiter' property.", node.Line, node.Column);
+        }
+        
+        if (dataset.Schema.Raw.Count == 0)
+        {
+            throw new ParseException($"Dataset {dataset.Source} missing 'schema' property.", node.Line, node.Column);
+        }
+    }
+
+    private void LoadDatasetData(DatasetValue dataset)
+    {
+        try
+        {
+            var adapter = AdapterFactory.CreateAdapter(dataset.Adapter, new Dictionary<string, string>
+            {
+                { "source", dataset.Source },
+                { "query", dataset.Query ?? "" },
+                { "delimiter", dataset.Delimiter ?? "," }
+            });
+            
+            var data = adapter.ReadAsync().Result;
+            dataset.AddData(data);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private void ValidateDatasetData(VariableDeclarationNode node, DatasetValue dataset)
+    {
+        // Validate the data matches the defined schema
+        var firstRow = dataset.Data.FirstOrDefault();
+        if (firstRow == null)
+            throw new ParseException($"Dataset {node.Identifier} has no data.", node.Line, node.Column);
+        
+        foreach (var field in dataset.Schema.Raw)
+        {
+            if (!firstRow.TryGetValue(field.Value.Name, out var value))
+                throw new ParseException($"Dataset {node.Identifier} missing field '{field.Key}'.", node.Line, node.Column);
+
+            try
+            {
+                switch (field.Value.Type)
+                {
+                    case SymbolType.Integer:
+                        IntegerValue.TryParse(value.ToString());
+                        break;
+                    case SymbolType.Decimal:
+                        DecimalValue.TryParse(value.ToString());
+                        break;
+                    case SymbolType.Text:
+                        TextValue.TryParse(value.ToString());
+                        break;
+                    case SymbolType.Boolean:
+                        BooleanValue.TryParse(value.ToString());
+                        break;
+                    case SymbolType.Date:
+                        DateValue.TryParse(value.ToString());
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new ParseException($"Dataset {node.Identifier} has field '{field.Key}' with wrong data type.", node.Line, node.Column);
+            }
+        }
+    }
+
+    private DatasetValue HandleDatasetFromMethodChain(VariableDeclarationNode node)
+    {
+        var value = node.Expression?.Accept(this);
+        
+        if (value is not DatasetValue datasetValue)
+            throw new ParseException("Invalid dataset method chain value.", node.Line, node.Column);
+        
+        ValidateDatasetProperties(node, datasetValue);
+        LoadDatasetData(datasetValue);
+        ValidateDatasetData(node, datasetValue);
+        
+        return datasetValue;
     }
 
     public Value VisitAssignmentNode(AssignmentNode node)
     {
         var value = node.Expression.Accept(this);
         _values[node.Definition] = value;
+        
         return value;
     }
 
     public Value VisitIfNode(IfNode node)
     {
         var conditionValue = node.Condition.Accept(this);
-        if (conditionValue is BooleanValue booleanValue)
+        if (conditionValue is not BooleanValue booleanValue) 
+            return new NullValue();
+        
+        if (booleanValue.Raw)
         {
-            if (booleanValue.Raw == true)
-            {
-                return node.ThenBlock.Accept(this);
-            }
-
-            if (node.HasElse && booleanValue.Raw == false)
-            {
-                return node.ElseBlock?.Accept(this);
-            }
+            return node.ThenBlock.Accept(this);
         }
 
-        return null;
+        if (node.HasElse && !booleanValue.Raw)
+        {
+            return node.ElseBlock!.Accept(this);
+        }
+
+        return new NullValue();
     }
 
     public Value VisitTernaryNode(TernaryNode node)
@@ -141,7 +296,8 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitExpressionStatementNode(ExpressionStatementNode node)
     {
-        throw new NotImplementedException();
+        // TODO: Implement expression statement
+        return new NullValue();
     }
 
     public Value VisitParenNode(ParenNode node)
@@ -151,55 +307,42 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitLiteralNode(LiteralNode node)
     {
-        switch (node.InferredType)
+        if (node.Value is null)
+            return new NullValue();
+        
+        return node.InferredType switch
         {
-            case SymbolType.Integer:
-                return new IntegerValue((long)node.Value);
-            case SymbolType.Decimal:
-                return new DecimalValue((double)node.Value);
-            case SymbolType.Text:
-                return new TextValue((string)node.Value);
-            case SymbolType.Boolean:
-                return new BooleanValue((bool)node.Value);
-            default:
-                throw new NotImplementedException($"Literal type {node.InferredType} not implemented.");
-        }
+            SymbolType.Integer => new IntegerValue((long)node.Value),
+            SymbolType.Decimal => new DecimalValue((double)node.Value),
+            SymbolType.Text => new TextValue((string)node.Value),
+            SymbolType.Boolean => new BooleanValue((bool)node.Value),
+            _ => throw new NotImplementedException($"Literal type {node.InferredType} not implemented.")
+        };
     }
 
     public Value VisitTypeLiteralNode(TypeLiteralNode node)
     {
-        throw new NotImplementedException();
+        return new TypeValue(node.Type);
     }
 
     public Value VisitUnaryNode(UnaryNode node)
     {
         var value = node.Operand.Accept(this);
-        switch (node.Operator)
+        return node.Operator switch
         {
-            case OpType.Negation:
-                if (value is IntegerValue iv)
-                {
-                    return new IntegerValue(-iv.Raw);
-                }
-
-                if (value is DecimalValue dv)
-                {
-                    return new DecimalValue(-dv.Raw);
-                }
-
-                break;
-
-            case OpType.Not:
-                if (value is BooleanValue bv)
-                {
-                    return new BooleanValue(!bv.Raw);
-                }
-
-                break;
-        }
-
-        throw new NotImplementedException(
-            $"Unary operator {node.Operator} not implemented for type {value.GetType()}.");
+            OpType.Negation => value switch
+            {
+                IntegerValue iv => new IntegerValue(-iv.Raw),
+                DecimalValue dv => new DecimalValue(-dv.Raw),
+                _ => throw new NotImplementedException($"Unary negation not implemented for type {value.GetType()}.")
+            },
+            OpType.Not => value switch
+            {
+                BooleanValue bv => new BooleanValue(!bv.Raw),
+                _ => throw new NotImplementedException($"Unary not operator not implemented for type {value.GetType()}.")
+            },
+            _ => throw new NotImplementedException($"Unary operator {node.Operator} not implemented.")
+        };
     }
 
     public Value VisitBinaryNode(BinaryNode node)
@@ -236,8 +379,11 @@ public class Interpreter : IAstVisitor<Value>
                     ToBoolean(leftVal, node.Left) || ToBoolean(rightVal, node.Right)
                 );
             case OpType.NullishCoalescing:
-                return leftVal != null ? leftVal : rightVal;
+                return leftVal is NullValue ? rightVal : leftVal;
 
+            case OpType.Combine:
+                return new MashdValue(leftVal, rightVal);
+            
             default:
                 throw new NotImplementedException($"Binary operator {node.Operator} not implemented.");
         }
@@ -263,7 +409,7 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitBlockNode(BlockNode node)
     {
-        Value last = null;
+        Value last = new NullValue();
         foreach (var stmt in node.Statements)
         {
             last = stmt.Accept(this);
@@ -274,36 +420,23 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitFormalParameterNode(FormalParameterNode node)
     {
-        throw new NotImplementedException();
+        // TODO: Implement formal parameter
+        return new NullValue();
     }
 
     public Value VisitFormalParameterListNode(FormalParameterListNode node)
     {
-        throw new NotImplementedException();
+        // TODO: Implement formal parameter list
+        return new NullValue();
     }
 
     public Value VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
         // register the function AST-node so calls can find it
         _functions[node] = node;
-        return null;
+        return new NullValue();
     }
-
-    public Value VisitSchemaDefinitionNode(SchemaDefinitionNode node)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Value VisitDatasetDefinitionNode(DatasetDefinitionNode node)
-    {
-        throw new NotImplementedException();
-    }
-
-    public Value VisitMashdDefinitionNode(MashdDefinitionNode node)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     public Value VisitReturnNode(ReturnNode node)
     {
         var value = node.Expression.Accept(this);
@@ -312,12 +445,14 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
-        throw new NotImplementedException();
+        // TODO: Implement property access
+        return new NullValue();
     }
 
     public Value VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException();
+        // TODO: Implement method chain
+        return new NullValue();
     }
 
     public Value VisitDateLiteralNode(DateLiteralNode node)
@@ -332,19 +467,17 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitObjectExpressionNode(ObjectExpressionNode node)
     {
-        throw new NotImplementedException();
-    }
+        var properties = new Dictionary<string, Value>();
+        foreach (var (key, expression) in node.Properties)
+        {
+            var value = expression.Accept(this);
+            
+            properties[key] = value;
+        }
 
-    public Value VisitSchemaObjectNode(SchemaObjectNode objectNode)
-    {
-        throw new NotImplementedException();
+        return new ObjectValue(properties);
     }
-
-    public Value VisitDatasetObjectNode(DatasetObjectNode node)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     // Helper methods
 
     private Value EvaluateArithmetic(OpType op, Value leftVal, Value rightVal, BinaryNode node)
@@ -439,8 +572,8 @@ public class Interpreter : IAstVisitor<Value>
                     OpType.LessThanEqual => lf.Raw <= rf.Raw,
                     OpType.GreaterThan => lf.Raw > rf.Raw,
                     OpType.GreaterThanEqual => lf.Raw >= rf.Raw,
-                    OpType.Equality => lf.Raw == rf.Raw,
-                    OpType.Inequality => lf.Raw != rf.Raw,
+                    OpType.Equality => Math.Abs(lf.Raw - rf.Raw) < TOLERANCE,
+                    OpType.Inequality => Math.Abs(lf.Raw - rf.Raw) > TOLERANCE,
                     _ => throw new InvalidOperationException()
                 }
             );
