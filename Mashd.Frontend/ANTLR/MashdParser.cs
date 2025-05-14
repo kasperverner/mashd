@@ -41,7 +41,7 @@ public partial class MashdParser : Parser {
 		T__17=18, T__18=19, T__19=20, T__20=21, T__21=22, T__22=23, T__23=24, 
 		T__24=25, T__25=26, T__26=27, T__27=28, T__28=29, T__29=30, BOOLEAN_TYPE=31, 
 		INTEGER_TYPE=32, DATE_TYPE=33, DECIMAL_TYPE=34, TEXT_TYPE=35, SCHEMA_TYPE=36, 
-		DATASET_TYPE=37, MASHD_TYPE=38, INTEGER=39, DECIMAL=40, BOOLEAN=41, NULL=42, 
+		DATASET_TYPE=37, MASHD_TYPE=38, DECIMAL=39, INTEGER=40, BOOLEAN=41, NULL=42, 
 		TEXT=43, DATE=44, ID=45, WS=46, COMMENT=47, MULTILINE_COMMENT=48;
 	public const int
 		RULE_program = 0, RULE_importStatement = 1, RULE_definition = 2, RULE_formalParameters = 3, 
@@ -66,7 +66,7 @@ public partial class MashdParser : Parser {
 		null, null, null, null, null, null, null, null, null, null, null, null, 
 		null, null, null, null, null, null, null, "BOOLEAN_TYPE", "INTEGER_TYPE", 
 		"DATE_TYPE", "DECIMAL_TYPE", "TEXT_TYPE", "SCHEMA_TYPE", "DATASET_TYPE", 
-		"MASHD_TYPE", "INTEGER", "DECIMAL", "BOOLEAN", "NULL", "TEXT", "DATE", 
+		"MASHD_TYPE", "DECIMAL", "INTEGER", "BOOLEAN", "NULL", "TEXT", "DATE", 
 		"ID", "WS", "COMMENT", "MULTILINE_COMMENT"
 	};
 	public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
@@ -2147,7 +2147,7 @@ public partial class MashdParser : Parser {
 		163,136,1,0,0,0,163,139,1,0,0,0,163,142,1,0,0,0,163,145,1,0,0,0,163,148,
 		1,0,0,0,163,154,1,0,0,0,163,157,1,0,0,0,163,160,1,0,0,0,164,167,1,0,0,
 		0,165,163,1,0,0,0,165,166,1,0,0,0,166,15,1,0,0,0,167,165,1,0,0,0,168,175,
-		5,41,0,0,169,175,5,39,0,0,170,175,5,44,0,0,171,175,5,40,0,0,172,175,5,
+		5,41,0,0,169,175,5,40,0,0,170,175,5,44,0,0,171,175,5,39,0,0,172,175,5,
 		43,0,0,173,175,5,42,0,0,174,168,1,0,0,0,174,169,1,0,0,0,174,170,1,0,0,
 		0,174,171,1,0,0,0,174,172,1,0,0,0,174,173,1,0,0,0,175,17,1,0,0,0,176,177,
 		5,45,0,0,177,178,5,29,0,0,178,179,3,14,7,0,179,19,1,0,0,0,180,185,3,14,

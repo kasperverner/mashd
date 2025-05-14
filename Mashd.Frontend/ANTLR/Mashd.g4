@@ -82,8 +82,8 @@ SCHEMA_TYPE     : 'Schema' ;
 DATASET_TYPE    : 'Dataset' ;
 MASHD_TYPE      : 'Mashd' ;
 
-INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
+INTEGER         : [0-9]+ ;
 BOOLEAN         : 'true' | 'false' ;
 
 NULL            : 'null' ;

@@ -1,4 +1,5 @@
-﻿using Antlr4.Runtime;
+﻿using System.Globalization;
+using Antlr4.Runtime;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Definitions;
@@ -297,7 +298,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         string decText = context.DECIMAL().GetText();
 
-        double value = double.Parse(decText);
+        double value = double.Parse(decText, CultureInfo.InvariantCulture);
         return new LiteralNode(value, line, column, text, SymbolType.Decimal);
     }
 
