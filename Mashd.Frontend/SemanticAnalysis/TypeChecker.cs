@@ -495,14 +495,13 @@ public class TypeChecker : IAstVisitor<SymbolType>
                 SymbolType.Decimal => argType == SymbolType.Text
                                       || argType == SymbolType.Integer
                                       || argType == SymbolType.Decimal,
-                SymbolType.Text => argType == SymbolType.Text
-                                   || argType == SymbolType.Integer
+                SymbolType.Text => argType is SymbolType.Text or SymbolType.Integer
                                    || argType == SymbolType.Decimal
                                    || argType == SymbolType.Boolean
                                    || argType == SymbolType.Date,
                 SymbolType.Boolean => argType == SymbolType.Text
                                       || argType == SymbolType.Boolean,
-                SymbolType.Date => argType == SymbolType.Text,
+                SymbolType.Date when node.Arguments.Count is 1 or 2 => argType == SymbolType.Text,
                 _ => false
             };
 
