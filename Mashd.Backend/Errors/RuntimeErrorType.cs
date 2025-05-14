@@ -6,5 +6,10 @@ public enum RuntimeErrorType
     DivisionByZero,
     UndefinedVariable,
     TypeMismatch,
-
+    ParseArity,
+    ParseArgument,
+    MethodNotFound,
+    InvalidFilePath,
+    DateFormat,
+    UnsupportedOperation,
 }

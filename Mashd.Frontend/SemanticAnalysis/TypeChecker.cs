@@ -300,7 +300,8 @@ public class TypeChecker : IAstVisitor<SymbolType>
         {
             if (!DateTime.TryParseExact(dateString, "yyyy-MM-dd", null, DateTimeStyles.None, out _))
             {
-                errorReporter.Report.TypeCheck(node, $"Invalid date format: {dateString}. Expected ISO 8601 (yyyy-MM-dd).");
+                errorReporter.Report.TypeCheck(node,
+                    $"Invalid date format: {dateString}. Expected ISO 8601 (yyyy-MM-dd).");
             }
         }
 
@@ -452,32 +453,97 @@ public class TypeChecker : IAstVisitor<SymbolType>
 
     public SymbolType VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        // Visit the left side
         var leftType = node.Left?.Accept(this) ?? SymbolType.Unknown;
 
-        bool isValid = leftType switch
+        foreach (var arg in node.Arguments)
         {
-            SymbolType.Integer => node.MethodName == "parse",
-            SymbolType.Decimal => node.MethodName == "parse",
-            SymbolType.Text => node.MethodName == "parse",
-            SymbolType.Boolean => node.MethodName == "parse",
-            SymbolType.Date => node.MethodName == "parse",
-            SymbolType.Dataset => node.MethodName is "toFile" or "toTable",
-            SymbolType.Mashd => node.MethodName is "match" or "fuzzyMatch" or "functionMatch" or "transform" or "join"
-                or "union",
+            arg.Accept(this);
+        }
+
+        if (node.Next != null)
+        {
+            node.Next.Accept(this);
+        }
+
+        if (node.MethodName == "parse")
+        {
+            // Must be on a type-literal
+            if (node.Left is not TypeLiteralNode tl)
+            {
+                errorReporter.Report.TypeCheck(
+                    node,
+                    "parse() must be invoked on a type literal, e.g. Integer.parse(...)"
+                );
+                node.InferredType = SymbolType.Unknown;
+                return node.InferredType;
+            }
+
+            // Only a single argument is allowed
+            if (node.Arguments.Count != 1)
+            {
+                errorReporter.Report.TypeCheck(node, $"parse() on {tl.Type} requires exactly one argument, but got {node.Arguments.Count}");
+                node.InferredType = SymbolType.Unknown;
+                return node.InferredType;
+            }
+            
+            var argType = node.Arguments[0].InferredType;
+            bool argOk = tl.Type switch
+            {
+                SymbolType.Integer => argType == SymbolType.Text
+                                      || argType == SymbolType.Decimal
+                                      || argType == SymbolType.Integer,
+                SymbolType.Decimal => argType == SymbolType.Text
+                                      || argType == SymbolType.Integer
+                                      || argType == SymbolType.Decimal,
+                SymbolType.Text => argType is SymbolType.Text or SymbolType.Integer
+                                   || argType == SymbolType.Decimal
+                                   || argType == SymbolType.Boolean
+                                   || argType == SymbolType.Date,
+                SymbolType.Boolean => argType == SymbolType.Text
+                                      || argType == SymbolType.Boolean,
+                SymbolType.Date when node.Arguments.Count is 1 or 2 => argType == SymbolType.Text,
+                _ => false
+            };
+
+            if (!argOk)
+            {
+                errorReporter.Report.TypeCheck(node, $"Cannot parse a {argType} as {tl.Type}");
+                node.InferredType = SymbolType.Unknown;
+                return node.InferredType;
+            }
+
+            node.InferredType = tl.Type;
+            return node.InferredType;
+        }
+
+        // Dataset and Mashd instance methods
+        bool isValid = node.MethodName switch
+        {
+            "toFile" when leftType == SymbolType.Dataset && node.Left is not TypeLiteralNode => true,
+            "toTable" when leftType == SymbolType.Dataset && node.Left is not TypeLiteralNode => true,
+
+            "match" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+            "fuzzyMatch" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+            "functionMatch" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+            "transform" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+            "join" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+            "union" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
+
             _ => false
         };
 
         if (!isValid)
         {
-            errorReporter.Report.TypeCheck(node, $"Method '{node.MethodName}' is not valid for type '{leftType}'");
+            errorReporter.Report.TypeCheck(
+                node,
+                $"Method '{node.MethodName}' is not valid on expression of type '{leftType}'"
+            );
         }
 
-        // TODO: Validate the arguments of the method call
-
         node.InferredType = leftType;
-        return leftType;
+        return node.InferredType;
     }
+
 
     public SymbolType VisitObjectExpressionNode(ObjectExpressionNode node)
     {

@@ -6,6 +6,7 @@ using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
 using System.Globalization;
+using Mashd.Backend.BuiltInMethods;
 
 namespace Mashd.Backend;
 
@@ -161,6 +162,8 @@ public class Interpreter : IAstVisitor<Value>
                 return new TextValue((string)node.Value);
             case SymbolType.Boolean:
                 return new BooleanValue((bool)node.Value);
+            case SymbolType.Date:
+                return new DateValue((DateTime)node.Value);
             default:
                 throw new NotImplementedException($"Literal type {node.InferredType} not implemented.");
         }
@@ -168,7 +171,7 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitTypeLiteralNode(TypeLiteralNode node)
     {
-        throw new NotImplementedException();
+        return new TypeValue(node.InferredType);
     }
 
     public Value VisitUnaryNode(UnaryNode node)
@@ -317,8 +320,128 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        throw new NotImplementedException();
+        var leftVal = node.Left.Accept(this);
+
+        if (leftVal is TypeValue tv && node.MethodName == "parse" && node.Next == null)
+        {
+            if (node.Arguments.Count < 1 || node.Arguments.Count > 2)
+            {
+                throw new Exception("parse() requires exactly one ore two arguments");
+            }
+
+            var argVal = node.Arguments[0].Accept(this);
+            return InvokeStaticParse(tv, argVal, node);
+        }
+
+        Value current = leftVal;
+        var chain = node;
+        while (chain != null)
+        {
+            var argValues = chain.Arguments
+                .Select(a => a.Accept(this))
+                .ToList();
+
+            current = InvokeInstanceMethod(current, chain.MethodName, argValues, chain);
+            chain = chain.Next;
+        }
+
+        return current;
     }
+
+    private Value InvokeStaticParse(TypeValue tv, Value arg, MethodChainExpressionNode node)
+    {
+        switch (tv.Type)
+        {
+            case SymbolType.Integer:
+                switch (arg)
+                {
+                    case TextValue t: return new IntegerValue(long.Parse(t.Raw));
+                    case DecimalValue d: return new IntegerValue((long)d.Raw);
+                    case IntegerValue i: return i;
+                    default:
+                        throw new Exception($"Integer.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Decimal:
+                switch (arg)
+                {
+                    case TextValue t: return new DecimalValue(double.Parse(t.Raw));
+                    case IntegerValue i: return new DecimalValue(i.Raw);
+                    case DecimalValue d: return d;
+                    default:
+                        throw new Exception($"Decimal.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Text:
+                // Anything can become text via ToString()
+                return new TextValue(arg.ToString());
+
+            case SymbolType.Boolean:
+                switch (arg)
+                {
+                    case TextValue t: return new BooleanValue(bool.Parse(t.Raw));
+                    case BooleanValue b: return b;
+                    default:
+                        throw new Exception($"Boolean.parse() cannot accept {arg.GetType().Name}");
+                }
+
+            case SymbolType.Date:
+            {
+                if (arg is not TextValue text1)
+                    throw new Exception($"Date.parse() requires the first argument to be a string");
+                if (node.Arguments.Count == 1)
+                {
+                  // iso 8601 format parsing
+                  var parsed = Date.parse(text1.Raw);
+                  return new DateValue(parsed.Value);
+                }
+                else if (node.Arguments.Count == 2)
+                {
+                    var arg2 = node.Arguments[1].Accept(this);
+                    if (arg2 is not TextValue text2)
+                        throw new Exception("Date.parse() second argument must be a string format descriptor");
+                    
+                    var parsed = Date.parse(text1.Raw, text2.Raw);
+                    return new DateValue(parsed.Value);
+                }
+                else
+                {
+                    throw new Exception("Date.parse() requires 1 or 2 string arguments");
+                }
+            }
+
+            default:
+                throw new Exception($"Type '{tv.Type}' has no static parse()");
+        }
+    }
+
+    private Value InvokeInstanceMethod(Value target, string methodName, List<Value> args, MethodChainExpressionNode node)
+    {
+        switch (target)
+        {
+            // example: dataset.toFile("out.csv")
+            case DatasetValue ds when methodName == "toFile":
+                var path = (args.Single() as TextValue)?.Raw ??
+                           throw new Exception(
+                               "toFile requires a string path"); //throw new RuntimeException("toFile requires a string path");
+                ds.ToFile(path);
+                return ds;
+
+            case DatasetValue ds when methodName == "toTable":
+                ds.ToTable();
+                return ds;
+
+            // mashd DSL methods
+            case MashdValue mv when methodName == "match":
+            // return mv.fuzzyMatch(args[0], args[1]);
+            //fuzzyMatch, functionMatch, transform, join, union, etc.
+
+            default:
+                throw new Exception("Invalid method call");
+            //throw new RuntimeException($"Cannot call '{methodName}' on value of type '{target.GetType().Name}'");
+        }
+    }
+
 
     public Value VisitDateLiteralNode(DateLiteralNode node)
     {
