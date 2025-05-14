@@ -325,9 +325,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         var (line, column, text) = ExtractNodeInfo(context);
         string typeText = context.GetText();
         SymbolType type = ParseVariableType(typeText);
-        
-        Console.WriteLine("Type: " + type);
-
         return new TypeLiteralNode(type, line, column, text, type);
     }
 

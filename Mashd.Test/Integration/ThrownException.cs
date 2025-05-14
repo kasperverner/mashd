@@ -194,7 +194,7 @@ public class ThrownException
         var ex = Assert.Throws<FrontendException>(() => TestPipeline.RunFull(src));
         Assert.Equal(ET.TypeCheck, ex.Phase);
         Assert.Contains(ex.Errors, e =>
-            e.Message.Contains("not valid for type", System.StringComparison.OrdinalIgnoreCase)
+            e.Message.Contains("is not valid on expression of type", System.StringComparison.OrdinalIgnoreCase)
         );
     }
 
