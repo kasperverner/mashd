@@ -234,7 +234,9 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
         if (node.Left is not null)
+        {
             Resolve(node.Left);
+        }
         
         foreach (var method in node.Arguments)
         {

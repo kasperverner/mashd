@@ -6,6 +6,14 @@ public abstract class Value
 {
 }
 
+public class TypeValue : Value
+{
+    public SymbolType Type { get; }
+    public TypeValue(SymbolType type) => Type = type;
+    public override string ToString() => $"<type:{Type}>";
+}
+
+
 public class IntegerValue : Value
 {
     public long Raw;
@@ -14,7 +22,7 @@ public class IntegerValue : Value
     {
         this.Raw = raw;
     }
-    
+
     public static IntegerValue TryParse(string? raw)
     {
         if (long.TryParse(raw, out var result))
@@ -41,7 +49,7 @@ public class DecimalValue : Value
     {
         this.Raw = raw;
     }
-    
+
     public static DecimalValue TryParse(string? raw)
     {
         if (double.TryParse(raw, out var result))
@@ -68,7 +76,7 @@ public class TextValue : Value
     {
         this.Raw = raw;
     }
-    
+
     public static TextValue TryParse(string? raw)
     {
         if (raw != null)
@@ -95,7 +103,7 @@ public class BooleanValue : Value
     {
         this.Raw = raw;
     }
-    
+
     public static BooleanValue TryParse(string? raw)
     {
         if (bool.TryParse(raw, out var result))
@@ -122,7 +130,7 @@ public class DateValue : Value
     {
         Raw = raw;
     }
-    
+
     public static DateValue TryParse(string? raw)
     {
         if (DateTime.TryParse(raw, out var result))
@@ -134,7 +142,7 @@ public class DateValue : Value
             throw new ArgumentException($"Cannot parse '{raw}' as a date.");
         }
     }
-    
+
     public override string ToString() => Raw.ToString("yyyy-MM-dd");
 }
 
@@ -193,7 +201,7 @@ public class DatasetValue(SchemaValue schema, string source, string adapter, str
     {
         Data.AddRange(data);
     }
-    
+
     public override string ToString()
     {
         return $"Dataset: {{ Schema: {Schema.ToString()}, Source: {Source}, Adapter: {Adapter}, Query: {Query}, Delimiter: {Delimiter} }}";

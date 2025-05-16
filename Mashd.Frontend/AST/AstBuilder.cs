@@ -277,8 +277,10 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
     public override AstNode VisitTypeLitteralExpression(MashdParser.TypeLitteralExpressionContext context)
     {
-        var node = VisitTypeLiteral(context.type());
-        return node;
+        var (line, column, text) = ExtractNodeInfo(context);
+        string typeText = context.GetText();
+        SymbolType type = ParseVariableType(typeText);
+        return new TypeLiteralNode(type, line, column, text, type);
     }
 
     public override AstNode VisitIntegerLiteral(MashdParser.IntegerLiteralContext context)
@@ -309,7 +311,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         string rawText = context.TEXT().GetText();
         string value = rawText.Trim('"');
         var (line, column, text) = ExtractNodeInfo(context);
-
         return new LiteralNode(value, line, column, text, SymbolType.Text);
     }
 
@@ -349,15 +350,15 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         var identifier = context.ID().GetText();
 
-        var expression = context.expression() is { } exprCtx 
-            ? Visit(exprCtx) as ExpressionNode 
+        var expression = context.expression() is { } exprCtx
+            ? Visit(exprCtx) as ExpressionNode
             : null;
 
         var (line, column, text) = ExtractNodeInfo(context);
 
         return new VariableDeclarationNode(type, identifier, expression, line, column, text);
     }
-    
+
     public override AstNode VisitIfDefinition(MashdParser.IfDefinitionContext context)
     {
         var (line, column, text) = ExtractNodeInfo(context);
@@ -378,7 +379,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             );
             hasElse = true;
         }
-        
+
         else if (context.block().Length > 1)
         {
             elseBlock = (BlockNode)Visit(context.block(1));
@@ -478,15 +479,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     private (int line, int column, string text) ExtractNodeInfo(ParserRuleContext context)
     {
         return (context.Start.Line, context.Start.Column, context.GetText());
-    }
-
-    private ExpressionNode VisitTypeLiteral(MashdParser.TypeContext context)
-    {
-        var (line, column, text) = ExtractNodeInfo(context);
-        string typeText = context.GetText();
-        SymbolType type = ParseVariableType(typeText);
-
-        return new TypeLiteralNode(type, line, column, text, type);
     }
 
     private SymbolType ParseVariableType(string typeText)
