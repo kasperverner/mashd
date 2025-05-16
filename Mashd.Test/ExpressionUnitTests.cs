@@ -1,7 +1,6 @@
-﻿using Antlr4.Runtime.Tree;
-using Mashd.Backend;
+﻿using Mashd.Backend;
 
-namespace TestProject1;
+namespace Mashd.Test;
 
 public class ExpressionUnitTests
 {

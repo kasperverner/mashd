@@ -1,7 +1,7 @@
 ﻿using Mashd.Frontend;
 using ET = Mashd.Frontend.ErrorType;
 
-namespace TestProject1.Integration;
+namespace Mashd.Test.Integration;
 
 public class ThrownException
 {

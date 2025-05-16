@@ -1,11 +1,9 @@
 ﻿using Mashd.Application;
 using Mashd.Backend;
-using Mashd.Frontend;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Statements;
-using Mashd.Frontend.SemanticAnalysis;
 
-namespace TestProject1.Integration;
+namespace Mashd.Test.Integration;
 
 public static class TestPipeline
 {

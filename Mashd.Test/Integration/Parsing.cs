@@ -1,6 +1,6 @@
 ﻿using Mashd.Frontend;
 
-namespace TestProject1.Integration;
+namespace Mashd.Test.Integration;
 
 public class Parsing
 {

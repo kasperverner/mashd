@@ -1,7 +1,6 @@
-﻿using Mashd.Backend.Errors;
-using Mashd.Frontend;
+﻿using Mashd.Frontend;
 
-namespace TestProject1.Integration;
+namespace Mashd.Test.Integration;
 
 public class Comparison
 {

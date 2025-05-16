@@ -213,7 +213,12 @@ public class Interpreter : IAstVisitor<Value>
 
         foreach (var field in dataset.Schema.Raw)
         {
-            if (!firstRow.TryGetValue(field.Value.Name, out var value))
+            // PostgreSQL returns unquoted identifiers as lowercase, so we need to convert the field name to lowercase
+            var fieldName = dataset.Adapter == "postgresql" 
+                ? field.Value.Name.ToLower() 
+                : field.Value.Name;
+            
+            if (!firstRow.TryGetValue(fieldName, out var value))
                 throw new ParseException($"Dataset {node.Identifier} missing field '{field.Key}'.", node.Line, node.Column);
 
             try
@@ -484,7 +489,7 @@ public class Interpreter : IAstVisitor<Value>
 
     private Value InvokeStaticParse(TypeValue tv, Value arg, MethodChainExpressionNode node)
     {
-        switch (tv.Type)
+        switch (tv.Raw)
         {
             case SymbolType.Integer:
                 switch (arg)
@@ -545,7 +550,7 @@ public class Interpreter : IAstVisitor<Value>
             }
 
             default:
-                throw new Exception($"Type '{tv.Type}' has no static parse()");
+                throw new Exception($"Type '{tv.Raw}' has no static parse()");
         }
     }
 
@@ -558,11 +563,11 @@ public class Interpreter : IAstVisitor<Value>
                 var path = (args.Single() as TextValue)?.Raw ??
                            throw new Exception(
                                "toFile requires a string path"); //throw new RuntimeException("toFile requires a string path");
-                ds.ToFile(path);
+                // ds.ToFile(path);
                 return ds;
 
             case DatasetValue ds when methodName == "toTable":
-                ds.ToTable();
+                // ds.ToTable();
                 return ds;
 
             // mashd DSL methods

@@ -8,9 +8,9 @@ public abstract class Value
 
 public class TypeValue : Value
 {
-    public SymbolType Type { get; }
-    public TypeValue(SymbolType type) => Type = type;
-    public override string ToString() => $"<type:{Type}>";
+    public SymbolType Raw { get; }
+    public TypeValue(SymbolType raw) => Raw = raw;
+    public override string ToString() => $"<type:{Raw}>";
 }
 
 
@@ -144,16 +144,6 @@ public class DateValue : Value
     }
 
     public override string ToString() => Raw.ToString("yyyy-MM-dd");
-}
-
-public class TypeValue(SymbolType raw) : Value
-{
-    public readonly SymbolType Raw = raw;
-
-    public override string ToString()
-    {
-        return Raw.ToString();
-    }
 }
 
 public class ObjectValue(Dictionary<string, Value> raw) : Value
