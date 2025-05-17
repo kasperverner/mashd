@@ -7,17 +7,14 @@ public class VariableDeclarationNode : StatementNode, IDeclaration
 {
     public SymbolType DeclaredType { get; }
     public string Identifier { get; }
-    public AstNode Expression { get; }
-    
-    public bool HasInitialization { get; }
+    public AstNode? Expression { get; }
 
-    public VariableDeclarationNode(SymbolType type, string identifier, ExpressionNode expression, bool hasInitialization, int line, int column, string text)
+    public VariableDeclarationNode(SymbolType type, string identifier, ExpressionNode? expression, int line, int column, string text)
         : base(line, column, text)
     {
         DeclaredType = type;
         Identifier = identifier;
         Expression = expression;
-        HasInitialization = hasInitialization;
     }
     
     public override T Accept<T>(IAstVisitor<T> visitor)

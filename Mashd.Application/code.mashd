@@ -1,5 +1,13 @@
 ﻿import "schemas.mashd";
 
+Dataset peopleData = {
+  adapter: "csv",
+  schema: peopleSchema,
+  source: "data.csv",
+  delimiter: ";"
+};
+
+/*
 Dataset operationData = {
   adapter: "csv",
   schema: operationSchema,
@@ -56,3 +64,4 @@ name
 
 Dataset mergedDataSet = name.join();
 mergedDataSet.toFile("merged_output.csv");
+*/

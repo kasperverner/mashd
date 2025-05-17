@@ -1,13 +1,6 @@
-﻿using System;
-using Mashd.Backend;
-using Mashd.Backend.BuiltInMethods;
-using Mashd.Frontend;
-using Antlr4.Runtime;
-using Mashd.Frontend.AST;
-using Mashd.Frontend.AST.Statements;
-using Mashd.Frontend.SemanticAnalysis;
+﻿using Mashd.Backend.BuiltInMethods;
 
-namespace TestProject1;
+namespace Mashd.Test;
 
 public class DateTests
 {

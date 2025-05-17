@@ -8,9 +8,9 @@ public abstract class Value
 
 public class TypeValue : Value
 {
-    public SymbolType Type { get; }
-    public TypeValue(SymbolType type) => Type = type;
-    public override string ToString() => $"<type:{Type}>";
+    public SymbolType Raw { get; }
+    public TypeValue(SymbolType raw) => Raw = raw;
+    public override string ToString() => $"<type:{Raw}>";
 }
 
 
@@ -21,6 +21,18 @@ public class IntegerValue : Value
     public IntegerValue(long raw)
     {
         this.Raw = raw;
+    }
+
+    public static IntegerValue TryParse(string? raw)
+    {
+        if (long.TryParse(raw, out var result))
+        {
+            return new IntegerValue(result);
+        }
+        else
+        {
+            throw new ArgumentException($"Cannot parse '{raw}' as an integer.");
+        }
     }
 
     public override string ToString()
@@ -38,6 +50,18 @@ public class DecimalValue : Value
         this.Raw = raw;
     }
 
+    public static DecimalValue TryParse(string? raw)
+    {
+        if (double.TryParse(raw, out var result))
+        {
+            return new DecimalValue(result);
+        }
+        else
+        {
+            throw new ArgumentException($"Cannot parse '{raw}' as a decimal.");
+        }
+    }
+
     public override string ToString()
     {
         return Raw.ToString();
@@ -51,6 +75,18 @@ public class TextValue : Value
     public TextValue(string raw)
     {
         this.Raw = raw;
+    }
+
+    public static TextValue TryParse(string? raw)
+    {
+        if (raw != null)
+        {
+            return new TextValue(raw);
+        }
+        else
+        {
+            throw new ArgumentException($"Cannot parse '{raw}' as text.");
+        }
     }
 
     public override string ToString()
@@ -68,6 +104,18 @@ public class BooleanValue : Value
         this.Raw = raw;
     }
 
+    public static BooleanValue TryParse(string? raw)
+    {
+        if (bool.TryParse(raw, out var result))
+        {
+            return new BooleanValue(result);
+        }
+        else
+        {
+            throw new ArgumentException($"Cannot parse '{raw}' as a boolean.");
+        }
+    }
+
     public override string ToString()
     {
         return Raw.ToString();
@@ -82,46 +130,89 @@ public class DateValue : Value
     {
         Raw = raw;
     }
-    
+
+    public static DateValue TryParse(string? raw)
+    {
+        if (DateTime.TryParse(raw, out var result))
+        {
+            return new DateValue(result);
+        }
+        else
+        {
+            throw new ArgumentException($"Cannot parse '{raw}' as a date.");
+        }
+    }
+
     public override string ToString() => Raw.ToString("yyyy-MM-dd");
 }
 
-public class DatasetValue : Value
+public class ObjectValue(Dictionary<string, Value> raw) : Value
 {
-    public List<Dictionary<string, Value>> Raw;
-
-    public DatasetValue(List<Dictionary<string, Value>> raw)
-    {
-        this.Raw = raw;
-    }
+    public readonly Dictionary<string, Value> Raw = raw;
 
     public override string ToString()
     {
-        return $"Dataset with {Raw.Count} rows";
-    }
-
-    public void ToFile(string fileName)
-    {
-        throw new NotImplementedException();
-    }
-    
-    public void ToTable()
-    {
-        throw new NotImplementedException();
+        return "{" + string.Join(", ", Raw.Select(kvp => $"{kvp.Key}: {kvp.Value.ToString()}")) + "}";
     }
 }
 
-public class MashdValue : Value
+public class SchemaValue(Dictionary<string, SchemaFieldValue> raw) : Value
 {
-    public Dictionary<string, Value> Raw;
+    public readonly Dictionary<string, SchemaFieldValue> Raw = raw;
 
-    public MashdValue(Dictionary<string, Value> raw)
+    public override string ToString()
     {
-        this.Raw = raw;
+        return "{" + string.Join(", ", Raw.Select(kvp => $"{kvp.Key}: {kvp.Value.ToString()}")) + "}";
+    }
+}
+
+public class SchemaFieldValue(SymbolType type, string name) : Value
+{
+    public readonly SymbolType Type = type;
+    public readonly string Name = name;
+
+    public override string ToString()
+    {
+        return $"{{ Type: {Type.ToString()}, Name: {Name} }}";
+    }
+}
+
+public class DatasetValue(SchemaValue schema, string source, string adapter, string? query, string? delimiter) : Value
+{
+    public readonly SchemaValue Schema = schema;
+    public readonly string Source = source;
+    public readonly string Adapter = adapter;
+    public readonly string? Query = query;
+    public readonly string? Delimiter = delimiter;
+
+    public List<Dictionary<string, object>> Data { get; } = [];
+
+    public void AddData(IEnumerable<Dictionary<string, object>> data)
+    {
+        Data.AddRange(data);
     }
 
     public override string ToString()
     {
-        return $"Mashd with {Raw.Count} keys";
+        return $"Dataset: {{ Schema: {Schema.ToString()}, Source: {Source}, Adapter: {Adapter}, Query: {Query}, Delimiter: {Delimiter} }}";
+    }
+}
+
+public class MashdValue(Value left, Value right) : Value
+{
+    public readonly Value Left = left;
+    public readonly Value Right = right;
+
+    public override string ToString()
+    {
+        return Left.ToString() + " & " + Right.ToString();
+    }
+}
+
+public class NullValue : Value
+{
+    public override string ToString()
+    {
+        return "null";
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace TestProject1;
+﻿namespace Mashd.Test;
 
 public static class TestSnippets
 {

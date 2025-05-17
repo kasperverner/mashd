@@ -2,11 +2,11 @@
 {
     public class LiteralNode : ExpressionNode
     {
-        public object Value { get; }
+        public object? Value { get; }
         
         public SymbolType ParsedType { get; set; }
 
-        public LiteralNode(object value, int line, int column, string text, SymbolType parsedType)
+        public LiteralNode(object? value, int line, int column, string text, SymbolType parsedType)
             : base(line, column, text)
         {
             Value = value;

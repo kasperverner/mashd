@@ -118,19 +118,14 @@ public class MashdInterpreter(string input)
                 continue;
             }
 
-            if (_processedFiles.Contains(importPath))
+            if (!_processedFiles.Add(importPath))
             {
                 // Skip already processed files to prevent circular dependencies
                 continue;
             }
 
-            _processedFiles.Add(importPath);
-
-            // var importedContent = File.ReadAllText(importPath);
-            // var importedInterpreter = new MashdInterpreter(importedContent);
-
-            var importedInterpreter = new MashdInterpreter(importPath);
-
+            var importedContent = File.ReadAllText(importPath);
+            var importedInterpreter = new MashdInterpreter(importedContent);
 
             // Pass the current processed files to the imported interpreter to avoid reprocessing
             importedInterpreter._processedFiles.UnionWith(_processedFiles);

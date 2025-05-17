@@ -65,42 +65,6 @@ public interface IMashdListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitFunctionDefinition([NotNull] MashdParser.FunctionDefinitionContext context);
 	/// <summary>
-	/// Enter a parse tree produced by the <c>SchemaDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterSchemaDefinition([NotNull] MashdParser.SchemaDefinitionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>SchemaDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitSchemaDefinition([NotNull] MashdParser.SchemaDefinitionContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>DatasetDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterDatasetDefinition([NotNull] MashdParser.DatasetDefinitionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>DatasetDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitDatasetDefinition([NotNull] MashdParser.DatasetDefinitionContext context);
-	/// <summary>
-	/// Enter a parse tree produced by the <c>MashdDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void EnterMashdDefinition([NotNull] MashdParser.MashdDefinitionContext context);
-	/// <summary>
-	/// Exit a parse tree produced by the <c>MashdDefinition</c>
-	/// labeled alternative in <see cref="MashdParser.definition"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	void ExitMashdDefinition([NotNull] MashdParser.MashdDefinitionContext context);
-	/// <summary>
 	/// Enter a parse tree produced by the <c>ParameterList</c>
 	/// labeled alternative in <see cref="MashdParser.formalParameters"/>.
 	/// </summary>
