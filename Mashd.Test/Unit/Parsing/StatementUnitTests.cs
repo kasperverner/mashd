@@ -63,8 +63,6 @@ public class StatementUnitTests
     public void ThrowsOnInvalidStatements(string input)
     {
         var parser = TestHelper.CreateParser(input);
-        parser.ErrorHandler = new BailErrorStrategy();
-
         Assert.Throws<ParseException>(() => parser.statement());
     }
 

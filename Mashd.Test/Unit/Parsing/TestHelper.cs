@@ -26,7 +26,6 @@ public static class TestHelper
         var parser = new MashdParser(new CommonTokenStream(new MashdLexer(new AntlrInputStream(input))));
         parser.RemoveErrorListeners();
         parser.AddErrorListener(new ThrowingErrorListener());
-        parser.ErrorHandler = new BailErrorStrategy();
         return parser; 
     }
 }
