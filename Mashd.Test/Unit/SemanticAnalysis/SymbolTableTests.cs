@@ -20,7 +20,7 @@ public class SymbolTableTests
             int line = 1,
             int column = 1,
             string text = "")
-            : base(line, column, text)
+            : base(line, column, text, 1)
         {
             Identifier = identifier;
             DeclaredType = declaredType;

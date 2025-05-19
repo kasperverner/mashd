@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Xunit;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Statements;
@@ -27,9 +28,9 @@ namespace TestProject1.Unit.SemanticAnalysis
             var checker = new TypeChecker(reporter);
             var prog = new ProgramNode(
                 imports: new List<ImportNode>(),
-                definitions: new List<DefinitionNode>(defs),
-                statements: new List<StatementNode>(stmts),
-                line: 1, column: 1, text: "<test>"
+                definitions: defs.ToList(),
+                statements: stmts.ToList(),
+                line: 1, column: 1, text: "<test>", 1
             );
             checker.VisitProgramNode(prog);
             return reporter;
@@ -39,8 +40,8 @@ namespace TestProject1.Unit.SemanticAnalysis
         public void ReturnOutsideFunction_ReportsError()
         {
             var ret = new ReturnNode(
-                expression: new LiteralNode(0L, 1, 1, "0", SymbolType.Integer),
-                line: 1, column: 1, text: "return 0;"
+                expression: new LiteralNode(0L, 1, 1, "0", SymbolType.Integer, level: 1),
+                line: 1, column: 1, text: "return 0;", level: 1
             );
 
             var rep = CheckNode(ret);
@@ -55,21 +56,21 @@ namespace TestProject1.Unit.SemanticAnalysis
                 statements: new List<StatementNode>
                 {
                     new ReturnNode(
-                        expression: new LiteralNode("text", 1, 10, "\"text\"", SymbolType.Text),
-                        line: 1, column: 1, text: "return \"text\";"
+                        expression: new LiteralNode("text", 1, 10, "\"text\"", SymbolType.Text, level: 1),
+                        line: 1, column: 1, text: "return \"text\";", level: 1
                     )
                 },
-                line: 1, column: 1, text: "{ return \"text\"; }"
+                line: 1, column: 1, text: "{ return \"text\"; }", level: 1
             );
             var fn = new FunctionDefinitionNode(
                 functionName: "foo",
                 returnType: SymbolType.Integer,
-                parameterList: new FormalParameterListNode(new List<FormalParameterNode>(), 1, 5, "()"),
+                parameterList: new FormalParameterListNode(new List<FormalParameterNode>(), 1, 5, "()", level: 1),
                 body: body,
-                line: 1, column: 1, text: "function foo() { return \"text\"; }"
+                line: 1, column: 1, text: "function foo() { return \"text\"; }", level: 1
             );
 
-            var rep = CheckProgram(new[] { fn }, new StatementNode[0]);
+            var rep = CheckProgram(new[] { fn }, Enumerable.Empty<StatementNode>());
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
             Assert.Contains("Return type Text does not match expected type Integer", rep.Errors[0].Message);
         }
@@ -79,17 +80,17 @@ namespace TestProject1.Unit.SemanticAnalysis
         {
             var body = new BlockNode(
                 statements: new List<StatementNode>(),
-                line: 1, column: 1, text: "{ }"
+                line: 1, column: 1, text: "{ }", level: 1
             );
             var fn = new FunctionDefinitionNode(
                 functionName: "bar",
                 returnType: SymbolType.Decimal,
-                parameterList: new FormalParameterListNode(new List<FormalParameterNode>(), 1, 5, "()"),
+                parameterList: new FormalParameterListNode(new List<FormalParameterNode>(), 1, 5, "()", level: 1),
                 body: body,
-                line: 1, column: 1, text: "function bar() { }"
+                line: 1, column: 1, text: "function bar() { }", level: 1
             );
 
-            var rep = CheckProgram(new[] { fn }, new StatementNode[0]);
+            var rep = CheckProgram(new[] { fn }, Enumerable.Empty<StatementNode>());
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
             Assert.Contains("Function 'bar' may exit without returning on some paths", rep.Errors[0].Message);
         }
@@ -100,9 +101,8 @@ namespace TestProject1.Unit.SemanticAnalysis
             var decl = new VariableDeclarationNode(
                 type: SymbolType.Integer,
                 identifier: "x",
-                expression: new LiteralNode("true", 1, 5, "true", SymbolType.Boolean),
-                hasInitialization: true,
-                line: 1, column: 1, text: "Integer x = true;"
+                expression: new LiteralNode("true", 1, 5, "true", SymbolType.Boolean, level: 1),
+                line: 1, column: 1, text: "Integer x = true;", level: 1
             );
 
             var rep = CheckNode(decl);
@@ -113,14 +113,9 @@ namespace TestProject1.Unit.SemanticAnalysis
         [Fact]
         public void BinaryTypeMismatch_ReportsError()
         {
-            var left = new LiteralNode(1L, 1, 1, "1", SymbolType.Integer);
-            var right = new LiteralNode("a", 1, 3, "\"a\"", SymbolType.Text);
-            var bin = new BinaryNode(
-                left: left,
-                op: OpType.Add,
-                right: right,
-                line: 1, column: 1, text: "1 + \"a\""
-            );
+            var left = new LiteralNode(1L, 1, 1, "1", SymbolType.Integer, level: 1);
+            var right = new LiteralNode("a", 1, 3, "\"a\"", SymbolType.Text, level: 1);
+            var bin = new BinaryNode(left, right, OpType.Add, line: 1, column: 1, text: "1 + \"a\"", level: 1);
 
             var rep = CheckNode(bin);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
@@ -130,11 +125,11 @@ namespace TestProject1.Unit.SemanticAnalysis
         [Fact]
         public void UnaryNegation_NonNumeric_ReportsError()
         {
-            var operand = new LiteralNode(true, 1, 2, "true", SymbolType.Boolean);
+            var operand = new LiteralNode(true, 1, 2, "true", SymbolType.Boolean, level: 1);
             var unary = new UnaryNode(
-                unaryOperator: OpType.Negation,
                 operand: operand,
-                line: 1, column: 1, text: "-true"
+                unaryOperator: OpType.Negation,
+                line: 1, column: 1, text: "-true", level: 1
             );
 
             var rep = CheckNode(unary);
@@ -145,13 +140,13 @@ namespace TestProject1.Unit.SemanticAnalysis
         [Fact]
         public void IfCondition_NonBoolean_ReportsError()
         {
-            var cond = new LiteralNode(123L, 1, 4, "123", SymbolType.Integer);
+            var cond = new LiteralNode(123L, 1, 4, "123", SymbolType.Integer, level: 1);
             var ifNode = new IfNode(
                 condition: cond,
-                thenBlock: new BlockNode(new List<StatementNode>(), 1, 5, "{}"),
+                thenBlock: new BlockNode(new List<StatementNode>(), 1, 5, "{}", level: 1),
                 hasElse: false,
                 elseBlock: null,
-                line: 1, column: 1, text: "if (123) {}"
+                line: 1, column: 1, text: "if (123) {}", level: 1
             );
 
             var rep = CheckNode(ifNode);
@@ -163,10 +158,10 @@ namespace TestProject1.Unit.SemanticAnalysis
         public void Ternary_MismatchedArms_ReportsError()
         {
             var tern = new TernaryNode(
-                condition: new LiteralNode(true, 1, 1, "true", SymbolType.Boolean),
-                trueExpression: new LiteralNode(1L, 1, 7, "1", SymbolType.Integer),
-                falseExpression: new LiteralNode("no", 1, 10, "\"no\"", SymbolType.Text),
-                line: 1, column: 1, text: "true ? 1 : \"no\""
+                condition: new LiteralNode(true, 1, 1, "true", SymbolType.Boolean, level: 1),
+                trueExpression: new LiteralNode(1L, 1, 7, "1", SymbolType.Integer, level: 1),
+                falseExpression: new LiteralNode("no", 1, 10, "\"no\"", SymbolType.Text, level: 1),
+                line: 1, column: 1, text: "true ? 1 : \"no\"", level: 1
             );
 
             var rep = CheckNode(tern);
@@ -177,7 +172,7 @@ namespace TestProject1.Unit.SemanticAnalysis
         [Fact]
         public void DateLiteral_InvalidFormat_ReportsError()
         {
-            var dateLit = new LiteralNode("2025-13-01", 1, 1, "\"2025-13-01\"", SymbolType.Date);
+            var dateLit = new LiteralNode("2025-13-01", 1, 1, "\"2025-13-01\"", SymbolType.Date, level: 1);
             var rep = CheckNode(dateLit);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
             Assert.Contains("Invalid date format: 2025-13-01. Expected ISO 8601 (yyyy-MM-dd)", rep.Errors[0].Message);
@@ -186,15 +181,14 @@ namespace TestProject1.Unit.SemanticAnalysis
         [Fact]
         public void MethodChain_ParseInvalidArg_ReportsError()
         {
-            // Boolean.parse(123)
-            var typeLit = new TypeLiteralNode(SymbolType.Boolean, 1, 1, "Boolean", SymbolType.Boolean);
-            var argument = new LiteralNode(123L, 1, 15, "123", SymbolType.Integer);
+            var typeLit = new TypeLiteralNode(SymbolType.Boolean, 1, 1, "Boolean", SymbolType.Boolean, level: 1);
+            var argument = new LiteralNode(123L, 1, 15, "123", SymbolType.Integer, level: 1);
             var chain = new MethodChainExpressionNode(
                 left: typeLit,
                 methodName: "parse",
                 arguments: new List<ExpressionNode> { argument },
                 next: null,
-                line: 1, column: 1, text: "Boolean.parse(123)"
+                line: 1, column: 1, text: "Boolean.parse(123)", level: 1
             );
 
             var rep = CheckNode(chain);
@@ -210,14 +204,14 @@ namespace TestProject1.Unit.SemanticAnalysis
                 "foo", SymbolType.Integer,
                 new FormalParameterListNode(new List<FormalParameterNode>
                 {
-                    new FormalParameterNode(SymbolType.Integer, "a", 1, 1, "Integer a"),
-                    new FormalParameterNode(SymbolType.Integer, "b", 1, 1, "Integer b")
-                }, 1, 1, "(Integer a, Integer b)"),
+                    new FormalParameterNode(SymbolType.Integer, "a", 1, 1, "Integer a", 1),
+                    new FormalParameterNode(SymbolType.Integer, "b", 1, 1, "Integer b", 1)
+                }, 1, 1, "(Integer a, Integer b)", 1),
                 new BlockNode(new List<StatementNode>
                 {
-                    new ReturnNode(new LiteralNode(0L, 1, 1, "0", SymbolType.Integer), 1, 1, "return 0;")
-                }, 1, 1, "{}"),
-                1, 1, "function foo(Integer a, Integer b) { return 0; }"
+                    new ReturnNode(new LiteralNode(0L, 1, 1, "0", SymbolType.Integer, 1), 1, 1, "return 0;", 1)
+                }, 1, 1, "{}", 1),
+                1, 1, "function foo(Integer a, Integer b) { return 0; }", 1
             );
 
             // call with 1 argument instead of 2
@@ -225,95 +219,70 @@ namespace TestProject1.Unit.SemanticAnalysis
                 "foo",
                 new List<ExpressionNode>
                 {
-                    new LiteralNode(1L, 2, 1, "1", SymbolType.Integer)
+                    new LiteralNode(1L, 2, 1, "1", SymbolType.Integer, 1)
                 },
-                2, 1, "foo(1)"
+                2, 1, "foo(1)", 1
             );
             call.Definition = fn;
-            var stmt = new ExpressionStatementNode(call, 2, 1, "foo(1);");
+            var stmt = new ExpressionStatementNode(call, 2, 1, "foo(1);", 1);
 
             var rep = CheckProgram(new[] { fn }, new[] { stmt });
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
             Assert.Contains("expects 2 args, but got 1 args", rep.Errors[0].Message);
         }
 
+
         [Fact]
         public void FunctionCall_ArgTypeMismatch_ReportsError()
         {
-            // function bar(x: Text) { return ""; }
             var fn = new FunctionDefinitionNode(
                 "bar", SymbolType.Text,
                 new FormalParameterListNode(new List<FormalParameterNode>
                 {
-                    new FormalParameterNode(SymbolType.Text, "x", 1, 1, "Text x")
-                }, 1, 1, "(Text x)"),
+                    new FormalParameterNode(SymbolType.Text, "x", 1, 1, "Text x", level: 1)
+                }, 1, 1, "(Text x)", level: 1),
                 new BlockNode(new List<StatementNode>
                 {
-                    new ReturnNode(new LiteralNode("", 1, 1, "\"\"", SymbolType.Text), 1, 1, "return \"\";")
-                }, 1, 1, "{}"),
-                1, 1, "function bar(Text x) { return \"\"; }"
+                    new ReturnNode(new LiteralNode("", 1, 1, "\"\"", SymbolType.Text, level: 1), 1, 1, "return \"\";",
+                        level: 1)
+                }, 1, 1, "{}", level: 1),
+                1, 1, "function bar(Text x) { return \"\"; }", level: 1
             );
 
-            // call bar(123)
             var call = new FunctionCallNode(
                 "bar",
-                new List<ExpressionNode>
-                {
-                    new LiteralNode(123L, 2, 1, "123", SymbolType.Integer)
-                },
-                2, 1, "bar(123)"
+                new List<ExpressionNode> { new LiteralNode(123L, 2, 1, "123", SymbolType.Integer, level: 1) },
+                2, 1, "bar(123)", level: 1
             );
             call.Definition = fn;
-            var stmt = new ExpressionStatementNode(call, 2, 1, "bar(123);");
+            var stmt = new ExpressionStatementNode(call, 2, 1, "bar(123);", level: 1);
 
             var rep = CheckProgram(new[] { fn }, new[] { stmt });
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
             Assert.Contains("Argument 1 has type Integer, expected Text", rep.Errors[0].Message);
         }
 
-
         [Fact]
         public void ValidArithmetic_NoErrors()
         {
-            var expr = new BinaryNode(
-                new LiteralNode(2L, 1, 1, "2", SymbolType.Integer),
-                new LiteralNode(3L, 1, 5, "3", SymbolType.Integer),
-                OpType.Multiply,
-                1, 1, "2 * 3"
-            );
+            var a = new LiteralNode(2L, 1, 1, "2", SymbolType.Integer, level: 1);
+            var b = new LiteralNode(3L, 1, 5, "3", SymbolType.Integer, level: 1);
+            var expr = new BinaryNode(a, b, OpType.Multiply, 1, 1, "2 * 3", level: 1);
+
             var rep = CheckNode(expr);
             Assert.False(rep.HasErrors(ErrorType.TypeCheck));
-        }
-
-        [Fact]
-        public void Equality_NonBasicType_ReportsError()
-        {
-            // simulate two schema identifiers both resolving to a SchemaDefinitionNode
-            var schemaDef = new SchemaDefinitionNode(
-                "S",
-                new SchemaObjectNode(new Dictionary<string, SchemaField>(), 1, 1, "schema S {}"),
-                1, 1, "schema S {}"
-            );
-            var leftId = new IdentifierNode("S", 1, 1, "S") { Definition = schemaDef };
-            var rightId = new IdentifierNode("S", 1, 1, "S") { Definition = schemaDef };
-
-            var eq = new BinaryNode(leftId, rightId, OpType.Equality, 1, 1, "S == S");
-            var rep = CheckNode(eq);
-            Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Equality operations requires basic type operands", rep.Errors[0].Message);
         }
 
 
         [Fact]
         public void MethodChain_ParseOnNonType_ReportsError()
         {
-            // ("123").parse()
             var chain = new MethodChainExpressionNode(
-                left: new LiteralNode("123", 1, 1, "\"123\"", SymbolType.Text),
+                left: new LiteralNode("123", 1, 1, "\"123\"", SymbolType.Text, level: 1),
                 methodName: "parse",
                 arguments: new List<ExpressionNode>(),
                 next: null,
-                line: 1, column: 1, text: "\"123\".parse()"
+                line: 1, column: 1, text: "\"123\".parse()", level: 1
             );
 
             var rep = CheckNode(chain);
@@ -323,104 +292,84 @@ namespace TestProject1.Unit.SemanticAnalysis
 
 
         [Fact]
-        public void SchemaObject_UnknownFieldType_ReportsError()
+        public void Combine_NonDatasetOperands_ReportsError()
         {
-            var schemaObj = new SchemaObjectNode(
-                fields: new Dictionary<string, SchemaField>
-                {
-                    ["f"] = new SchemaField("NonexistentType", "f")
-                },
-                line: 1, column: 1,
-                text: "schema S { NonexistentType f; }"
-            );
-            var schema = new SchemaDefinitionNode(
-                identifier: "S",
-                objectNode: schemaObj,
-                line: 1, column: 1,
-                text: "schema S { NonexistentType f; }"
-            );
+            // "foo" +combine "bar"
+            var left = new LiteralNode("foo", 1, 1, "\"foo\"", SymbolType.Text, level: 1);
+            var right = new LiteralNode("bar", 1, 1, "\"bar\"", SymbolType.Text, level: 1);
+            var combine = new BinaryNode(left, right, OpType.Combine, 1, 1, "\"foo\" combine \"bar\"", level: 1);
 
-            var rep = CheckNode(schema);
-
+            var rep = CheckNode(combine);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains(
-                "Unknown type 'NonexistentType' in field 'f'",
-                rep.Errors[0].Message
-            );
+            Assert.Contains("Combine requires two datasets", rep.Errors[0].Message);
         }
 
-
         [Fact]
-        public void DatasetObject_MissingAdapter_ReportsError()
+        public void Combine_OneOperandNotDataset_ReportsError()
         {
-            var props = new Dictionary<string, DatasetObjectNode.DatasetProperty>
-            {
-                ["source"] = new DatasetObjectNode.DatasetProperty(
-                    "source",
-                    new LiteralNode("file.csv", 1, 1, "\"file.csv\"", SymbolType.Text)
-                ),
-                ["schema"] = new DatasetObjectNode.DatasetProperty(
-                    "schema",
-                    new IdentifierNode("S", 1, 1, "S")
-                )
-            };
-            var dsObj = new DatasetObjectNode(1, 1, "dataset D {}", props);
-            var ds = new DatasetDefinitionNode("D", dsObj, 1, 1, "dataset D {}");
+            var dsDef = new VariableDeclarationNode(
+                type: SymbolType.Dataset,
+                identifier: "x",
+                expression: null,
+                line: 1, column: 1, text: "Dataset x", level: 1
+            );
+            var id = new IdentifierNode("x", 1, 1, "x", level: 1) { Definition = dsDef };
 
-            var rep = CheckProgram(new[] { ds }, new StatementNode[0]);
+            var right = new LiteralNode(123L, 1, 5, "123", SymbolType.Integer, level: 1);
+
+            var combine = new BinaryNode(id, right, OpType.Combine, 1, 1, "x combine 123", level: 1);
+
+            var rep = CheckNode(combine);
+
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Required property 'adapter' is missing", rep.Errors[0].Message);
+            Assert.Contains("Binary operator requires both sides", rep.Errors[0].Message);
         }
 
-
         [Fact]
-        public void DatasetObject_UnsupportedAdapter_ReportsError()
+        public void Combine_TwoDatasets_NoError()
         {
-            var props = new Dictionary<string, DatasetObjectNode.DatasetProperty>
-            {
-                ["adapter"] = new DatasetObjectNode.DatasetProperty(
-                    "adapter",
-                    new LiteralNode("xml", 1, 1, "\"xml\"", SymbolType.Text)
-                ),
-                ["source"] = new DatasetObjectNode.DatasetProperty(
-                    "source",
-                    new LiteralNode("file.xml", 1, 1, "\"file.xml\"", SymbolType.Text)
-                ),
-                ["schema"] = new DatasetObjectNode.DatasetProperty(
-                    "schema",
-                    new IdentifierNode("S", 1, 1, "S")
-                )
-            };
-            var dsObj = new DatasetObjectNode(1, 1, "dataset D {}", props);
-            var ds = new DatasetDefinitionNode("D", dsObj, 1, 1, "dataset D {}");
+            var dsA = new VariableDeclarationNode(
+                SymbolType.Dataset, "a", null, line: 1, column: 1, text: "Dataset a", level: 1
+            );
+            var dsB = new VariableDeclarationNode(
+                SymbolType.Dataset, "b", null, line: 1, column: 1, text: "Dataset b", level: 1
+            );
 
-            var rep = CheckProgram(new[] { ds }, new StatementNode[0]);
-            Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Unsupported adapter", rep.Errors[0].Message);
+            var idA = new IdentifierNode("a", 1, 1, "a", level: 1) { Definition = dsA };
+            var idB = new IdentifierNode("b", 1, 1, "b", level: 1) { Definition = dsB };
+
+            var combine = new BinaryNode(idA, idB, OpType.Combine, 1, 1, "a combine b", level: 1);
+            var rep = CheckNode(combine);
+            Assert.False(rep.HasErrors(ErrorType.TypeCheck));
+            Assert.Equal(SymbolType.Mashd, combine.InferredType);
         }
 
+        [Fact]
+        public void PropertyAccess_NonSchemaDataset_ReportsError()
+        {
+            var lit = new LiteralNode(42L, 1, 1, "42", SymbolType.Integer, level: 1);
+            var access = new PropertyAccessExpressionNode(lit, "foo", 1, 1, "42.foo", level: 1);
+
+            var rep = CheckNode(access);
+            Assert.True(rep.HasErrors(ErrorType.TypeCheck));
+            Assert.Contains("Property access requires Schema or Dataset", rep.Errors[0].Message);
+        }
 
         [Fact]
-        public void MashdDefinition_LeftNotDataset_ReportsError()
+        public void MethodChain_ToTableOnNonDataset_ReportsError()
         {
-            var left = new LiteralNode("foo", 1, 1, "\"foo\"", SymbolType.Text);
-            var right = new LiteralNode("bar", 1, 1, "\"bar\"", SymbolType.Text);
-
-            var mashd = new MashdDefinitionNode(
-                identifier: "id",
-                left: left,
-                right: right,
-                line: 1, column: 1,
-                text: "mashd id = \"foo\" mash \"bar\""
+            var lit = new LiteralNode("notDs", 1, 1, "\"notDs\"", SymbolType.Text, level: 1);
+            var chain = new MethodChainExpressionNode(
+                left: lit,
+                methodName: "toTable",
+                arguments: new List<ExpressionNode>(),
+                next: null,
+                line: 1, column: 1, text: "\"notDs\".toTable()", level: 1
             );
 
-            var rep = CheckNode(mashd);
-
+            var rep = CheckNode(chain);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains(
-                "Left side of mashd definition 'id' must be a Dataset, but got Text",
-                rep.Errors[0].Message
-            );
+            Assert.Contains("Method 'toTable' is not valid on expression of type 'Text'", rep.Errors[0].Message);
         }
     }
 }

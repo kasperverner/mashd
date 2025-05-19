@@ -18,7 +18,7 @@ namespace Mashd.Tests.Frontend.AST
         public AstBuilderTests()
         {
             _mockErrorReporter = new Mock<ErrorReporter>();
-            _astBuilder = new AstBuilder(_mockErrorReporter.Object);
+            _astBuilder = new AstBuilder(_mockErrorReporter.Object, 1);
         }
 
         private MashdParser CreateParser(string input)
@@ -324,7 +324,6 @@ namespace Mashd.Tests.Frontend.AST
             Assert.NotNull(result);
             Assert.Equal(SymbolType.Integer, result.DeclaredType);
             Assert.Equal("count", result.Identifier);
-            Assert.False(result.HasInitialization);
             Assert.Null(result.Expression);
         }
         
@@ -343,7 +342,6 @@ namespace Mashd.Tests.Frontend.AST
             Assert.NotNull(result);
             Assert.Equal(SymbolType.Integer, result.DeclaredType);
             Assert.Equal("count", result.Identifier);
-            Assert.True(result.HasInitialization);
             Assert.NotNull(result.Expression);
             Assert.IsType<LiteralNode>(result.Expression);
         }

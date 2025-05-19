@@ -395,13 +395,12 @@ public class Functions
     [InlineData("foo(123, 456)", "Argument 2 has type Integer, expected Text")]
     public void FunctionCall_ParameterErrors(string callExpr, string expectedMessage)
     {
-        // Arrange: build the full program text
         string src = $@"
                 {FnDef}
                 Text result = {callExpr};
             ";
 
-        // Act & Assert: full end-to-end
+        // Act & Assert:
         var ex = Assert.Throws<FrontendException>(() =>
             TestPipeline.RunFull(src)
         );
