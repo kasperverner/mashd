@@ -14,8 +14,9 @@ namespace Mashd.Frontend.AST.Expressions
             MethodChainExpressionNode? next,
             int line,
             int column,
-            string text
-        ) : base(line, column, text)
+            string text,
+            int level
+        ) : base(line, column, text, level)
         {
             Left = left;
             MethodName = methodName;

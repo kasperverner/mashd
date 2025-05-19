@@ -12,7 +12,7 @@ public class DateIntegration
     {
         var lexer = new MashdLexer(new AntlrInputStream(input));
         var parser = new MashdParser(new CommonTokenStream(lexer));
-        var astBuilder = new AstBuilder(new ErrorReporter());
+        var astBuilder = new AstBuilder(new ErrorReporter(), 0);
         return astBuilder.VisitProgram(parser.program());
     }
     

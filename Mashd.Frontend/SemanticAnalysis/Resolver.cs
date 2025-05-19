@@ -22,26 +22,37 @@ public class Resolver : IAstVisitor<DummyVoid>
     }
     public DummyVoid VisitProgramNode(ProgramNode node)
     {
-        // Register all imports, TBD
-        foreach (var import in node.Imports)
+        var nodes = new List<AstNode>()
+            .Concat(node.Definitions)
+            .Concat(node.Statements)
+            .OrderBy(x => x.Level)
+            .ThenBy(x => x.Line)
+            .ToList();
+           
+        // process each in source order
+        foreach (var item in nodes)
         {
-            Resolve(import);
-        }
-        
-        foreach (var definition in node.Definitions)
-        {
-            if (definition is FunctionDefinitionNode functionDefinition)
-                currentScope.Add(functionDefinition.Identifier, functionDefinition);
-            
-            Resolve(definition);
-        }
-        
-        foreach (var statement in node.Statements)
-        {
-            if (statement is VariableDeclarationNode variableDeclaration)
-                currentScope.Add(variableDeclaration.Identifier, variableDeclaration);
-            
-            Resolve(statement);
+            switch (item)
+            {
+                case FunctionDefinitionNode fn:
+                    // 1) register function name
+                    currentScope.Add(fn.Identifier, fn);
+                    // 2) resolve its body in a nested scope
+                    Resolve(fn);
+                    break;
+
+                case VariableDeclarationNode vd:
+                    // 1) register variable name
+                    currentScope.Add(vd.Identifier, vd);
+                    // 2) resolve initializer expression if any
+                    Resolve(vd);
+                    break;
+
+                default:
+                    // a non‐declaration statement
+                    Resolve(item);
+                    break;
+            }
         }
         
         return DummyVoid.Null;

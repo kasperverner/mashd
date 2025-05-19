@@ -4,8 +4,8 @@ public class ObjectExpressionNode : ExpressionNode
 {
     public Dictionary<string, ExpressionNode> Properties { get; } = new();
 
-    public ObjectExpressionNode(int line, int column, string text)
-        : base(line, column, text)
+    public ObjectExpressionNode(int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
     }
     

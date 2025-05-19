@@ -52,12 +52,10 @@ public class StatementUnitTests
 
     
     [Theory]
-    [InlineData("x + 5 = 10;")]
     [InlineData("return;")]
     [InlineData("if (true) { return 1; } else;")]
     [InlineData("function Integer add(Integer a, Integer b) { return a + b; } 123;")]
     [InlineData("integer x = ; 10;")]
-    [InlineData("123 add(Integer a, Integer b) { return a + b; }")]
     [InlineData("if (true) { if (false) { return 1; } else; }")]
     public void ThrowsOnInvalidStatements(string input)
     {
@@ -66,8 +64,10 @@ public class StatementUnitTests
     }
 
     [Theory]
+    [InlineData("x + 5 = 10;")]
     [InlineData("if (x > 5) { return x; } else { return y;")]
     [InlineData("if { return x; }")]
+    [InlineData("123 add(Integer a, Integer b) { return a + b; }")]
     public void ThrowsParseCanceledExceptionOnCriticalSyntaxErrors(string input)
     {
         var parser = TestHelper.CreateParser(input);

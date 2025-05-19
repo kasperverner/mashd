@@ -7,8 +7,8 @@ public class TernaryNode : ExpressionNode
     public ExpressionNode Condition { get; }
     public ExpressionNode TrueExpression { get; }
     public ExpressionNode FalseExpression { get; }
-    public TernaryNode(ExpressionNode condition, ExpressionNode trueExpression, ExpressionNode falseExpression, int line, int column, string text)
-        : base(line, column, text)
+    public TernaryNode(ExpressionNode condition, ExpressionNode trueExpression, ExpressionNode falseExpression, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Condition = condition;
         TrueExpression = trueExpression;

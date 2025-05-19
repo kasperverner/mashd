@@ -4,8 +4,8 @@ public class ParenNode : ExpressionNode
 {
     public ExpressionNode InnerExpression { get; }
 
-    public ParenNode(ExpressionNode innerExpression, int line, int column, string text)
-        : base(line, column, text)
+    public ParenNode(ExpressionNode innerExpression, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         InnerExpression = innerExpression;
     }

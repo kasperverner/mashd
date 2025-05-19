@@ -9,8 +9,8 @@ public class IfNode : StatementNode
     public BlockNode ElseBlock { get; }
     public bool HasElse { get; }
     
-    public IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode elseBlock, bool hasElse, int line, int column, string text)
-        : base(line, column, text)
+    public IfNode(ExpressionNode condition, BlockNode thenBlock, BlockNode elseBlock, bool hasElse, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Condition = condition;
         ThenBlock = thenBlock;

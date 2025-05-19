@@ -9,8 +9,8 @@ public class VariableDeclarationNode : StatementNode, IDeclaration
     public string Identifier { get; }
     public AstNode? Expression { get; }
 
-    public VariableDeclarationNode(SymbolType type, string identifier, ExpressionNode? expression, int line, int column, string text)
-        : base(line, column, text)
+    public VariableDeclarationNode(SymbolType type, string identifier, ExpressionNode? expression, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         DeclaredType = type;
         Identifier = identifier;

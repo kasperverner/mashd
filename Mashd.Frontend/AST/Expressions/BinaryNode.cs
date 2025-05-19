@@ -6,8 +6,8 @@ public class BinaryNode : ExpressionNode
     public ExpressionNode Right { get; }
     public OpType Operator { get; }
     
-    public BinaryNode(ExpressionNode left, ExpressionNode right, OpType op, int line, int column, string text)
-        : base(line, column, text)
+    public BinaryNode(ExpressionNode left, ExpressionNode right, OpType op, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Left = left;
         Right = right;
