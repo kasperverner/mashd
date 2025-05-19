@@ -61,7 +61,7 @@ public class TypeChecker : IAstVisitor<SymbolType>
         if (!BlockAlwaysReturns(node.Body))
         {
             errorReporter.Report.TypeCheck(node,
-                $"Function '{{node.Identifier}}' may exit without returning on some paths");
+                $"Function '{node.Identifier}' may exit without returning on some paths");
         }
 
         _returnTypeStack.Pop();
@@ -147,7 +147,9 @@ public class TypeChecker : IAstVisitor<SymbolType>
     {
         if (_returnTypeStack.Count == 0)
         {
-            errorReporter.Report.TypeCheck(node, $"Return statement outside of function");
+            errorReporter.Report.TypeCheck(node, "Return statement outside of function");
+            node.InferredType = SymbolType.Unknown;
+            return SymbolType.Unknown;
         }
 
         var exprType = node.Expression.Accept(this);
