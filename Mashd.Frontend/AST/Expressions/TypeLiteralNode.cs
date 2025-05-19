@@ -6,8 +6,8 @@ public class TypeLiteralNode : ExpressionNode
         
     public SymbolType ParsedType { get; set; }
 
-    public TypeLiteralNode(SymbolType type, int line, int column, string text, SymbolType parsedType)
-        : base(line, column, text)
+    public TypeLiteralNode(SymbolType type, int line, int column, string text, SymbolType parsedType, int level)
+        : base(line, column, text, level)
     {
         Type = type;
         ParsedType = parsedType;

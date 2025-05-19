@@ -11,8 +11,8 @@ public class FunctionCallNode : ExpressionNode
     public IDeclaration Definition {get; set; }
 
     
-    public FunctionCallNode(string functionName, List<ExpressionNode> arguments, int line, int column, string text)
-        : base(line, column, text)
+    public FunctionCallNode(string functionName, List<ExpressionNode> arguments, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         FunctionName = functionName;
         Arguments = arguments;

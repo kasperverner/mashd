@@ -8,8 +8,8 @@ public class BlockNode : ScopeNode
 {
     public List<StatementNode> Statements { get; }
     
-    public BlockNode(List<StatementNode> statements, int line, int column, string text)
-        : base(line, column, text)
+    public BlockNode(List<StatementNode> statements, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Statements = statements;
     }

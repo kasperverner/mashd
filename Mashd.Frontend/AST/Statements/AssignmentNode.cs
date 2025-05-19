@@ -11,8 +11,8 @@ public class AssignmentNode : StatementNode
     
     public IDeclaration Definition {get; set; }
     
-    public AssignmentNode(string identifier, ExpressionNode expression, int line, int column, string text)
-        : base(line, column, text)
+    public AssignmentNode(string identifier, ExpressionNode expression, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Identifier = identifier;
         Expression = expression;

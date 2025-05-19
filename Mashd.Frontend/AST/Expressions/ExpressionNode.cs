@@ -2,8 +2,8 @@
 {
     public abstract class ExpressionNode : AstNode
     {
-        protected ExpressionNode(int line, int column, string text)
-            : base(line, column, text)
+        protected ExpressionNode(int line, int column, string text, int level)
+            : base(line, column, text, level)
         {
         }
     }
