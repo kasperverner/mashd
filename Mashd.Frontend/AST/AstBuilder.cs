@@ -1,4 +1,5 @@
-﻿using Antlr4.Runtime;
+﻿using System.Globalization;
+using Antlr4.Runtime;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.AST.Definitions;
@@ -83,53 +84,6 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         return new FunctionDefinitionNode(functionName, returnType, parameters, body, line, column, text);
     }
-
-    public override AstNode VisitSchemaDefinition(MashdParser.SchemaDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var objectNode = Visit(context.expression()) as ObjectExpressionNode;
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        if (objectNode is null)
-        {
-            throw new ArgumentException("Expected ObjectExpressionNode, but got null");
-        }
-
-        SchemaObjectNode schemaObject = BuildSchemaObject(objectNode);
-
-        return new SchemaDefinitionNode(identifier, schemaObject, line, column, text);
-    }
-
-    public override AstNode VisitDatasetDefinition(MashdParser.DatasetDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var (line, column, text) = ExtractNodeInfo(context);
-
-        var node = Visit(context.expression()) switch
-        {
-            ObjectExpressionNode objectExpression => new DatasetDefinitionNode(identifier,
-                BuildDatasetObject(objectExpression), line, column, text),
-            MethodChainExpressionNode methodChain => new DatasetDefinitionNode(identifier, methodChain, line, column,
-                text),
-            _ => throw new ArgumentException("Invalid expression type for DatasetDefinition")
-        };
-
-        return node;
-    }
-
-    public override AstNode VisitMashdDefinition(MashdParser.MashdDefinitionContext context)
-    {
-        var identifier = context.ID().GetText();
-
-        var combineNode = Visit(context.expression()) as BinaryNode;
-
-        return new MashdDefinitionNode(identifier, combineNode.Left, combineNode.Right, combineNode.Line,
-            combineNode.Column, combineNode.Text);
-    }
-
 
     // Expression Nodes
     public override ExpressionNode VisitFunctionCall(MashdParser.FunctionCallContext context)
@@ -317,7 +271,8 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     // Literal Nodes
     public override AstNode VisitLiteralExpression(MashdParser.LiteralExpressionContext context)
     {
-        return Visit(context.literal());
+        var node = Visit(context.literal());
+        return node;
     }
 
     public override AstNode VisitTypeLitteralExpression(MashdParser.TypeLitteralExpressionContext context)
@@ -345,7 +300,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         string decText = context.DECIMAL().GetText();
 
-        double value = double.Parse(decText);
+        double value = double.Parse(decText, CultureInfo.InvariantCulture);
         return new LiteralNode(value, line, column, text, SymbolType.Decimal);
     }
 
@@ -395,14 +350,13 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
         var identifier = context.ID().GetText();
 
-        // Check if there is an initialization expression
-        bool hasInitialization = context.expression() != null;
+        var expression = context.expression() is { } exprCtx
+            ? Visit(exprCtx) as ExpressionNode
+            : null;
 
-        // If there is an initialization expression visit it
-        var expression = hasInitialization ? Visit(context.expression()) as ExpressionNode : null;
+        var (line, column, text) = ExtractNodeInfo(context);
 
-        return new VariableDeclarationNode(type, identifier, expression, hasInitialization, context.Start.Line,
-            context.Start.Column, context.GetText());
+        return new VariableDeclarationNode(type, identifier, expression, line, column, text);
     }
 
     public override AstNode VisitIfDefinition(MashdParser.IfDefinitionContext context)
@@ -425,7 +379,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
             );
             hasElse = true;
         }
-        
+
         else if (context.block().Length > 1)
         {
             elseBlock = (BlockNode)Visit(context.block(1));
@@ -526,7 +480,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
     {
         return (context.Start.Line, context.Start.Column, context.GetText());
     }
-    
+
     private SymbolType ParseVariableType(string typeText)
     {
         return typeText switch
@@ -588,58 +542,5 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         }
 
         return new MethodChainExpressionNode(null!, methodName, arguments, next, line, column, text);
-    }
-
-    private SchemaObjectNode BuildSchemaObject(ObjectExpressionNode node)
-    {
-        var properties = new Dictionary<string, SchemaField>();
-
-        foreach (var pair in node.Properties)
-        {
-            var key = pair.Key;
-
-            if (pair.Value is not ObjectExpressionNode value)
-            {
-                errorReporter.Add(ErrorType.AstBuilder, node,
-                    $"Expected value to be ObjectExpressionNode, but got {pair.Value.GetType()}");
-                continue;
-            }
-
-            var type = value.Properties["type"].Text;
-            var name = value.Properties["name"].Text;
-
-            if (string.IsNullOrEmpty(type))
-            {
-                errorReporter.Add(ErrorType.AstBuilder, node,
-                    $"Expected type to be specified in ObjectExpressionNode, but got empty string");
-                continue;
-            }
-
-            if (string.IsNullOrEmpty(name))
-            {
-                errorReporter.Add(ErrorType.AstBuilder, node,
-                    $"Expected name to be specified in ObjectExpressionNode, but got empty string");
-                continue;
-            }
-
-            properties[key] = new SchemaField(type, name);
-        }
-
-        return new SchemaObjectNode(properties, node.Line, node.Column, node.Text);
-    }
-
-    private DatasetObjectNode BuildDatasetObject(ObjectExpressionNode node)
-    {
-        var properties = new Dictionary<string, DatasetObjectNode.DatasetProperty>();
-
-        foreach (var pair in node.Properties)
-        {
-            var key = pair.Key;
-            var value = pair.Value;
-
-            properties[key] = new DatasetObjectNode.DatasetProperty(key, value);
-        }
-
-        return new DatasetObjectNode(node.Line, node.Column, node.Text, properties);
     }
 }

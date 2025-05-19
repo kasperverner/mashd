@@ -7,9 +7,6 @@ importStatement : 'import' TEXT ';'                                             
                 ;
 
 definition      : type ID '(' formalParameters ')' block                                        # FunctionDefinition
-                | SCHEMA_TYPE ID '=' expression ';'                                             # SchemaDefinition
-                | DATASET_TYPE ID '=' expression ';'                                            # DatasetDefinition                                
-                | MASHD_TYPE ID '=' expression ';'                                              # MashdDefinition
                 ;               
 
 formalParameters 
@@ -70,9 +67,9 @@ functionCall    : ID '(' actualParameters? ')'
 methodChain     : functionCall ('.' methodChain)?
                 ;       
 
-type            : BOOLEAN_TYPE | INTEGER_TYPE | DATE_TYPE | DECIMAL_TYPE | TEXT_TYPE
+type            : BOOLEAN_TYPE | INTEGER_TYPE | DATE_TYPE | DECIMAL_TYPE | TEXT_TYPE 
+                | SCHEMA_TYPE | DATASET_TYPE | MASHD_TYPE
                 ;
-
 
 // Lexer Rules
 BOOLEAN_TYPE    : 'Boolean' ;
@@ -85,8 +82,8 @@ SCHEMA_TYPE     : 'Schema' ;
 DATASET_TYPE    : 'Dataset' ;
 MASHD_TYPE      : 'Mashd' ;
 
-INTEGER         : [0-9]+ ;
 DECIMAL         : [0-9]+ '.' [0-9]+ ;
+INTEGER         : [0-9]+ ;
 BOOLEAN         : 'true' | 'false' ;
 
 NULL            : 'null' ;

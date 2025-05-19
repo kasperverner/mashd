@@ -10,16 +10,17 @@ public static class AdapterFactory
     {
         return adapterType.ToLower() switch
         {
+            "csv" => new CsvAdapter(
+                filePath: config["source"], 
+                delimiter: config.GetValueOrDefault("delimiter")
+            ),
             "sqlserver" => new SqlServerAdapter(
-                connectionString: config["connectionString"],
+                connectionString: config["source"],
                 query: config["query"]
             ),
-            "csv" => new CsvAdapter(
-                config["file"], config.GetValueOrDefault("delimiter")
-            ),
             "postgresql" => new PostgreSqlAdapter(
-                config["connectionString"],
-                config["query"]
+                connectionString: config["source"],
+                query: config["query"]
             ),
             _ => throw new NotSupportedException($"Adapter type '{adapterType}' is not supported.")
         };

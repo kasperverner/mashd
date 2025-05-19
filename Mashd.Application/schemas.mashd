@@ -1,3 +1,19 @@
+Schema peopleSchema = {
+  id: {
+    type: Integer,
+    name: "ID"
+  },
+  firstName: {
+    type: Text,
+    name: "FirstName"
+  },
+  lastName: {
+    type: Text,
+    name: "LastName"
+  }
+};
+
+/*
 Schema patientSchema = {
   patientId: {
     type: Integer,
@@ -20,7 +36,6 @@ Schema patientSchema = {
     name: "had_vaccination"
   }
 };
-
 
 Schema operationSchema = {
   operationId: {
@@ -48,3 +63,4 @@ Schema operationSchema = {
     name: "Confirmed-Vaccine"
   }
 };
+*/
