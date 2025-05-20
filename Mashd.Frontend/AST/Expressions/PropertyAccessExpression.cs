@@ -5,8 +5,8 @@ public class PropertyAccessExpressionNode : ExpressionNode
     public ExpressionNode Left { get; }
     public string Property { get; }
 
-    public PropertyAccessExpressionNode(ExpressionNode left, string property, int line, int column, string text)
-        : base(line, column, text)
+    public PropertyAccessExpressionNode(ExpressionNode left, string property, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Left = left;
         Property = property;

@@ -1,4 +1,5 @@
-﻿using Mashd.Frontend.AST;
+﻿using System.Globalization;
+using Mashd.Frontend.AST;
 
 namespace Mashd.Backend;
 
@@ -52,7 +53,7 @@ public class DecimalValue : Value
 
     public static DecimalValue TryParse(string? raw)
     {
-        if (double.TryParse(raw, out var result))
+        if (double.TryParse(raw, CultureInfo.InvariantCulture, out var result))
         {
             return new DecimalValue(result);
         }
@@ -64,7 +65,7 @@ public class DecimalValue : Value
 
     public override string ToString()
     {
-        return Raw.ToString();
+        return Raw.ToString(CultureInfo.InvariantCulture);
     }
 }
 

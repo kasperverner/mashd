@@ -96,4 +96,28 @@ public static class TestPipeline
         if (v is BooleanValue bv) return bv.Raw;
         throw new Exception($"Variable '{name}' is not a BooleanValue");
     }
+    /// <summary>Get the schema Value for a named variable.</summary>
+    // public static SchemaValue GetSchema(Interpreter interpreter, ProgramNode ast, string name)
+    // {
+    //     var v = GetValue(interpreter, ast, name);
+    //     if (v is SchemaValue sv) return sv;
+    //     throw new Exception($"Variable '{name}' is not a SchemaValue");
+    // }
+
+    /// <summary>Get the dataset Value for a named variable.</summary>
+    public static DatasetValue GetDataset(Interpreter interpreter, ProgramNode ast, string name)
+    {
+        var v = GetValue(interpreter, ast, name);
+        if (v is DatasetValue dv) return dv;
+        throw new Exception($"Variable '{name}' is not a DatasetValue");
+    }
+
+    /// <summary>Get the mashd Value for a named variable.</summary>
+    public static MashdValue GetMashd(Interpreter interpreter, ProgramNode ast, string name)
+    {
+        var v = GetValue(interpreter, ast, name);
+        if (v is MashdValue mv) return mv;
+        throw new Exception($"Variable '{name}' is not a MashdValue");
+    }
+
 }

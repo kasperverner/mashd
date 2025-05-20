@@ -5,8 +5,8 @@ public class ImportNode : AstNode
     
     public string Path { get; set; }
 
-    public ImportNode(string path, int line, int column, string text)
-        : base(line, column, text)
+    public ImportNode(string path, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Path = path;
     }

@@ -11,8 +11,8 @@ public class FunctionDefinitionNode : DefinitionNode, IDeclaration
     
     public BlockNode Body { get; }
     
-    public FunctionDefinitionNode(string functionName, SymbolType returnType, FormalParameterListNode parameterList, BlockNode body, int line, int column, string text)
-        : base(line, column, text)
+    public FunctionDefinitionNode(string functionName, SymbolType returnType, FormalParameterListNode parameterList, BlockNode body, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         DeclaredType = returnType;
         Identifier = functionName;

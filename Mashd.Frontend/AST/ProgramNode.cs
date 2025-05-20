@@ -11,8 +11,8 @@ public class ProgramNode : AstNode
     public List<DefinitionNode> Definitions { get; private set; }
     public List<StatementNode> Statements { get; private set; }
 
-    public ProgramNode(List<ImportNode> imports, List<DefinitionNode> definitions, List<StatementNode> statements, int line, int column, string text)
-        : base(line, column, text)
+    public ProgramNode(List<ImportNode> imports, List<DefinitionNode> definitions, List<StatementNode> statements, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Imports = imports;
         Definitions = definitions;

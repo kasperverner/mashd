@@ -9,15 +9,18 @@ using Mashd.Frontend.AST;
 namespace Mashd.Application;
 
 
-public class MashdInterpreter(string input)
+public class MashdInterpreter(string input, int level = 0)
 {
     private readonly ErrorReporter _errorReporter = new();
     private readonly HashSet<string> _processedFiles = new();
 
     private readonly string _input = input;
+    private readonly int _level = level;
+    
     private CommonTokenStream? Tokens { get; set; }
     private MashdParser.ProgramContext? Context { get; set; }
     public ProgramNode? Ast { get; private set; }
+    
 
     public MashdInterpreter Lex()
     {
@@ -32,18 +35,6 @@ public class MashdInterpreter(string input)
         CheckErrors(ErrorType.Lexical);
 
         return this;
-    }
-
-    // TODO: Do we maintain this method as it is not used in the current implementation?
-    public void Run()
-    {
-        Lex();
-        Parse();
-        BuildAst();
-        HandleImports();
-        Resolve();
-        TypeCheck();
-        Interpret();
     }
 
     public MashdInterpreter Parse()
@@ -71,7 +62,7 @@ public class MashdInterpreter(string input)
         {
             throw new InvalidOperationException("Parser must be run before AstBuilder.");
         }
-        AstBuilder astBuilder = new AstBuilder(_errorReporter);
+        AstBuilder astBuilder = new AstBuilder(_errorReporter, _level);
         Ast = (ProgramNode) astBuilder.Visit(Context);
 
         CheckErrors(ErrorType.AstBuilder);
@@ -125,7 +116,7 @@ public class MashdInterpreter(string input)
             }
 
             var importedContent = File.ReadAllText(importPath);
-            var importedInterpreter = new MashdInterpreter(importedContent);
+            var importedInterpreter = new MashdInterpreter(importedContent, _level - 1);
 
             // Pass the current processed files to the imported interpreter to avoid reprocessing
             importedInterpreter._processedFiles.UnionWith(_processedFiles);
@@ -168,10 +159,6 @@ public class MashdInterpreter(string input)
         catch (RuntimeException ex)
         {
             ReportException(ex);
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Unexpected error during interpretation", e);
         }
     }
 

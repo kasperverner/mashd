@@ -6,8 +6,8 @@
         
         public SymbolType ParsedType { get; set; }
 
-        public LiteralNode(object? value, int line, int column, string text, SymbolType parsedType)
-            : base(line, column, text)
+        public LiteralNode(object? value, int line, int column, string text, SymbolType parsedType, int level)
+            : base(line, column, text, level)
         {
             Value = value;
             ParsedType = parsedType;

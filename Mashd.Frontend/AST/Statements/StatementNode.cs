@@ -2,8 +2,8 @@
 
 public abstract class StatementNode : AstNode
 {
-    protected StatementNode(int line, int column, string text)
-        : base(line, column, text)
+    protected StatementNode(int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
     }
 

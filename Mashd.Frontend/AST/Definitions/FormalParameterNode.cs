@@ -7,8 +7,8 @@ public class FormalParameterNode : DefinitionNode, IDeclaration
     public SymbolType DeclaredType { get; }
     public string Identifier { get; }
 
-    public FormalParameterNode(SymbolType paramType, string identifier, int line, int column, string text)
-        : base(line, column, text)
+    public FormalParameterNode(SymbolType paramType, string identifier, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         DeclaredType = paramType;
         Identifier = identifier;

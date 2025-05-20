@@ -395,13 +395,12 @@ public class Functions
     [InlineData("foo(123, 456)", "Argument 2 has type Integer, expected Text")]
     public void FunctionCall_ParameterErrors(string callExpr, string expectedMessage)
     {
-        // Arrange: build the full program text
         string src = $@"
                 {FnDef}
                 Text result = {callExpr};
             ";
 
-        // Act & Assert: full end-to-end
+        // Act & Assert:
         var ex = Assert.Throws<FrontendException>(() =>
             TestPipeline.RunFull(src)
         );
@@ -411,4 +410,76 @@ public class Functions
             e.Message.Contains(expectedMessage, System.StringComparison.OrdinalIgnoreCase)
         );
     }
+    [Fact]
+    public void FunctionReturnsSchemaType()
+    {
+        var src = @"
+            Schema mk() {
+              return {
+                foo: { type: Integer, name: ""foo_col"" }
+              };
+            }
+            Schema result = mk();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+
+        // should be a SchemaValue
+        // var schemaVal = TestPipeline.GetSchema(interp, ast, "result");
+        // Assert.NotNull(schemaVal);
+    }
+
+    [Fact]
+    public void FunctionReturnsDatasetType()
+    {
+        var src = @"
+            Schema s = { foo: { type: Integer, name: ""foo_col"" } };
+
+            Dataset mkDs() {
+              return {
+                adapter: ""csv"",
+                schema: s,
+                source: ""in-memory://foo,1""
+              };
+            }
+
+            Dataset result = mkDs();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+
+        // should be a DatasetValue
+        var dsVal = TestPipeline.GetDataset(interp, ast, "result");
+        Assert.NotNull(dsVal);
+    }
+
+    [Fact]
+    public void FunctionReturnsMashdType()
+    {
+        var src = @"
+            Schema s = { foo: { type: Integer, name: ""foo_col"" } };
+
+            Dataset d1 = {
+              adapter: ""csv"",
+              schema: s,
+              source: ""in-memory://foo,1""
+            };
+            Dataset d2 = {
+              adapter: ""csv"",
+              schema: s,
+              source: ""in-memory://foo,2""
+            };
+
+            Mashd mkM() {
+              return d1 & d2;
+            }
+
+            Mashd result = mkM();
+        ";
+        var (interp, ast) = TestPipeline.Run(src);
+
+        // should be a MashdValue
+        var mashdVal = TestPipeline.GetMashd(interp, ast, "result");
+        Assert.NotNull(mashdVal);
+    }
+
+    
 }

@@ -5,7 +5,7 @@ namespace Mashd.Test.Integration;
 public class Parsing
 {
     [Theory]
-    // Integer.parse
+    // // Integer.parse
     [InlineData("Integer.parse(\"42\")", "Integer", 42L)]
     [InlineData("Integer.parse(42.9)", "Integer", 42L)]
     [InlineData("Integer.parse(123)", "Integer", 123L)]

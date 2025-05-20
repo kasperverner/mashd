@@ -6,8 +6,8 @@ public class ReturnNode : StatementNode
 {
     public ExpressionNode Expression { get; }
 
-    public ReturnNode(ExpressionNode expression, int line, int column, string text)
-        : base(line, column, text)
+    public ReturnNode(ExpressionNode expression, int line, int column, string text, int level)
+        : base(line, column, text, level)
     {
         Expression = expression;
     }

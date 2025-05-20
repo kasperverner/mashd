@@ -112,7 +112,7 @@ public class Interpreter : IAstVisitor<Value>
 
         var dataset = BuildDatasetFromObject(node, objectValue);
         ValidateDatasetProperties(node, dataset);
-        LoadDatasetData(dataset);
+        LoadDatasetData(node, dataset);
         ValidateDatasetData(node, dataset);
 
         return dataset;
@@ -183,7 +183,7 @@ public class Interpreter : IAstVisitor<Value>
         }
     }
 
-    private void LoadDatasetData(DatasetValue dataset)
+    private void LoadDatasetData(VariableDeclarationNode node, DatasetValue dataset)
     {
         try
         {
@@ -200,7 +200,7 @@ public class Interpreter : IAstVisitor<Value>
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            throw new ParseException(e.Message, node.Line, node.Column);
         }
     }
 
@@ -257,7 +257,7 @@ public class Interpreter : IAstVisitor<Value>
             throw new ParseException("Invalid dataset method chain value.", node.Line, node.Column);
 
         ValidateDatasetProperties(node, datasetValue);
-        LoadDatasetData(datasetValue);
+        LoadDatasetData(node, datasetValue);
         ValidateDatasetData(node, datasetValue);
 
         return datasetValue;
@@ -461,7 +461,7 @@ public class Interpreter : IAstVisitor<Value>
     {
         var leftVal = node.Left.Accept(this);
 
-        if (leftVal is TypeValue tv && node.MethodName == "parse" && node.Next == null)
+        if (leftVal is TypeValue tv && node is { MethodName: "parse", Next: null })
         {
             if (node.Arguments.Count < 1 || node.Arguments.Count > 2)
             {
@@ -504,7 +504,7 @@ public class Interpreter : IAstVisitor<Value>
             case SymbolType.Decimal:
                 switch (arg)
                 {
-                    case TextValue t: return new DecimalValue(double.Parse(t.Raw));
+                    case TextValue t: return new DecimalValue(double.Parse(t.Raw, CultureInfo.InvariantCulture));
                     case IntegerValue i: return new DecimalValue(i.Raw);
                     case DecimalValue d: return d;
                     default:
@@ -513,7 +513,8 @@ public class Interpreter : IAstVisitor<Value>
 
             case SymbolType.Text:
                 // Anything can become text via ToString()
-                return new TextValue(arg.ToString());
+                return new TextValue(arg.ToString() ?? string.Empty);
+                
 
             case SymbolType.Boolean:
                 switch (arg)
