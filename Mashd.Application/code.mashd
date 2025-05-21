@@ -31,7 +31,13 @@ Mashd combined = left & right;
 
 combined
   .match(left.id, right.id)
-  .fuzzyMatch(left.firstName, right.firstName, 0.85);
+  .fuzzyMatch(left.firstName, right.firstName, 0.85)
+  // .functionMatch(compareNames, left.lastName, right.lastName);
+  .transform({
+    id: left.id,
+    fullName: left.firstName,
+    lastName: left.lastName
+  });
 
 /*
 Dataset operationData = {

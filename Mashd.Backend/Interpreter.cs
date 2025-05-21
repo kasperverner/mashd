@@ -231,6 +231,9 @@ public class Interpreter : IAstVisitor<IValue>
 
     public IValue VisitBinaryNode(BinaryNode node)
     {
+        if (node.Operator == OpType.Combine)
+            return CreateMashed(node);
+        
         var leftVal = node.Left.Accept(this);
         var rightVal = node.Right.Accept(this);
 
@@ -262,15 +265,26 @@ public class Interpreter : IAstVisitor<IValue>
             // Assignment
             OpType.NullishCoalescing => leftVal is NullValue ? rightVal : leftVal,
             
-            // Mashd specific
-            OpType.Combine when leftVal is DatasetValue ds1 && rightVal is DatasetValue ds2 => new MashdValue(ds1, ds2),
-            OpType.Combine when leftVal is not DatasetValue || rightVal is DatasetValue => 
-                throw new NotImplementedException($"Combine operator not implemented for types {leftVal.GetType()} and {rightVal.GetType()}."),
-            
             _ => throw new NotImplementedException($"Binary operator {node.Operator} not implemented.")
         };
 
         return value;
+    }
+
+    private IValue CreateMashed(BinaryNode node)
+    {
+        var leftValue = node.Left.Accept(this);
+        var rightValue = node.Right.Accept(this);
+
+        if (leftValue is not DatasetValue ds1 || rightValue is not DatasetValue ds2)
+            throw new NotImplementedException(
+                $"Combine operator not implemented for types {leftValue.GetType()} and {rightValue.GetType()}.");
+
+        if (node.Left is not IdentifierNode nodeLeft || node.Right is not IdentifierNode nodeRight)
+            throw new NotImplementedException(
+                $"Combine operator not implemented for types {node.Left.GetType()} and {node.Right.GetType()}.");
+
+        return new MashdValue(nodeLeft.Name, ds1, nodeRight.Name, ds2);
     }
 
     public IValue VisitIdentifierNode(IdentifierNode node)
@@ -286,6 +300,13 @@ public class Interpreter : IAstVisitor<IValue>
         if (_values.TryGetValue(node.Definition, out var globalVal))
         {
             return globalVal;
+        }
+        
+        // 3) check if the identifier is a function
+        if (node.Definition is FunctionDefinitionNode def && _functions.TryGetValue(def, out var functionDef))
+        {
+            //TODO: Handle function as arguments
+            return new NullValue();
         }
 
         throw new UndefinedVariableException(node);
@@ -304,21 +325,11 @@ public class Interpreter : IAstVisitor<IValue>
 
     public IValue VisitFormalParameterNode(FormalParameterNode node)
     {
-        // TODO: Implement formal parameter
-
-        Console.WriteLine("FormalParameterNode not implemented yet." +
-                          $" Parameter: {node.Identifier}, Type: {node.InferredType}");
-        
         return new NullValue();
     }
 
     public IValue VisitFormalParameterListNode(FormalParameterListNode node)
     {
-        // TODO: Implement formal parameter list
-        
-        Console.WriteLine("FormalParameterListNode not implemented yet." +
-                          $" Parameters: {string.Join(", ", node.Parameters.Select(p => p.Identifier))}");
-        
         return new NullValue();
     }
 
@@ -337,18 +348,22 @@ public class Interpreter : IAstVisitor<IValue>
 
     public IValue VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
+        if (node.Left is not IdentifierNode identifier)
+            throw new ParseException("Property access only valid on identifiers.", node.Line, node.Column);
+        
         var value = node.Left.Accept(this);
+        
         if (value is not DatasetValue datasetValue)
         {
             throw new ParseException("Property access only valid on datasets.", node.Line, node.Column);
         }
         
-        if (!datasetValue.Schema.Raw.TryGetValue(node.Property, out var propertyValue))
+        if (!datasetValue.Schema.Raw.TryGetValue(node.Property, out var fieldValue))
         {
             throw new ParseException($"Property '{node.Property}' not found in schema.", node.Line, node.Column);
         }
         
-        return new TextValue(propertyValue.Name);
+        return new PropertyAccessValue(fieldValue, identifier.Name, node.Property);
     }
 
     public IValue VisitMethodChainExpressionNode(MethodChainExpressionNode node)
@@ -484,10 +499,10 @@ public class Interpreter : IAstVisitor<IValue>
         if (arguments.Count != 2)
             throw new Exception("match() requires exactly two arguments");
 
-        if (arguments[0] is not TextValue left)
+        if (arguments[0] is not PropertyAccessValue left)
             throw new Exception("match() first argument must be a dataset property access");
         
-        if (arguments[1] is not TextValue right)
+        if (arguments[1] is not PropertyAccessValue right)
             throw new Exception("match() second argument must be a dataset property access");
 
         mashd.AddMatch(left, right);
@@ -500,10 +515,10 @@ public class Interpreter : IAstVisitor<IValue>
         if (arguments.Count != 3)
             throw new Exception("fuzzyMatch() requires exactly three arguments");
 
-        if (arguments[0] is not TextValue left)
+        if (arguments[0] is not PropertyAccessValue left)
             throw new Exception("fuzzyMatch() first argument must be a dataset property access");
         
-        if (arguments[1] is not TextValue right)
+        if (arguments[1] is not PropertyAccessValue right)
             throw new Exception("fuzzyMatch() second argument must be a dataset property access");
 
         if (arguments[2] is not DecimalValue threshold)
@@ -521,7 +536,15 @@ public class Interpreter : IAstVisitor<IValue>
     
     private IValue HandleTransform(MashdValue mashd, List<IValue> arguments)
     {
-        throw new NotImplementedException();
+        if (arguments.Count != 1)
+            throw new Exception("transform() requires exactly one arguments");
+
+        if (arguments[0] is not ObjectValue objectValue)
+            throw new Exception("transform() first argument must be an object");
+        
+        mashd.Transform(objectValue);
+        
+        return mashd;
     }
     
     private IValue HandleJoin(MashdValue mashd, List<IValue> arguments)

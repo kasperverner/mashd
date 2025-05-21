@@ -2,8 +2,8 @@
 
 namespace Mashd.Backend.Match;
 
-public class SimpleMatch(TextValue left, TextValue right) : IMatch
+public class SimpleMatch(PropertyAccessValue left, PropertyAccessValue right) : IMatch
 {
-    public TextValue Left { get; } = left;
-    public TextValue Right { get; } = right;
+    public PropertyAccessValue Left { get; } = left;
+    public PropertyAccessValue Right { get; } = right;
 }
