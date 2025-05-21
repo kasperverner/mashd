@@ -178,7 +178,8 @@ public class Interpreter : IAstVisitor<IValue>
 
     public IValue VisitExpressionStatementNode(ExpressionStatementNode node)
     {
-        // TODO: Implement expression statement
+        node.Expression.Accept(this);
+            
         return new NullValue();
     }
 
@@ -337,17 +338,17 @@ public class Interpreter : IAstVisitor<IValue>
     public IValue VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
         var value = node.Left.Accept(this);
-        if (value is not SchemaValue schemaValue)
+        if (value is not DatasetValue datasetValue)
         {
-            throw new ParseException("Property access only valid on schemas.", node.Line, node.Column);
+            throw new ParseException("Property access only valid on datasets.", node.Line, node.Column);
         }
         
-        if (!schemaValue.Raw.TryGetValue(node.Property, out var propertyValue))
+        if (!datasetValue.Schema.Raw.TryGetValue(node.Property, out var propertyValue))
         {
             throw new ParseException($"Property '{node.Property}' not found in schema.", node.Line, node.Column);
         }
         
-        return propertyValue;
+        return new TextValue(propertyValue.Name);
     }
 
     public IValue VisitMethodChainExpressionNode(MethodChainExpressionNode node)
@@ -483,11 +484,11 @@ public class Interpreter : IAstVisitor<IValue>
         if (arguments.Count != 2)
             throw new Exception("match() requires exactly two arguments");
 
-        if (arguments[0] is not SchemaFieldValue left)
-            throw new Exception("match() first argument must be a schema property access");
+        if (arguments[0] is not TextValue left)
+            throw new Exception("match() first argument must be a dataset property access");
         
-        if (arguments[1] is not SchemaFieldValue right)
-            throw new Exception("match() second argument must be a schema property access");
+        if (arguments[1] is not TextValue right)
+            throw new Exception("match() second argument must be a dataset property access");
 
         mashd.AddMatch(left, right);
 
@@ -499,11 +500,11 @@ public class Interpreter : IAstVisitor<IValue>
         if (arguments.Count != 3)
             throw new Exception("fuzzyMatch() requires exactly three arguments");
 
-        if (arguments[0] is not SchemaFieldValue left)
-            throw new Exception("fuzzyMatch() first argument must be a schema property access");
+        if (arguments[0] is not TextValue left)
+            throw new Exception("fuzzyMatch() first argument must be a dataset property access");
         
-        if (arguments[1] is not SchemaFieldValue right)
-            throw new Exception("fuzzyMatch() second argument must be a schema property access");
+        if (arguments[1] is not TextValue right)
+            throw new Exception("fuzzyMatch() second argument must be a dataset property access");
 
         if (arguments[2] is not DecimalValue threshold)
             throw new Exception("fuzzyMatch() third argument must be a decimal value");

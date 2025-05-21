@@ -6,20 +6,25 @@ public class MashdValue(DatasetValue left, DatasetValue right) : IValue
 {
     public readonly DatasetValue Left = left;
     public readonly DatasetValue Right = right;
-    public List<IMatch> MatchRules { get; } = [];
+    public Queue<IMatch> MatchRules { get; } = [];
     
     public override string ToString()
     {
         return Left.ToString() + " & " + Right.ToString();
     }
 
-    public void AddMatch(SchemaFieldValue left, SchemaFieldValue right)
+    public void AddMatch(TextValue left, TextValue right)
     {
-        MatchRules.Add(new Match.Match(left, right));
+        MatchRules.Enqueue(new SimpleMatch(left, right));
     }
     
-    public void AddMatch(SchemaFieldValue left, SchemaFieldValue right, DecimalValue threshold)
+    public void AddMatch(TextValue left, TextValue right, DecimalValue threshold)
     {
-        MatchRules.Add(new Match.FuzzyMatch(left, right, threshold));
+        MatchRules.Enqueue(new FuzzyMatch(left, right, threshold));
+    }
+    
+    public void AddMatch(TextValue identifier, params object[] arguments)
+    {
+        MatchRules.Enqueue(new FunctionMatch(identifier, arguments));
     }
 }

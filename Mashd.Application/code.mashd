@@ -1,11 +1,37 @@
-﻿import "schemas.mashd";
+﻿Schema peopleSchema = {
+  id: {
+    type: Integer,
+    name: "ID"
+  },
+  firstName: {
+    type: Text,
+    name: "FirstName"
+  },
+  lastName: {
+    type: Text,
+    name: "LastName"
+  }
+};
 
-Dataset peopleData = {
+Dataset left = {
   adapter: "csv",
   schema: peopleSchema,
   source: "data.csv",
   delimiter: ";"
 };
+
+Dataset right = {
+  adapter: "csv",
+  schema: peopleSchema,
+  source: "data.csv",
+  delimiter: ";"
+};
+
+Mashd combined = left & right;
+
+combined
+  .match(left.id, right.id)
+  .fuzzyMatch(left.firstName, right.firstName, 0.85);
 
 /*
 Dataset operationData = {

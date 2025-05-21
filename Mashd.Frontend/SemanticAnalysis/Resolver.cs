@@ -244,14 +244,16 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        if (node.Left is not null)
-        {
-            Resolve(node.Left);
-        }
-        
+        Resolve(node.Left);
+
         foreach (var method in node.Arguments)
         {
             Resolve(method);
+        }
+        
+        if (node.Next is not null)
+        {
+            Resolve(node.Next);
         }
         
         return DummyVoid.Null;

@@ -243,9 +243,8 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
 
     public SymbolType VisitIdentifierNode(IdentifierNode node)
     {
-        var declared = node.Definition.DeclaredType;
-        node.InferredType = declared;
-        return declared;
+        node.InferredType = node.Definition.DeclaredType;
+        return node.InferredType;
     }
 
     public SymbolType VisitParenNode(ParenNode node)
@@ -409,110 +408,95 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
     public SymbolType VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
         var objectType = node.Left.Accept(this);
-        if (objectType != SymbolType.Schema && objectType != SymbolType.Dataset)
+        if (objectType != SymbolType.Dataset)
         {
-            errorReporter.Report.TypeCheck(node, $"Property access requires Schema or Dataset");
+            errorReporter.Report.TypeCheck(node, $"Property access requires Dataset");
+            node.InferredType = SymbolType.Unknown;
+            return node.InferredType;
         }
 
-        // TODO: Check if the property exists in the schema or dataset
-        // TODO: Check if the return type is of the correct type
-
+        node.InferredType = SymbolType.Dataset;
         return node.InferredType;
     }
 
     public SymbolType VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        var leftType = node.Left?.Accept(this) ?? SymbolType.Unknown;
-
-        foreach (var arg in node.Arguments)
-        {
-            arg.Accept(this);
-        }
-
-        if (node.Next != null)
-        {
-            node.Next.Accept(this);
-        }
-
         if (node.MethodName == "parse")
         {
-            // Must be on a type-literal
-            if (node.Left is not TypeLiteralNode tl)
+            if (node.Left is not TypeLiteralNode literalNode)
             {
-                errorReporter.Report.TypeCheck(
-                    node,
-                    "parse() must be invoked on a type literal, e.g. Integer.parse(...)"
-                );
-                node.InferredType = SymbolType.Unknown;
-                return node.InferredType;
+                errorReporter.Report.TypeCheck(node, "parse() must be invoked on a type literal, e.g. Integer.parse(...)");
+                return node.InferredType = SymbolType.Unknown;
             }
-
-            // Only a single argument is allowed
-            if (node.Arguments.Count != 1)
+            
+            var hasValidArguments = literalNode.Type switch
             {
-                errorReporter.Report.TypeCheck(node, $"parse() on {tl.Type} requires exactly one argument, but got {node.Arguments.Count}");
-                node.InferredType = SymbolType.Unknown;
-                return node.InferredType;
-            }
-
-            var argType = node.Arguments[0].InferredType;
-            bool argOk = tl.Type switch
-            {
-                SymbolType.Integer => argType == SymbolType.Text
-                                      || argType == SymbolType.Decimal
-                                      || argType == SymbolType.Integer,
-                SymbolType.Decimal => argType == SymbolType.Text
-                                      || argType == SymbolType.Integer
-                                      || argType == SymbolType.Decimal,
-                SymbolType.Text => argType is SymbolType.Text or SymbolType.Integer
-                                   || argType == SymbolType.Decimal
-                                   || argType == SymbolType.Boolean
-                                   || argType == SymbolType.Date,
-                SymbolType.Boolean => argType == SymbolType.Text
-                                      || argType == SymbolType.Boolean,
-                SymbolType.Date when node.Arguments.Count is 1 or 2 => argType == SymbolType.Text,
+                SymbolType.Integer when node.Arguments.Count is 1 => node.Arguments[0].InferredType is SymbolType.Text or SymbolType.Decimal or SymbolType.Integer,
+                SymbolType.Decimal when node.Arguments.Count is 1 => node.Arguments[0].InferredType is SymbolType.Text or SymbolType.Integer or SymbolType.Decimal,
+                SymbolType.Text when node.Arguments.Count is 1 => node.Arguments[0].InferredType is SymbolType.Text or SymbolType.Integer or SymbolType.Decimal or SymbolType.Boolean or SymbolType.Date,
+                SymbolType.Boolean when node.Arguments.Count is 1 => node.Arguments[0].InferredType is SymbolType.Text or SymbolType.Boolean,
+                SymbolType.Date when node.Arguments.Count is 1 => node.Arguments[0].InferredType == SymbolType.Text,
+                SymbolType.Date when node.Arguments.Count is 2 => node.Arguments[1].InferredType == SymbolType.Text,
                 _ => false
             };
-
-            if (!argOk)
+        
+            if (!hasValidArguments)
             {
-                errorReporter.Report.TypeCheck(node, $"Cannot parse a {argType} as {tl.Type}");
-                node.InferredType = SymbolType.Unknown;
-                return node.InferredType;
+                errorReporter.Report.TypeCheck(node, $"Cannot parse {string.Join(node.Arguments.ToString(), ',')} as {literalNode.Type}");
+                return node.InferredType = SymbolType.Unknown;
             }
-
-            node.InferredType = tl.Type;
-            return node.InferredType;
+        
+            return node.InferredType = literalNode.Type;
+        }
+        
+        SymbolType leftType = SymbolType.Unknown;
+        var chain = node;
+        
+        while (chain != null)
+        {
+            foreach (var argument in chain.Arguments)
+            {
+                argument?.Accept(this);
+                Console.WriteLine($"Argument type: {argument?.InferredType}, {argument?.GetType()}");
+            }
+            
+            if (chain.Left is not IdentifierNode or MethodChainExpressionNode)
+            {
+                errorReporter.Report.TypeCheck(node, $"Invalid left-hand side type '{chain.Left.GetType()}'");
+                return node.InferredType = SymbolType.Unknown;
+            }
+            
+            leftType = node.Left.Accept(this);
+            
+            var isValid = node.MethodName switch
+            {
+                "toFile" when leftType == SymbolType.Dataset => true,
+                "toTable" when leftType == SymbolType.Dataset => true,
+        
+                "match" when leftType == SymbolType.Mashd => true,
+                "fuzzyMatch" when leftType == SymbolType.Mashd => true,
+                "functionMatch" when leftType == SymbolType.Mashd => true,
+                "transform" when leftType == SymbolType.Mashd => true,
+                
+                "join" when leftType == SymbolType.Mashd => true,
+                "union" when leftType == SymbolType.Mashd => true,
+        
+                _ => false
+            };
+        
+            if (!isValid)
+            {
+                errorReporter.Report.TypeCheck(node,$"Method '{node.MethodName}' is not valid on expression of type '{leftType}'");
+                return node.InferredType = SymbolType.Unknown;
+            }
+        
+            if (leftType == SymbolType.Mashd && node.MethodName is "join" or "union")
+                leftType = SymbolType.Dataset;
+            
+            chain.InferredType = leftType;
+            chain = chain.Next;
         }
 
-        // Dataset and Mashd instance methods
-        bool isValid = node.MethodName switch
-        {
-            "toFile" when leftType == SymbolType.Dataset && node.Left is not TypeLiteralNode => true,
-            "toTable" when leftType == SymbolType.Dataset && node.Left is not TypeLiteralNode => true,
-
-            "match" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-            "fuzzyMatch" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-            "functionMatch" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-            "transform" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-            "join" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-            "union" when leftType == SymbolType.Mashd && node.Left is not TypeLiteralNode => true,
-
-            _ => false
-        };
-
-        if (!isValid)
-        {
-            errorReporter.Report.TypeCheck(
-                node,
-                $"Method '{node.MethodName}' is not valid on expression of type '{leftType}'"
-            );
-        }
-
-        if (leftType == SymbolType.Mashd && node.MethodName is "join" or "union")
-            leftType = SymbolType.Dataset;
-
-        node.InferredType = leftType;
         return node.InferredType;
     }
 

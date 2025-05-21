@@ -2,9 +2,8 @@
 
 namespace Mashd.Backend.Match;
 
-public class FuzzyMatch(TextValue left, TextValue right, DecimalValue threshold) : IMatch
+public class SimpleMatch(TextValue left, TextValue right) : IMatch
 {
     public TextValue Left { get; } = left;
     public TextValue Right { get; } = right;
-    public DecimalValue Threshold { get; } = threshold;
 }
