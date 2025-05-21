@@ -1,6 +1,6 @@
 ﻿using Mashd.Backend;
 
-namespace Mashd.Test;
+namespace Mashd.Test.Unit.Parsing;
 
 public class ExpressionUnitTests
 {
@@ -26,8 +26,8 @@ public class ExpressionUnitTests
     [InlineData("a == b", "a==b", typeof(MashdParser.ComparisonExpressionContext))]
     [InlineData("a != b", "a!=b", typeof(MashdParser.ComparisonExpressionContext))]
     [InlineData("x ?? y", "x??y", typeof(MashdParser.NullishCoalescingExpressionContext))]
-    [InlineData("true && false", "true&&false", typeof(MashdParser.LogicalAndExpressionContext))]
-    [InlineData("true || false", "true||false", typeof(MashdParser.LogicalOrExpressionContext))]
+    [InlineData("true && false", "true&&false", typeof(MashdParser.LogicalExpressionContext))]
+    [InlineData("true || false", "true||false", typeof(MashdParser.LogicalExpressionContext))]
     [InlineData("x > 0 ? 1 : 0", "x>0?1:0", typeof(MashdParser.TernaryExpressionContext))]
     [InlineData("{ key: 42 }", "{key:42}", typeof(MashdParser.ObjectExpressionContext))]
     public void CanParseValidExpressions(string input, string expected, Type expectedType)

@@ -1,4 +1,4 @@
-﻿namespace Mashd.Test;
+﻿namespace Mashd.Test.Unit.Parsing;
 
 public static class TestSnippets
 {

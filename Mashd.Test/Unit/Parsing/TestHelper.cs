@@ -2,7 +2,7 @@ using Antlr4.Runtime;
 using Antlr4.Runtime.Tree;
 using Mashd.Backend;
 
-namespace Mashd.Test;
+namespace Mashd.Test.Unit.Parsing;
 
 public static class TestHelper
 {
