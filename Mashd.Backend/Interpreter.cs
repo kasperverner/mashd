@@ -6,27 +6,28 @@ using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
 using System.Globalization;
 using Mashd.Backend.BuiltInMethods;
+using Mashd.Backend.Value;
 
 namespace Mashd.Backend;
 
-public class Interpreter : IAstVisitor<Value>
+public class Interpreter : IAstVisitor<IValue>
 {
     // Tolerance for floating-point comparisons
     private const double Tolerance = 1e-10;
 
     // Runtime store: map each declaration to its current Value
-    private readonly Dictionary<IDeclaration, Value> _values = new();
+    private readonly Dictionary<IDeclaration, IValue> _values = new();
 
     // Expose values for testing or inspection
-    public IReadOnlyDictionary<IDeclaration, Value> Values => _values;
+    public IReadOnlyDictionary<IDeclaration, IValue> Values => _values;
 
     // New: store function definitions
     private readonly Dictionary<FunctionDefinitionNode, FunctionDefinitionNode> _functions = new();
 
     // New: an activation record stack for parameters/locals
-    private readonly Stack<Dictionary<IDeclaration, Value>> _callStack = new();
+    private readonly Stack<Dictionary<IDeclaration, IValue>> _callStack = new();
 
-    public Value VisitProgramNode(ProgramNode node)
+    public IValue VisitProgramNode(ProgramNode node)
     {
         // Phase 1: register every function
         foreach (var def in node.Definitions)
@@ -36,7 +37,7 @@ public class Interpreter : IAstVisitor<Value>
             }
 
         // Phase 2: run everything (function definitions return null)
-        Value last = new NullValue();
+        IValue last = new NullValue();
         foreach (var stmt in node.Statements)
         {
             last = stmt.Accept(this);
@@ -45,12 +46,12 @@ public class Interpreter : IAstVisitor<Value>
         return last;
     }
 
-    public Value VisitImportNode(ImportNode node)
+    public IValue VisitImportNode(ImportNode node)
     {
         return new NullValue();
     }
 
-    public Value VisitFunctionCallNode(FunctionCallNode node)
+    public IValue VisitFunctionCallNode(FunctionCallNode node)
     {
         if (node.Definition is not FunctionDefinitionNode def)
             throw new InvalidOperationException("Function definition is missing or invalid.");
@@ -59,7 +60,7 @@ public class Interpreter : IAstVisitor<Value>
         var arguments = node.Arguments.Select(a => a.Accept(this)).ToArray();
 
         // bind parameters into a fresh activation‐record
-        var locals = new Dictionary<IDeclaration, Value>();
+        var locals = new Dictionary<IDeclaration, IValue>();
         for (int i = 0; i < def.ParameterList.Parameters.Count; i++)
         {
             IDeclaration paramDecl = def.ParameterList.Parameters[i];
@@ -86,7 +87,7 @@ public class Interpreter : IAstVisitor<Value>
         }
     }
 
-    public Value VisitVariableDeclarationNode(VariableDeclarationNode node)
+    public IValue VisitVariableDeclarationNode(VariableDeclarationNode node)
     {
         var value = node switch
         {
@@ -100,7 +101,7 @@ public class Interpreter : IAstVisitor<Value>
         return value;
     }
     
-    public Value VisitAssignmentNode(AssignmentNode node)
+    public IValue VisitAssignmentNode(AssignmentNode node)
     {
         var value = node switch
         {
@@ -122,63 +123,13 @@ public class Interpreter : IAstVisitor<Value>
         if (value is not ObjectValue objectValue)
             throw new ParseException("Invalid dataset object value.", node.Line, node.Column);
 
-        var dataset = BuildDatasetFromObject(node, objectValue);
-        
+        var dataset = objectValue.ToDatasetValue();
         dataset.ValidateProperties();
         dataset.LoadData();
         dataset.ValidateData();
 
         return dataset;
     }
-
-    private DatasetValue BuildDatasetFromObject(ObjectExpressionNode node, ObjectValue value)
-    {
-        var properties = new Dictionary<string, string>();
-        foreach (var (key, val) in value.Raw)
-            if (val is TextValue textValue)
-                properties[key] = textValue.Raw;
-
-        if (!properties.TryGetValue("source", out var source))
-            throw new ParseException($"Dataset missing 'source' property.", node.Line, node.Column);
-
-        if (!properties.TryGetValue("adapter", out var adapter))
-            throw new ParseException($"Dataset missing 'adapter' property.", node.Line, node.Column);
-
-        if (!value.Raw.TryGetValue("schema", out var schemaObject))
-            throw new ParseException($"Dataset missing 'schema' property.", node.Line, node.Column);
-
-        var schema = BuildSchemaFromObject(schemaObject);
-
-        var query = properties.GetValueOrDefault("query");
-        var delimiter = properties.GetValueOrDefault("delimiter");
-
-        return new DatasetValue(schema, source, adapter, query, delimiter);
-    }
-
-    private SchemaValue BuildSchemaFromObject(Value value)
-    {
-        if (value is not ObjectValue objectValue)
-            throw new ArgumentException("Invalid object value for schema.");
-
-        var fields = new Dictionary<string, SchemaFieldValue>();
-
-        foreach (var (identifier, fieldValue) in objectValue.Raw)
-        {
-            if (fieldValue is not ObjectValue fieldObjectValue) continue;
-
-            var name = fieldObjectValue.Raw.GetValueOrDefault("name");
-            var type = fieldObjectValue.Raw.GetValueOrDefault("type");
-
-            if (name is not TextValue textValue || type is not TypeValue typeValue)
-                throw new ArgumentException("Invalid object value for schema field.");
-
-            fields[identifier] = new SchemaFieldValue(typeValue.Raw, textValue.Raw);
-        }
-
-        return new SchemaValue(fields);
-    }
-
-    
 
     private DatasetValue HandleDatasetFromMethodNode(MethodChainExpressionNode node)
     {
@@ -195,7 +146,7 @@ public class Interpreter : IAstVisitor<Value>
         return datasetValue;
     }
     
-    public Value VisitIfNode(IfNode node)
+    public IValue VisitIfNode(IfNode node)
     {
         var conditionValue = node.Condition.Accept(this);
         if (conditionValue is not BooleanValue booleanValue)
@@ -214,7 +165,7 @@ public class Interpreter : IAstVisitor<Value>
         return new NullValue();
     }
 
-    public Value VisitTernaryNode(TernaryNode node)
+    public IValue VisitTernaryNode(TernaryNode node)
     {
         var conditionValue = node.Condition.Accept(this);
         if (conditionValue is BooleanValue booleanValue)
@@ -225,18 +176,18 @@ public class Interpreter : IAstVisitor<Value>
         throw new TypeMismatchException(node.Condition);
     }
 
-    public Value VisitExpressionStatementNode(ExpressionStatementNode node)
+    public IValue VisitExpressionStatementNode(ExpressionStatementNode node)
     {
         // TODO: Implement expression statement
         return new NullValue();
     }
 
-    public Value VisitParenNode(ParenNode node)
+    public IValue VisitParenNode(ParenNode node)
     {
         return node.InnerExpression.Accept(this);
     }
 
-    public Value VisitLiteralNode(LiteralNode node)
+    public IValue VisitLiteralNode(LiteralNode node)
     {
         if (node.Value is null)
             return new NullValue();
@@ -252,12 +203,12 @@ public class Interpreter : IAstVisitor<Value>
 
     }
 
-    public Value VisitTypeLiteralNode(TypeLiteralNode node)
+    public IValue VisitTypeLiteralNode(TypeLiteralNode node)
     {
         return new TypeValue(node.InferredType);
     }
 
-    public Value VisitUnaryNode(UnaryNode node)
+    public IValue VisitUnaryNode(UnaryNode node)
     {
         var value = node.Operand.Accept(this);
         return node.Operator switch
@@ -277,7 +228,7 @@ public class Interpreter : IAstVisitor<Value>
         };
     }
 
-    public Value VisitBinaryNode(BinaryNode node)
+    public IValue VisitBinaryNode(BinaryNode node)
     {
         var leftVal = node.Left.Accept(this);
         var rightVal = node.Right.Accept(this);
@@ -321,7 +272,7 @@ public class Interpreter : IAstVisitor<Value>
         return value;
     }
 
-    public Value VisitIdentifierNode(IdentifierNode node)
+    public IValue VisitIdentifierNode(IdentifierNode node)
     {
         // 1) if inside a function, check the top of the call‐stack first
         if (_callStack.Count > 0 &&
@@ -339,9 +290,9 @@ public class Interpreter : IAstVisitor<Value>
         throw new UndefinedVariableException(node);
     }
 
-    public Value VisitBlockNode(BlockNode node)
+    public IValue VisitBlockNode(BlockNode node)
     {
-        Value last = new NullValue();
+        IValue last = new NullValue();
         foreach (var stmt in node.Statements)
         {
             last = stmt.Accept(this);
@@ -350,166 +301,239 @@ public class Interpreter : IAstVisitor<Value>
         return last;
     }
 
-    public Value VisitFormalParameterNode(FormalParameterNode node)
+    public IValue VisitFormalParameterNode(FormalParameterNode node)
     {
         // TODO: Implement formal parameter
+
+        Console.WriteLine("FormalParameterNode not implemented yet." +
+                          $" Parameter: {node.Identifier}, Type: {node.InferredType}");
         
         return new NullValue();
     }
 
-    public Value VisitFormalParameterListNode(FormalParameterListNode node)
+    public IValue VisitFormalParameterListNode(FormalParameterListNode node)
     {
         // TODO: Implement formal parameter list
+        
+        Console.WriteLine("FormalParameterListNode not implemented yet." +
+                          $" Parameters: {string.Join(", ", node.Parameters.Select(p => p.Identifier))}");
+        
         return new NullValue();
     }
 
-    public Value VisitFunctionDefinitionNode(FunctionDefinitionNode node)
+    public IValue VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
         // register the function AST-node so calls can find it
         _functions[node] = node;
         return new NullValue();
     }
 
-    public Value VisitReturnNode(ReturnNode node)
+    public IValue VisitReturnNode(ReturnNode node)
     {
         var value = node.Expression.Accept(this);
         throw new FunctionReturnExceptionSignal(value);
     }
 
-    public Value VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
+    public IValue VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
-        // TODO: Implement property access
+        var value = node.Left.Accept(this);
+        if (value is not SchemaValue schemaValue)
+        {
+            throw new ParseException("Property access only valid on schemas.", node.Line, node.Column);
+        }
         
-        return new NullValue();
+        if (!schemaValue.Raw.TryGetValue(node.Property, out var propertyValue))
+        {
+            throw new ParseException($"Property '{node.Property}' not found in schema.", node.Line, node.Column);
+        }
+        
+        return propertyValue;
     }
 
-    public Value VisitMethodChainExpressionNode(MethodChainExpressionNode node)
+    public IValue VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
         var leftVal = node.Left.Accept(this);
 
         if (leftVal is TypeValue tv && node is { MethodName: "parse", Next: null })
         {
-            if (node.Arguments.Count < 1 || node.Arguments.Count > 2)
+            if (node.Arguments.Count is < 1 or > 2)
             {
                 throw new Exception("parse() requires exactly one ore two arguments");
             }
 
-            var argVal = node.Arguments[0].Accept(this);
-            return InvokeStaticParse(tv, argVal, node);
+            var arguments = node.Arguments[0].Accept(this);
+            return InvokeStaticParse(tv, arguments, node);
         }
 
-        Value current = leftVal;
+        var current = leftVal;
         var chain = node;
+        
         while (chain != null)
         {
-            var argValues = chain.Arguments
+            var arguments = chain.Arguments
                 .Select(a => a.Accept(this))
                 .ToList();
 
-            current = InvokeInstanceMethod(current, chain.MethodName, argValues, chain);
+            current = InvokeInstanceMethod(current, chain.MethodName, arguments);
             chain = chain.Next;
         }
 
         return current;
     }
 
-    private Value InvokeStaticParse(TypeValue tv, Value arg, MethodChainExpressionNode node)
+    private IValue InvokeStaticParse(TypeValue tv, IValue argument, MethodChainExpressionNode node)
     {
         switch (tv.Raw)
         {
             case SymbolType.Integer:
-                switch (arg)
+                switch (argument)
                 {
                     case TextValue t: return new IntegerValue(long.Parse(t.Raw));
                     case DecimalValue d: return new IntegerValue((long)d.Raw);
                     case IntegerValue i: return i;
                     default:
-                        throw new Exception($"Integer.parse() cannot accept {arg.GetType().Name}");
+                        throw new Exception($"Integer.parse() cannot accept {argument.GetType().Name}");
                 }
 
             case SymbolType.Decimal:
-                switch (arg)
+                switch (argument)
                 {
                     case TextValue t: return new DecimalValue(double.Parse(t.Raw, CultureInfo.InvariantCulture));
                     case IntegerValue i: return new DecimalValue(i.Raw);
                     case DecimalValue d: return d;
                     default:
-                        throw new Exception($"Decimal.parse() cannot accept {arg.GetType().Name}");
+                        throw new Exception($"Decimal.parse() cannot accept {argument.GetType().Name}");
                 }
 
             case SymbolType.Text:
                 // Anything can become text via ToString()
-                return new TextValue(arg.ToString() ?? string.Empty);
+                return new TextValue(argument.ToString() ?? string.Empty);
                 
 
             case SymbolType.Boolean:
-                switch (arg)
+                switch (argument)
                 {
                     case TextValue t: return new BooleanValue(bool.Parse(t.Raw));
                     case BooleanValue b: return b;
                     default:
-                        throw new Exception($"Boolean.parse() cannot accept {arg.GetType().Name}");
+                        throw new Exception($"Boolean.parse() cannot accept {argument.GetType().Name}");
                 }
 
             case SymbolType.Date:
-            {
-                if (arg is not TextValue text1)
-                    throw new Exception($"Date.parse() requires the first argument to be a string");
-                if (node.Arguments.Count == 1)
-                {
-                  // iso 8601 format parsing
-                  var parsed = Date.parse(text1.Raw);
-                  return new DateValue(parsed.Value);
-                }
-                else if (node.Arguments.Count == 2)
-                {
-                    var arg2 = node.Arguments[1].Accept(this);
-                    if (arg2 is not TextValue text2)
-                        throw new Exception("Date.parse() second argument must be a string format descriptor");
+                if (argument is not TextValue dateString)
+                    throw new Exception("Date.parse() requires the first argument to be a string");
 
-                    var parsed = Date.parse(text1.Raw, text2.Raw);
-                    return new DateValue(parsed.Value);
-                }
-                else
+                var parsed = node.Arguments.Count switch
                 {
-                    throw new Exception("Date.parse() requires 1 or 2 string arguments");
-                }
-            }
+                    1 => Date.parse(dateString.Raw),
+                    2 when node.Arguments[1].Accept(this) is TextValue formatString => Date.parse(dateString.Raw, formatString.Raw),
+                    2 => throw new Exception("Date.parse() second argument must be a string format descriptor"),
+                    _ => throw new Exception("Date.parse() requires 1 or 2 string arguments")
+                };
+
+                return new DateValue(parsed.Value);
 
             default:
                 throw new Exception($"Type '{tv.Raw}' has no static parse()");
         }
     }
 
-    private Value InvokeInstanceMethod(Value target, string methodName, List<Value> args, MethodChainExpressionNode node)
+    private IValue InvokeInstanceMethod(IValue target, string methodName, List<IValue> arguments)
     {
-        switch (target)
+        return target switch
         {
-            // example: dataset.toFile("out.csv")
-            case DatasetValue ds when methodName == "toFile":
-                var path = (args.Single() as TextValue)?.Raw ??
-                           throw new Exception(
-                               "toFile requires a string path"); //throw new RuntimeException("toFile requires a string path");
-                // ds.ToFile(path);
-                return ds;
-
-            case DatasetValue ds when methodName == "toTable":
-                // ds.ToTable();
-                return ds;
-
-            // mashd DSL methods
-            case MashdValue mv when methodName == "match":
-            // return mv.fuzzyMatch(args[0], args[1]);
-            //fuzzyMatch, functionMatch, transform, join, union, etc.
-
-            default:
-                throw new Exception("Invalid method call");
-            //throw new RuntimeException($"Cannot call '{methodName}' on value of type '{target.GetType().Name}'");
-        }
+            DatasetValue ds when methodName == "toFile" => HandleToFile(ds, arguments),
+            DatasetValue ds when methodName == "toTable" => HandleToTable(ds, arguments),
+            
+            MashdValue mv when methodName == "match" => HandleMatch(mv, arguments),
+            MashdValue mv when methodName == "fuzzyMatch" => HandleFuzzyMatch(mv, arguments),
+            MashdValue mv when methodName == "functionMatch" => HandleFunctionMatch(mv, arguments),
+            MashdValue mv when methodName == "transform" => HandleTransform(mv, arguments),
+            MashdValue mv when methodName == "join" => HandleJoin(mv, arguments),
+            MashdValue mv when methodName == "union" => HandleUnion(mv, arguments),
+            
+            _ => throw new Exception("Invalid method call")
+        };
     }
 
+    private IValue HandleToFile(DatasetValue dataset, List<IValue> arguments)
+    {
+        if (arguments.Count != 1)
+            throw new Exception("match() requires exactly one argument");
 
-    public Value VisitDateLiteralNode(DateLiteralNode node)
+        var path = arguments.OfType<TextValue>().SingleOrDefault()?.Raw 
+                   ?? throw new Exception("toFile requires a path string");
+        
+        dataset.ToFile(path);
+
+        return dataset;
+    }
+
+    private IValue HandleToTable(DatasetValue dataset, List<IValue> arguments)
+    {
+        // TODO: Handle toTable with arguments
+        
+        dataset.ToTable();
+
+        return dataset;
+    }
+    
+    private IValue HandleMatch(MashdValue mashd, List<IValue> arguments)
+    {
+        if (arguments.Count != 2)
+            throw new Exception("match() requires exactly two arguments");
+
+        if (arguments[0] is not SchemaFieldValue left)
+            throw new Exception("match() first argument must be a schema property access");
+        
+        if (arguments[1] is not SchemaFieldValue right)
+            throw new Exception("match() second argument must be a schema property access");
+
+        mashd.AddMatch(left, right);
+
+        return mashd;
+    }
+        
+    private IValue HandleFuzzyMatch(MashdValue mashd, List<IValue> arguments)
+    {
+        if (arguments.Count != 3)
+            throw new Exception("fuzzyMatch() requires exactly three arguments");
+
+        if (arguments[0] is not SchemaFieldValue left)
+            throw new Exception("fuzzyMatch() first argument must be a schema property access");
+        
+        if (arguments[1] is not SchemaFieldValue right)
+            throw new Exception("fuzzyMatch() second argument must be a schema property access");
+
+        if (arguments[2] is not DecimalValue threshold)
+            throw new Exception("fuzzyMatch() third argument must be a decimal value");
+        
+        mashd.AddMatch(left, right, threshold);
+
+        return mashd;
+    }
+    
+    private IValue HandleFunctionMatch(MashdValue mashd, List<IValue> arguments)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private IValue HandleTransform(MashdValue mashd, List<IValue> arguments)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private IValue HandleJoin(MashdValue mashd, List<IValue> arguments)
+    {
+        throw new NotImplementedException();
+    }
+    
+    private IValue HandleUnion(MashdValue mashd, List<IValue> arguments)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IValue VisitDateLiteralNode(DateLiteralNode node)
     {
         if (DateTime.TryParseExact(node.Text, "yyyy-MM-dd", null, DateTimeStyles.None, out var parsedDate))
         {
@@ -519,9 +543,9 @@ public class Interpreter : IAstVisitor<Value>
         throw new FormatException($"Invalid date format: {node.Text}. Expected ISO 8601 (yyyy-MM-dd).");
     }
 
-    public Value VisitObjectExpressionNode(ObjectExpressionNode node)
+    public IValue VisitObjectExpressionNode(ObjectExpressionNode node)
     {
-        var properties = new Dictionary<string, Value>();
+        var properties = new Dictionary<string, IValue>();
         foreach (var (key, expression) in node.Properties)
         {
             var value = expression.Accept(this);
@@ -534,7 +558,7 @@ public class Interpreter : IAstVisitor<Value>
 
     // Helper methods
 
-    private Value EvaluateArithmetic(OpType op, Value leftVal, Value rightVal, BinaryNode node)
+    private IValue EvaluateArithmetic(OpType op, IValue leftVal, IValue rightVal, BinaryNode node)
     {
         switch (op)
         {
@@ -598,7 +622,7 @@ public class Interpreter : IAstVisitor<Value>
             $"Arithmetic {op} not implemented for types {leftVal.GetType()} and {rightVal.GetType()}.");
     }
 
-    private Value EvaluateComparison(OpType op, Value leftVal, Value rightVal)
+    private IValue EvaluateComparison(OpType op, IValue leftVal, IValue rightVal)
     {
         // Numeric comparisons
         if (leftVal is IntegerValue li && rightVal is IntegerValue ri)
@@ -653,7 +677,7 @@ public class Interpreter : IAstVisitor<Value>
             $"Comparison {op} not implemented for types {leftVal.GetType()} and {rightVal.GetType()}.");
     }
 
-    private bool ToBoolean(Value v, AstNode node)
+    private bool ToBoolean(IValue v, AstNode node)
     {
         if (v is BooleanValue bv) return bv.Raw;
         throw new TypeMismatchException(node);
@@ -661,7 +685,7 @@ public class Interpreter : IAstVisitor<Value>
 
     // Main entry point for evaluation
 
-    public Value Evaluate(AstNode node)
+    public IValue Evaluate(AstNode node)
     {
         return node.Accept(this);
     }

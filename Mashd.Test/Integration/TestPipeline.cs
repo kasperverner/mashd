@@ -58,7 +58,7 @@ public static class TestPipeline
     }
 
     /// <summary>Get the raw Value for a named variable.</summary>
-    public static Value GetValue(Interpreter interpreter, ProgramNode ast, string name)
+    public static IValue GetValue(Interpreter interpreter, ProgramNode ast, string name)
     {
         var decl = FindVar(ast, name);
         return interpreter.Values[decl];

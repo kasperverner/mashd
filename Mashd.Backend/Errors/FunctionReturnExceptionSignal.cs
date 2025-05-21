@@ -1,10 +1,12 @@
-﻿namespace Mashd.Backend.Errors;
+﻿using Mashd.Backend.Value;
+
+namespace Mashd.Backend.Errors;
 
 public class FunctionReturnExceptionSignal : Exception
 {
-    public Value ReturnValue { get; }
+    public IValue ReturnValue { get; }
 
-    public FunctionReturnExceptionSignal(Value returnValue)
+    public FunctionReturnExceptionSignal(IValue returnValue)
     {
         ReturnValue = returnValue;
     }

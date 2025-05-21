@@ -1,3 +1,4 @@
+using Mashd.Backend.Value;
 using Mashd.Frontend.AST;
 
 namespace Mashd.Backend.Errors;
@@ -40,13 +41,13 @@ public class ParseArityException : RuntimeException
 public class InvalidParseArgumentException : RuntimeException
 {
     public SymbolType TargetType { get; }
-    public Value      ArgValue   { get; }
+    public IValue Argument   { get; }
 
-    public InvalidParseArgumentException(AstNode node, SymbolType targetType, Value arg)
+    public InvalidParseArgumentException(AstNode node, SymbolType targetType, IValue argument)
         : base(node, RuntimeErrorType.ParseArgument)
     {
         TargetType = targetType;
-        ArgValue   = arg;
+        Argument   = argument;
     }
 }
 
