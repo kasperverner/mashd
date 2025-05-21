@@ -11,7 +11,7 @@ public class ExpressionUnitTests
     [InlineData("(1 + 2)", "(1+2)", typeof(MashdParser.ParenExpressionContext))]
     [InlineData("sum(1, 2)", "sum(1,2)", typeof(MashdParser.FunctionCallExpressionContext))]
     [InlineData("user.firstName", "user.firstName", typeof(MashdParser.PropertyAccessExpressionContext))]
-    [InlineData("x.filter(y).map(z)", "x.filter(y).map(z)", typeof(MashdParser.MethodChainContext))]
+    [InlineData("x.filter(y).map(z)", "x.filter(y).map(z)", typeof(MashdParser.MethodCallExpressionContext))]
     [InlineData("-5", "-5", typeof(MashdParser.NegationExpressionContext))]
     [InlineData("!false", "!false", typeof(MashdParser.NotExpressionContext))]
     [InlineData("2 * 3", "2*3", typeof(MashdParser.MultiplicativeExpressionContext))]
