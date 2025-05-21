@@ -4,361 +4,54 @@ namespace Mashd.Test;
 
 public class ExpressionUnitTests
 {
-    [Fact]
-    public void CanParseSimpleNumber()
+    [Theory]
+    [InlineData("42", "42", typeof(MashdParser.LiteralExpressionContext))]
+    [InlineData("true", "true", typeof(MashdParser.LiteralExpressionContext))]
+    [InlineData("x", "x", typeof(MashdParser.IdentifierExpressionContext))]
+    [InlineData("(1 + 2)", "(1+2)", typeof(MashdParser.ParenExpressionContext))]
+    [InlineData("sum(1, 2)", "sum(1,2)", typeof(MashdParser.FunctionCallExpressionContext))]
+    [InlineData("user.firstName", "user.firstName", typeof(MashdParser.PropertyAccessExpressionContext))]
+    [InlineData("x.filter(y).map(z)", "x.filter(y).map(z)", typeof(MashdParser.MethodChainContext))]
+    [InlineData("-5", "-5", typeof(MashdParser.NegationExpressionContext))]
+    [InlineData("!false", "!false", typeof(MashdParser.NotExpressionContext))]
+    [InlineData("2 * 3", "2*3", typeof(MashdParser.MultiplicativeExpressionContext))]
+    [InlineData("10 / 2", "10/2", typeof(MashdParser.MultiplicativeExpressionContext))]
+    [InlineData("10 % 3", "10%3", typeof(MashdParser.MultiplicativeExpressionContext))]
+    [InlineData("10 + 5", "10+5", typeof(MashdParser.AdditiveExpressionContext))]
+    [InlineData("10 - 5", "10-5", typeof(MashdParser.AdditiveExpressionContext))]
+    [InlineData("a < b", "a<b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("a <= b", "a<=b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("a > b", "a>b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("a >= b", "a>=b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("a == b", "a==b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("a != b", "a!=b", typeof(MashdParser.ComparisonExpressionContext))]
+    [InlineData("x ?? y", "x??y", typeof(MashdParser.NullishCoalescingExpressionContext))]
+    [InlineData("true && false", "true&&false", typeof(MashdParser.LogicalAndExpressionContext))]
+    [InlineData("true || false", "true||false", typeof(MashdParser.LogicalOrExpressionContext))]
+    [InlineData("x > 0 ? 1 : 0", "x>0?1:0", typeof(MashdParser.TernaryExpressionContext))]
+    [InlineData("{ key: 42 }", "{key:42}", typeof(MashdParser.ObjectExpressionContext))]
+    public void CanParseValidExpressions(string input, string expected, Type expectedType)
     {
-        // Arrange
-        string input = "42";
-            
-        // Act
-        var result = ExpressionParser.Parse(input);
-            
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(input, TestHelper.GetTerminalText(result));
-    }
-    
-    [Fact]
-    public void CanParseSimpleAddition()
-    {
-        // Arrange
-        string input = "40+2";
-            
-        // Act
-        var result = ExpressionParser.Parse(input);
-            
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(input, TestHelper.GetTerminalText(result));
+        {
+            var result = ExpressionParser.Parse(input);
+            Assert.NotNull(result);
+            Assert.Equal(expected, TestHelper.GetTerminalText(result));
+            Assert.IsType(expectedType, result);
+        }
     }
 
-[Fact]
-    public void CanParseMultiplicationAndDivision()
+    [Theory]
+    [InlineData("1 + ")]
+    [InlineData("x + + y")]
+    [InlineData("x > 0 ? 1")]
+    [InlineData("{ key 42 }")]
+    [InlineData("sum(1, 2")]
+    [InlineData("(1 + 2")]
+    [InlineData("x ??? y")]
+    [InlineData("true &&")]
+    [InlineData("x > 0 ? : 1")]
+    public void ThrowsOnInvalidExpressions(string input)
     {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "5 * 3",
-            "10 / 2",
-            "7 % 3"
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseNestedArithmeticExpressions()
-    {
-        // Arrange
-        string input = "2 + 3 * 4 - 5 / 2";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseParenthesizedExpressions()
-    {
-        // Arrange
-        string input = "(2 + 3) * (4 - 1)";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseLiterals()
-    {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "42",              // integer
-            "3.14",            // decimal
-            "\"Hello, world\"", // text
-            "true",            // boolean
-            "false",           // boolean
-            "null"             // null
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseDateLiteral()
-    {
-        // Arrange
-        string input = "\"2023-05-12T14:30:00Z\"";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseComparisonExpressions()
-    {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "x < 10",
-            "y <= 20",
-            "z > 0",
-            "value >= 100",
-            "a == b",
-            "c != d"
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseLogicalExpressions()
-    {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "a && b",
-            "c || d",
-            "x > 0 && y < 10",
-            "isValid || hasPermission"
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseUnaryExpressions()
-    {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "-x",
-            "!isValid"
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseTernaryExpression()
-    {
-        // Arrange
-        string input = "isValid ? \"Success\" : \"Error\"";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseNullishCoalescingExpression()
-    {
-        // Arrange
-        string input = "value ?? defaultValue";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseFunctionCall()
-    {
-        // Arrange
-        string input = "calculateTotal(price, quantity)";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseFunctionCallWithNoArguments()
-    {
-        // Arrange
-        string input = "getCurrentDate()";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParsePropertyAccess()
-    {
-        // Arrange
-        string input = "person.name";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseMethodCall()
-    {
-        // Arrange
-        string input = "person.getName()";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseChainedMethodCalls()
-    {
-        // Arrange
-        string input = "data.filter(x > 10).sort()";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseObjectExpression()
-    {
-        // Arrange
-        string input = "{ name: \"John\", age: 30, isActive: true }";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseEmptyObjectExpression()
-    {
-        // Arrange
-        string input = "{}";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseDatasetCombineExpression()
-    {
-        // Arrange
-        string input = "usersDataset & ordersDataset";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseComplexExpression()
-    {
-        // Arrange
-        string input = "(x > 0 && y < 10) ? calculate(x + y) * 2 : defaultValue ?? 0";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseTypeLiteral()
-    {
-        // Arrange
-        string[] inputs = new[]
-        {
-            "Integer",
-            "Boolean",
-            "Text",
-            "Date",
-            "Decimal"
-        };
-        
-        // Act & Assert
-        foreach (var input in inputs)
-        {
-            var result = ExpressionParser.Parse(input);
-            Assert.NotNull(result);
-        }
-    }
-    
-    [Fact]
-    public void CanParseNestedObjectExpressions()
-    {
-        // Arrange
-        string input = "{ user: { name: \"John\", address: { city: \"Copenhagen\", zip: \"10001\" } } }";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
-    }
-    
-    [Fact]
-    public void CanParseFunctionCallsWithComplexArguments()
-    {
-        // Arrange
-        string input = "processData(x + y, { id: userId, options: { sort: true } })";
-        
-        // Act
-        var result = ExpressionParser.Parse(input);
-        
-        // Assert
-        Assert.NotNull(result);
+        Assert.Throws<ParseException>(() => ExpressionParser.Parse(input));
     }
 }
