@@ -5,17 +5,14 @@ using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
 using System.Globalization;
-using System.Linq.Expressions;
-using Mashd.Backend.Adapters;
 using Mashd.Backend.BuiltInMethods;
-
 
 namespace Mashd.Backend;
 
 public class Interpreter : IAstVisitor<Value>
 {
     // Tolerance for floating-point comparisons
-    private const double TOLERANCE = 1e-10;
+    private const double Tolerance = 1e-10;
 
     // Runtime store: map each declaration to its current Value
     private readonly Dictionary<IDeclaration, Value> _values = new();
@@ -55,17 +52,18 @@ public class Interpreter : IAstVisitor<Value>
 
     public Value VisitFunctionCallNode(FunctionCallNode node)
     {
-        var def = (FunctionDefinitionNode)node.Definition!;
+        if (node.Definition is not FunctionDefinitionNode def)
+            throw new InvalidOperationException("Function definition is missing or invalid.");
 
         // evaluate arguments
-        var argValues = node.Arguments.Select(a => a.Accept(this)).ToArray();
+        var arguments = node.Arguments.Select(a => a.Accept(this)).ToArray();
 
         // bind parameters into a fresh activation‐record
         var locals = new Dictionary<IDeclaration, Value>();
         for (int i = 0; i < def.ParameterList.Parameters.Count; i++)
         {
             IDeclaration paramDecl = def.ParameterList.Parameters[i];
-            locals[paramDecl] = argValues[i];
+            locals[paramDecl] = arguments[i];
         }
 
         _callStack.Push(locals);
@@ -92,9 +90,8 @@ public class Interpreter : IAstVisitor<Value>
     {
         var value = node switch
         {
-            { DeclaredType: SymbolType.Dataset, Expression: ObjectExpressionNode } => HandleDatasetImport(node),
-            // TODO: Implement after method chain
-            // { DeclaredType: SymbolType.Dataset, Expression: MethodChainExpressionNode } => HandleDatasetFromMethodChain(node),
+            { InferredType: SymbolType.Dataset, Expression: ObjectExpressionNode objectNode } => HandleDatasetFromObjectNode(objectNode),
+            { InferredType: SymbolType.Dataset, Expression: MethodChainExpressionNode methodChain } => HandleDatasetFromMethodNode(methodChain),
             { Expression: not null } => node.Expression.Accept(this),
             _ => new NullValue()
         };
@@ -102,23 +99,39 @@ public class Interpreter : IAstVisitor<Value>
         _values[node] = value;
         return value;
     }
-
-    private DatasetValue HandleDatasetImport(VariableDeclarationNode node)
+    
+    public Value VisitAssignmentNode(AssignmentNode node)
     {
-        var value = node.Expression?.Accept(this);
+        var value = node switch
+        {
+            { InferredType: SymbolType.Dataset, Expression: ObjectExpressionNode objectNode } => HandleDatasetFromObjectNode(objectNode),
+            { InferredType: SymbolType.Dataset, Expression: MethodChainExpressionNode methodChain } => HandleDatasetFromMethodNode(methodChain),
+            { Expression: not null } => node.Expression.Accept(this),
+            _ => new NullValue()
+        };
+        
+        _values[node.Definition] = value;
+
+        return value;
+    }
+
+    private DatasetValue HandleDatasetFromObjectNode(ObjectExpressionNode node)
+    {
+        var value = node.Accept(this);
 
         if (value is not ObjectValue objectValue)
             throw new ParseException("Invalid dataset object value.", node.Line, node.Column);
 
         var dataset = BuildDatasetFromObject(node, objectValue);
-        ValidateDatasetProperties(node, dataset);
-        LoadDatasetData(node, dataset);
-        ValidateDatasetData(node, dataset);
+        
+        dataset.ValidateProperties();
+        dataset.LoadData();
+        dataset.ValidateData();
 
         return dataset;
     }
 
-    private DatasetValue BuildDatasetFromObject(VariableDeclarationNode node, ObjectValue value)
+    private DatasetValue BuildDatasetFromObject(ObjectExpressionNode node, ObjectValue value)
     {
         var properties = new Dictionary<string, string>();
         foreach (var (key, val) in value.Raw)
@@ -126,13 +139,13 @@ public class Interpreter : IAstVisitor<Value>
                 properties[key] = textValue.Raw;
 
         if (!properties.TryGetValue("source", out var source))
-            throw new ParseException($"Dataset {node.Identifier} missing 'source' property.", node.Line, node.Column);
+            throw new ParseException($"Dataset missing 'source' property.", node.Line, node.Column);
 
         if (!properties.TryGetValue("adapter", out var adapter))
-            throw new ParseException($"Dataset {node.Identifier} missing 'adapter' property.", node.Line, node.Column);
+            throw new ParseException($"Dataset missing 'adapter' property.", node.Line, node.Column);
 
         if (!value.Raw.TryGetValue("schema", out var schemaObject))
-            throw new ParseException($"Dataset {node.Identifier} missing 'schema' property.", node.Line, node.Column);
+            throw new ParseException($"Dataset missing 'schema' property.", node.Line, node.Column);
 
         var schema = BuildSchemaFromObject(schemaObject);
 
@@ -165,112 +178,23 @@ public class Interpreter : IAstVisitor<Value>
         return new SchemaValue(fields);
     }
 
-    private void ValidateDatasetProperties(VariableDeclarationNode node, DatasetValue dataset)
+    
+
+    private DatasetValue HandleDatasetFromMethodNode(MethodChainExpressionNode node)
     {
-        if (dataset.Adapter is "sqlserver" or "postgresql" && string.IsNullOrWhiteSpace(dataset.Query))
-        {
-            throw new ParseException($"Dataset {dataset.Source} missing 'query' property.", node.Line, node.Column);
-        }
-
-        if (dataset.Adapter is "csv" && string.IsNullOrWhiteSpace(dataset.Delimiter))
-        {
-            throw new ParseException($"Dataset {dataset.Source} missing 'delimiter' property.", node.Line, node.Column);
-        }
-
-        if (dataset.Schema.Raw.Count == 0)
-        {
-            throw new ParseException($"Dataset {dataset.Source} missing 'schema' property.", node.Line, node.Column);
-        }
-    }
-
-    private void LoadDatasetData(VariableDeclarationNode node, DatasetValue dataset)
-    {
-        try
-        {
-            var adapter = AdapterFactory.CreateAdapter(dataset.Adapter, new Dictionary<string, string>
-            {
-                { "source", dataset.Source },
-                { "query", dataset.Query ?? "" },
-                { "delimiter", dataset.Delimiter ?? "," }
-            });
-
-            var data = adapter.ReadAsync().Result;
-            dataset.AddData(data);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw new ParseException(e.Message, node.Line, node.Column);
-        }
-    }
-
-    private void ValidateDatasetData(VariableDeclarationNode node, DatasetValue dataset)
-    {
-        // Validate the data matches the defined schema
-        var firstRow = dataset.Data.FirstOrDefault();
-        if (firstRow == null)
-            throw new ParseException($"Dataset {node.Identifier} has no data.", node.Line, node.Column);
-
-        foreach (var field in dataset.Schema.Raw)
-        {
-            // PostgreSQL returns unquoted identifiers as lowercase, so we need to convert the field name to lowercase
-            var fieldName = dataset.Adapter == "postgresql" 
-                ? field.Value.Name.ToLower() 
-                : field.Value.Name;
-            
-            if (!firstRow.TryGetValue(fieldName, out var value))
-                throw new ParseException($"Dataset {node.Identifier} missing field '{field.Key}'.", node.Line, node.Column);
-
-            try
-            {
-                switch (field.Value.Type)
-                {
-                    case SymbolType.Integer:
-                        IntegerValue.TryParse(value.ToString());
-                        break;
-                    case SymbolType.Decimal:
-                        DecimalValue.TryParse(value.ToString());
-                        break;
-                    case SymbolType.Text:
-                        TextValue.TryParse(value.ToString());
-                        break;
-                    case SymbolType.Boolean:
-                        BooleanValue.TryParse(value.ToString());
-                        break;
-                    case SymbolType.Date:
-                        DateValue.TryParse(value.ToString());
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                throw new ParseException($"Dataset {node.Identifier} has field '{field.Key}' with wrong data type.", node.Line, node.Column);
-            }
-        }
-    }
-
-    private DatasetValue HandleDatasetFromMethodChain(VariableDeclarationNode node)
-    {
-        var value = node.Expression?.Accept(this);
+        var value = node.Accept(this);
 
         if (value is not DatasetValue datasetValue)
             throw new ParseException("Invalid dataset method chain value.", node.Line, node.Column);
 
-        ValidateDatasetProperties(node, datasetValue);
-        LoadDatasetData(node, datasetValue);
-        ValidateDatasetData(node, datasetValue);
+        // TODO: Generate new schema
+        // TODO: Generate new data based on method chain
+        // TODO: Validate new data based on generated schema
+        // TODO: Return new dataset value
 
         return datasetValue;
     }
-
-    public Value VisitAssignmentNode(AssignmentNode node)
-    {
-        var value = node.Expression.Accept(this);
-        _values[node.Definition] = value;
-
-        return value;
-    }
-
+    
     public Value VisitIfNode(IfNode node)
     {
         var conditionValue = node.Condition.Accept(this);
@@ -358,43 +282,43 @@ public class Interpreter : IAstVisitor<Value>
         var leftVal = node.Left.Accept(this);
         var rightVal = node.Right.Accept(this);
 
-        switch (node.Operator)
+        var value = node.Operator switch
         {
             // Arithmetic
-            case OpType.Add:
-            case OpType.Subtract:
-            case OpType.Multiply:
-            case OpType.Divide:
-            case OpType.Modulo:
-                return EvaluateArithmetic(node.Operator, leftVal, rightVal, node);
+            OpType.Add => EvaluateArithmetic(node.Operator, leftVal, rightVal, node),
+            OpType.Subtract => EvaluateArithmetic(node.Operator, leftVal, rightVal, node),
+            OpType.Multiply => EvaluateArithmetic(node.Operator, leftVal, rightVal, node),
+            OpType.Divide => EvaluateArithmetic(node.Operator, leftVal, rightVal, node),
+            OpType.Modulo => EvaluateArithmetic(node.Operator, leftVal, rightVal, node),
 
             // Comparison
-            case OpType.LessThan:
-            case OpType.LessThanEqual:
-            case OpType.GreaterThan:
-            case OpType.GreaterThanEqual:
-            case OpType.Equality:
-            case OpType.Inequality:
-                return EvaluateComparison(node.Operator, leftVal, rightVal);
+            OpType.LessThan => EvaluateComparison(node.Operator, leftVal, rightVal),
+            OpType.LessThanEqual => EvaluateComparison(node.Operator, leftVal, rightVal),
+            OpType.GreaterThan => EvaluateComparison(node.Operator, leftVal, rightVal),
+            OpType.GreaterThanEqual => EvaluateComparison(node.Operator, leftVal, rightVal),
+            OpType.Equality => EvaluateComparison(node.Operator, leftVal, rightVal),
+            OpType.Inequality => EvaluateComparison(node.Operator, leftVal, rightVal),
 
-            // Logical & Coalesce (if needed)
-            case OpType.LogicalAnd:
-                return new BooleanValue(
-                    ToBoolean(leftVal, node.Left) && ToBoolean(rightVal, node.Right)
-                );
-            case OpType.LogicalOr:
-                return new BooleanValue(
-                    ToBoolean(leftVal, node.Left) || ToBoolean(rightVal, node.Right)
-                );
-            case OpType.NullishCoalescing:
-                return leftVal is NullValue ? rightVal : leftVal;
+            // Logical
+            OpType.LogicalAnd => new BooleanValue(
+                ToBoolean(leftVal, node.Left) && ToBoolean(rightVal, node.Right)
+            ),
+            OpType.LogicalOr => new BooleanValue(
+                ToBoolean(leftVal, node.Left) || ToBoolean(rightVal, node.Right)
+            ),
+            
+            // Assignment
+            OpType.NullishCoalescing => leftVal is NullValue ? rightVal : leftVal,
+            
+            // Mashd specific
+            OpType.Combine when leftVal is DatasetValue ds1 && rightVal is DatasetValue ds2 => new MashdValue(ds1, ds2),
+            OpType.Combine when leftVal is not DatasetValue || rightVal is DatasetValue => 
+                throw new NotImplementedException($"Combine operator not implemented for types {leftVal.GetType()} and {rightVal.GetType()}."),
+            
+            _ => throw new NotImplementedException($"Binary operator {node.Operator} not implemented.")
+        };
 
-            case OpType.Combine:
-                return new MashdValue(leftVal, rightVal);
-
-            default:
-                throw new NotImplementedException($"Binary operator {node.Operator} not implemented.");
-        }
+        return value;
     }
 
     public Value VisitIdentifierNode(IdentifierNode node)
@@ -429,6 +353,7 @@ public class Interpreter : IAstVisitor<Value>
     public Value VisitFormalParameterNode(FormalParameterNode node)
     {
         // TODO: Implement formal parameter
+        
         return new NullValue();
     }
 
@@ -454,6 +379,7 @@ public class Interpreter : IAstVisitor<Value>
     public Value VisitPropertyAccessExpressionNode(PropertyAccessExpressionNode node)
     {
         // TODO: Implement property access
+        
         return new NullValue();
     }
 
@@ -700,8 +626,8 @@ public class Interpreter : IAstVisitor<Value>
                     OpType.LessThanEqual => lf.Raw <= rf.Raw,
                     OpType.GreaterThan => lf.Raw > rf.Raw,
                     OpType.GreaterThanEqual => lf.Raw >= rf.Raw,
-                    OpType.Equality => Math.Abs(lf.Raw - rf.Raw) < TOLERANCE,
-                    OpType.Inequality => Math.Abs(lf.Raw - rf.Raw) > TOLERANCE,
+                    OpType.Equality => Math.Abs(lf.Raw - rf.Raw) < Tolerance,
+                    OpType.Inequality => Math.Abs(lf.Raw - rf.Raw) > Tolerance,
                     _ => throw new InvalidOperationException()
                 }
             );

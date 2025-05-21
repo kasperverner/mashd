@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using Mashd.Backend.Adapters;
 using Mashd.Frontend.AST;
 
 namespace Mashd.Backend;
@@ -180,29 +181,112 @@ public class SchemaFieldValue(SymbolType type, string name) : Value
 
 public class DatasetValue(SchemaValue schema, string source, string adapter, string? query, string? delimiter) : Value
 {
-    public readonly SchemaValue Schema = schema;
-    public readonly string Source = source;
-    public readonly string Adapter = adapter;
-    public readonly string? Query = query;
-    public readonly string? Delimiter = delimiter;
+    private readonly SchemaValue _schema = schema;
+    private readonly string _source = source;
+    private readonly string _adapter = adapter;
+    private readonly string? _query = query;
+    private readonly string? _delimiter = delimiter;
 
     public List<Dictionary<string, object>> Data { get; } = [];
 
-    public void AddData(IEnumerable<Dictionary<string, object>> data)
+    private void AddData(IEnumerable<Dictionary<string, object>> data)
     {
+        if (Data.Count > 0)
+            Data.Clear();
+        
         Data.AddRange(data);
+    }
+    
+    public void ValidateProperties()
+    {
+        if (_adapter is "sqlserver" or "postgresql" && string.IsNullOrWhiteSpace(_query))
+        {
+            throw new Exception($"Dataset {_source} missing 'query' property.");
+        }
+
+        if (_schema.Raw.Count == 0)
+        {
+            throw new Exception($"Dataset {_source} missing 'schema' property.");
+        }
+    }
+    
+    public void LoadData()
+    {
+        try
+        {
+            var adapter = AdapterFactory.CreateAdapter(_adapter, new Dictionary<string, string>
+            {
+                { "source", _source },
+                { "query", _query ?? "" },
+                { "delimiter", _delimiter ?? "," }
+            });
+
+            var data = adapter.ReadAsync().Result;
+            AddData(data);
+        }
+        catch (Exception e)
+        {
+            throw new Exception(e.Message, e);
+        }
+    }
+    
+    public void ValidateData()
+    {
+        var firstRow = Data.FirstOrDefault();
+
+        if (firstRow == null)
+            return;
+
+        var comparer = StringComparer.OrdinalIgnoreCase;
+        var row = firstRow.ToDictionary(
+            x => x.Key, 
+            x => x.Value, 
+            comparer);
+        
+        var typeParsers = new Dictionary<SymbolType, Func<string?, Value>>
+        {
+            { SymbolType.Integer, IntegerValue.TryParse },
+            { SymbolType.Decimal, DecimalValue.TryParse },
+            { SymbolType.Text, TextValue.TryParse },
+            { SymbolType.Boolean, BooleanValue.TryParse },
+            { SymbolType.Date, DateValue.TryParse }
+        };
+        
+        foreach (var field in _schema.Raw)
+        {
+            var fieldName = field.Value.Name;
+            
+            if (!row.TryGetValue(fieldName, out var value))
+                throw new Exception("Dataset has field '" + fieldName + "' that is not present in the data.");
+
+            try
+            {
+                if (typeParsers.TryGetValue(field.Value.Type, out var parser))
+                {
+                    parser(value?.ToString());
+                }
+                else
+                {
+                    throw new Exception($"Unsupported SymbolType: {field.Value.Type}");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Dataset has field '{field.Key}' with wrong data type.", e);
+            }
+        }
     }
 
     public override string ToString()
     {
-        return $"Dataset: {{ Schema: {Schema.ToString()}, Source: {Source}, Adapter: {Adapter}, Query: {Query}, Delimiter: {Delimiter} }}";
+        return $"Dataset: {{ Schema: {_schema.ToString()}, Source: {_source}, Adapter: {_adapter}, Query: {_query}, Delimiter: {_delimiter} }}";
     }
 }
 
-public class MashdValue(Value left, Value right) : Value
+public class MashdValue(DatasetValue left, DatasetValue right) : Value
 {
-    public readonly Value Left = left;
-    public readonly Value Right = right;
+    public readonly DatasetValue Left = left;
+    public readonly DatasetValue Right = right;
 
     public override string ToString()
     {
