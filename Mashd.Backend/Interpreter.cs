@@ -643,37 +643,64 @@ public class Interpreter : IAstVisitor<IValue>
     
     private IValue HandleJoin(MashdValue mashd)
     {
-        var leftData = mashd.RightDataset.Data;
+        var leftData = mashd.LeftDataset.Data;
         var rightData = mashd.RightDataset.Data;
-    
+
         var outputRows = new List<Dictionary<string, object>>();
-    
-        foreach (var leftRow in leftData)
+
+        if (mashd.Conditions.Count == 0)
         {
-            var matchingRightRows = FindMatchingRows(leftRow, rightData, mashd.Conditions);
-        
-            foreach (var rightRow in matchingRightRows)
+            foreach (var leftRow in leftData)
             {
-                var joinedRow = new Dictionary<string, object>();
-            
-                if (mashd.Transform is not null)
+                foreach (var rightRow in rightData)
                 {
-                    joinedRow = ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform);
+                    var joinedRow = new Dictionary<string, object>();
+
+                    if (mashd.Transform is not null)
+                    {
+                        joinedRow = ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform);
+                    }
+                    else
+                    {
+                        foreach (var kvp in leftRow)
+                            joinedRow[$"{mashd.LeftIdentifier}.{kvp.Key}"] = kvp.Value;
+                        foreach (var kvp in rightRow)
+                            joinedRow[$"{mashd.RightIdentifier}.{kvp.Key}"] = kvp.Value;
+                    }
+
+                    outputRows.Add(joinedRow);
                 }
-                else
-                {
-                    foreach (var kvp in leftRow)
-                        joinedRow[$"{mashd.LeftIdentifier}.{kvp.Key}"] = kvp.Value;
-                    foreach (var kvp in rightRow)
-                        joinedRow[$"{mashd.RightIdentifier}.{kvp.Key}"] = kvp.Value;
-                }
-            
-                outputRows.Add(joinedRow);
             }
         }
-    
+        else
+        {
+            foreach (var leftRow in leftData)
+            {
+                var matchingRightRows = FindMatchingRows(leftRow, rightData, mashd.Conditions);
+
+                foreach (var rightRow in matchingRightRows)
+                {
+                    var joinedRow = new Dictionary<string, object>();
+
+                    if (mashd.Transform is not null)
+                    {
+                        joinedRow = ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform);
+                    }
+                    else
+                    {
+                        foreach (var kvp in leftRow)
+                            joinedRow[$"{mashd.LeftIdentifier}.{kvp.Key}"] = kvp.Value;
+                        foreach (var kvp in rightRow)
+                            joinedRow[$"{mashd.RightIdentifier}.{kvp.Key}"] = kvp.Value;
+                    }
+
+                    outputRows.Add(joinedRow);
+                }
+            }
+        }
+
         var outputSchema = GenerateSchema(mashd, outputRows);
-        
+
         return new DatasetValue(outputSchema, outputRows);
     }
     
@@ -963,7 +990,7 @@ public class Interpreter : IAstVisitor<IValue>
         
         try
         {
-            foreach (var (outputColumn, expression) in mashd.Transform.Properties)
+            foreach (var (outputColumn, expression) in mashd.Transform!.Properties)
             {
                 try
                 {
