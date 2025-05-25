@@ -3,13 +3,28 @@ using Mashd.Frontend.AST;
 
 namespace Mashd.Backend.Value;
 
-public class DatasetValue(SchemaValue schema, string source, string adapter, string? query, string? delimiter) : IValue
+public class DatasetValue : IValue
 {
-    public readonly SchemaValue Schema = schema;
-    public readonly string Source = source;
-    public readonly string Adapter = adapter;
-    public readonly string? Query = query;
-    public readonly string? Delimiter = delimiter;
+    public DatasetValue(SchemaValue schema, string? source, string? adapter, string? query, string? delimiter)
+    {
+        Schema = schema;
+        Source = source;
+        Adapter = adapter;
+        Query = query;
+        Delimiter = delimiter;
+    }
+
+    public DatasetValue(SchemaValue schema, List<Dictionary<string, object>> data)
+    {
+        Schema = schema;
+        Data = data;
+    }
+    
+    public readonly SchemaValue Schema;
+    public readonly string? Source;
+    public readonly string? Adapter;
+    public readonly string? Query;
+    public readonly string? Delimiter;
 
     public List<Dictionary<string, object>> Data { get; } = [];
 

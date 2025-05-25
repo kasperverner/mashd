@@ -2,6 +2,6 @@
 
 namespace Mashd.Backend.Match;
 
-public interface IMatch
+public interface ICondition
 {
 }

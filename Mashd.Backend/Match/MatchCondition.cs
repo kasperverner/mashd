@@ -2,9 +2,8 @@
 
 namespace Mashd.Backend.Match;
 
-public class FuzzyMatch(PropertyAccessValue left, PropertyAccessValue right, DecimalValue threshold) : IMatch
+public class MatchCondition(PropertyAccessValue left, PropertyAccessValue right) : ICondition
 {
     public PropertyAccessValue Left { get; } = left;
     public PropertyAccessValue Right { get; } = right;
-    public DecimalValue Threshold { get; } = threshold;
 }

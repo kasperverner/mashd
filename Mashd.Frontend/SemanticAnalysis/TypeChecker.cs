@@ -229,13 +229,13 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
 
         for (int i = 0; i < paramList.Count; i++)
         {
+            var isPropertyAccess = node.Arguments[i] is PropertyAccessExpressionNode;
             var argType = node.Arguments[i].Accept(this);
             var expected = paramList[i].DeclaredType;
-            if (argType != expected)
+            if (!isPropertyAccess && argType != expected)
                 errorReporter.Report.TypeCheck(node,
                     $"Argument {i + 1} has type {argType}, expected {expected}");
         }
-
 
         node.InferredType = fnDecl.DeclaredType;
         return node.InferredType;
@@ -385,8 +385,12 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
 
             // Nullish coalescing
             case OpType.NullishCoalescing:
-                throw new NotImplementedException(
-                    $"Line {node.Line}:{node.Column}: Nullish coalescing not implemented");
+                if (left != right)
+                {
+                    errorReporter.Report.TypeCheck(node, $"Combine require both sides of same type");
+                }
+
+                assumedType = node.Right.InferredType;
                 break;
             case OpType.Combine:
                 if (left != SymbolType.Dataset || right != SymbolType.Dataset)
@@ -414,7 +418,7 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
             node.InferredType = SymbolType.Unknown;
             return node.InferredType;
         }
-
+        
         node.InferredType = SymbolType.Dataset;
         return node.InferredType;
     }
@@ -457,7 +461,6 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
             foreach (var argument in chain.Arguments)
             {
                 argument?.Accept(this);
-                Console.WriteLine($"Argument type: {argument?.InferredType}, {argument?.GetType()}");
             }
             
             if (chain.Left is not IdentifierNode or MethodChainExpressionNode)

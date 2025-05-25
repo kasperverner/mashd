@@ -4,7 +4,7 @@ using Mashd.Frontend.AST.Definitions;
 
 namespace Mashd.Frontend.AST;
 
-public interface IAstVisitor<T>
+public interface IAstVisitor<out T>
 {
     T VisitProgramNode(ProgramNode node);
     T VisitImportNode(ImportNode node);
