@@ -645,203 +645,123 @@ public class Interpreter : IAstVisitor<IValue>
     {
         var leftData = mashd.LeftDataset.Data;
         var rightData = mashd.RightDataset.Data;
-
+    
         var outputRows = new List<Dictionary<string, object>>();
-
-        if (mashd.Conditions.Count == 0)
+    
+        foreach (var leftRow in leftData)
         {
-            foreach (var leftRow in leftData)
+            var rightRows = mashd.Conditions.Count == 0 
+                ? rightData // Cartesian product
+                : FindMatchingRows(leftRow, rightData, mashd.Conditions);
+    
+            foreach (var rightRow in rightRows)
             {
-                foreach (var rightRow in rightData)
-                {
-                    var joinedRow = new Dictionary<string, object>();
-
-                    if (mashd.Transform is not null)
-                    {
-                        joinedRow = ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform);
-                    }
-                    else
-                    {
-                        foreach (var kvp in leftRow)
-                            joinedRow[$"{mashd.LeftIdentifier}.{kvp.Key}"] = kvp.Value;
-                        foreach (var kvp in rightRow)
-                            joinedRow[$"{mashd.RightIdentifier}.{kvp.Key}"] = kvp.Value;
-                    }
-
-                    outputRows.Add(joinedRow);
-                }
+                var joinedRow = mashd.Transform is not null
+                    ? ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform)
+                    : MergeRows(leftRow, rightRow, mashd.LeftIdentifier, mashd.RightIdentifier);
+    
+                outputRows.Add(joinedRow);
             }
         }
-        else
+    
+        if (mashd.Conditions.Count == 0 && leftData.Count > 20 && rightData.Count > 20)
         {
-            foreach (var leftRow in leftData)
-            {
-                var matchingRightRows = FindMatchingRows(leftRow, rightData, mashd.Conditions);
-
-                foreach (var rightRow in matchingRightRows)
-                {
-                    var joinedRow = new Dictionary<string, object>();
-
-                    if (mashd.Transform is not null)
-                    {
-                        joinedRow = ApplyTransformation(mashd, leftRow, rightRow, mashd.Transform);
-                    }
-                    else
-                    {
-                        foreach (var kvp in leftRow)
-                            joinedRow[$"{mashd.LeftIdentifier}.{kvp.Key}"] = kvp.Value;
-                        foreach (var kvp in rightRow)
-                            joinedRow[$"{mashd.RightIdentifier}.{kvp.Key}"] = kvp.Value;
-                    }
-
-                    outputRows.Add(joinedRow);
-                }
-            }
+            Console.WriteLine($"Warning: Creating Cartesian product of {leftData.Count} x {rightData.Count} = {outputRows.Count} rows");
         }
-
+    
         var outputSchema = GenerateSchema(mashd, outputRows);
-
         return new DatasetValue(outputSchema, outputRows);
     }
     
-    private IValue HandleUnion(MashdValue mashd)
+    private Dictionary<string, object> MergeRows(
+        Dictionary<string, object> leftRow, 
+        Dictionary<string, object> rightRow, 
+        string leftIdentifier, 
+        string rightIdentifier)
     {
-        var leftData = mashd.LeftDataset.Data;
-        var rightData = mashd.RightDataset.Data;
-        
-        var outputRows = new List<Dictionary<string, object>>();
-        
-        if (mashd.Conditions.Count > 0)
+        var mergedRow = new Dictionary<string, object>();
+    
+        foreach (var kvp in leftRow)
+            mergedRow[$"{leftIdentifier}.{kvp.Key}"] = kvp.Value;
+    
+        foreach (var kvp in rightRow)
+            mergedRow[$"{rightIdentifier}.{kvp.Key}"] = kvp.Value;
+    
+        return mergedRow;
+    }
+    
+    private IValue HandleUnion(MashdValue mashd)
         {
-            var processedLeftRows = new HashSet<int>();
-            var processedRightRows = new HashSet<int>();
+            var leftData = mashd.LeftDataset.Data;
+            var rightData = mashd.RightDataset.Data;
+            var outputRows = new List<Dictionary<string, object>>();
         
-            for (int leftIndex = 0; leftIndex < leftData.Count; leftIndex++)
+            if (mashd.Conditions.Count > 0)
             {
-                var leftRow = leftData[leftIndex];
-                
-                for (int rightIndex = 0; rightIndex < rightData.Count; rightIndex++)
+                var processedLeftRows = new HashSet<int>();
+                var processedRightRows = new HashSet<int>();
+        
+                foreach (var (leftIndex, leftRow) in leftData.Select((row, index) => (index, row)))
                 {
-                    var rightRow = rightData[rightIndex];
-                    
-                    bool allMatch = true;
-                    foreach (var condition in mashd.Conditions)
+                    foreach (var (rightIndex, rightRow) in rightData.Select((row, index) => (index, row)))
                     {
-                        bool conditionMatches = condition switch
+                        if (mashd.Conditions.All(condition => condition switch
                         {
                             MatchCondition match => CheckExactMatch(leftRow, rightRow, match),
                             FuzzyMatchCondition fuzzy => CheckFuzzyMatch(leftRow, rightRow, fuzzy),
                             FunctionMatchCondition function => CheckFunctionMatch(leftRow, rightRow, function),
                             _ => false
-                        };
-                        
-                        if (!conditionMatches)
+                        }))
                         {
-                            allMatch = false;
-                            break;
+                            if (processedLeftRows.Add(leftIndex))
+                                outputRows.Add(mashd.Transform is not null
+                                    ? ApplyTransformationForUnion(mashd, leftRow, true)
+                                    : leftRow);
+        
+                            if (processedRightRows.Add(rightIndex))
+                                outputRows.Add(mashd.Transform is not null
+                                    ? ApplyTransformationForUnion(mashd, rightRow, false)
+                                    : rightRow);
                         }
                     }
-                    
-                    if (allMatch)
-                    {
-                        if (!processedLeftRows.Contains(leftIndex))
-                        {
-                            if (mashd.Transform is not null)
-                            {
-                                var transformedRow = ApplyTransformationForUnion(mashd, leftRow, true);
-                                outputRows.Add(transformedRow);
-                            }
-                            else
-                            {
-                                outputRows.Add(leftRow);
-                            }
-                            processedLeftRows.Add(leftIndex);
-                        }
-                        
-                        if (!processedRightRows.Contains(rightIndex))
-                        {
-                            if (mashd.Transform is not null)
-                            {
-                                var transformedRow = ApplyTransformationForUnion(mashd, rightRow, false);
-                                outputRows.Add(transformedRow);
-                            }
-                            else
-                            {
-                                outputRows.Add(rightRow);
-                            }
-                            processedRightRows.Add(rightIndex);
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            if (mashd.Transform is not null)
-            {
-                foreach (var leftRow in leftData)
-                {
-                    var transformedRow = ApplyTransformationForUnion(mashd, leftRow, true);
-                    outputRows.Add(transformedRow);
-                }
-                
-                foreach (var rightRow in rightData)
-                {
-                    var transformedRow = ApplyTransformationForUnion(mashd, rightRow, false);
-                    outputRows.Add(transformedRow);
                 }
             }
             else
             {
-                if (!AreSchemasCompatibleForUnion(mashd.LeftDataset.Schema, mashd.RightDataset.Schema))
+                if (mashd.Transform is not null)
                 {
-                    throw new Exception("Cannot union datasets with incompatible schemas. Use transform() to align schemas.");
+                    outputRows.AddRange(leftData.Select(row => ApplyTransformationForUnion(mashd, row, true)));
+                    outputRows.AddRange(rightData.Select(row => ApplyTransformationForUnion(mashd, row, false)));
                 }
-                
-                outputRows.AddRange(leftData);
-                outputRows.AddRange(rightData);
+                else
+                {
+                    if (!AreSchemasCompatibleForUnion(mashd.LeftDataset.Schema, mashd.RightDataset.Schema))
+                        throw new Exception("Cannot union datasets with incompatible schemas. Use transform() to align schemas.");
+        
+                    outputRows.AddRange(leftData);
+                    outputRows.AddRange(rightData);
+                }
             }
+        
+            var outputSchema = GenerateSchema(mashd, outputRows);
+            return new DatasetValue(outputSchema, outputRows);
         }
-        
-        var outputSchema = GenerateSchema(mashd, outputRows);
-        
-        return new DatasetValue(outputSchema, outputRows);
-    }
     
     private List<Dictionary<string, object>> FindMatchingRows(
-        Dictionary<string, object> leftRow,
-        List<Dictionary<string, object>> rightData,
-        List<ICondition> conditions)
-    {
-        var matchingRows = new List<Dictionary<string, object>>();
-        
-        foreach (var rightRow in rightData)
+            Dictionary<string, object> leftRow,
+            List<Dictionary<string, object>> rightData,
+            List<ICondition> conditions)
         {
-            bool allConditionsMatch = true;
-            
-            foreach (var condition in conditions)
-            {
-                bool conditionMatches = condition switch
+            return rightData.Where(rightRow =>
+                conditions.All(condition => condition switch
                 {
                     MatchCondition match => CheckExactMatch(leftRow, rightRow, match),
                     FuzzyMatchCondition fuzzy => CheckFuzzyMatch(leftRow, rightRow, fuzzy),
                     FunctionMatchCondition function => CheckFunctionMatch(leftRow, rightRow, function),
                     _ => false
-                };
-                
-                if (!conditionMatches)
-                {
-                    allConditionsMatch = false;
-                    break;
-                }
-            }
-            
-            if (allConditionsMatch)
-                matchingRows.Add(rightRow);
+                })
+            ).ToList();
         }
-        
-        return matchingRows;
-    }
 
     private bool CheckExactMatch(
         Dictionary<string, object> leftRow,
@@ -1146,7 +1066,6 @@ public class Interpreter : IAstVisitor<IValue>
 
     private IValue EvaluateComparison(OpType op, IValue leftVal, IValue rightVal)
     {
-        // Numeric comparisons
         if (leftVal is IntegerValue li && rightVal is IntegerValue ri)
         {
             return new BooleanValue(
@@ -1316,7 +1235,7 @@ public class Interpreter : IAstVisitor<IValue>
             case PropertyAccessExpressionNode propertyAccess:
                 if (propertyAccess.Left is IdentifierNode identifier)
                 {
-                    SchemaValue schema = null;
+                    SchemaValue? schema = null;
                     if (identifier.Name == mashd.LeftIdentifier)
                         schema = mashd.LeftDataset.Schema;
                     else if (identifier.Name == mashd.RightIdentifier)
@@ -1350,7 +1269,6 @@ public class Interpreter : IAstVisitor<IValue>
         }
     }
 
-    // Infer type from actual data values
     private SymbolType InferTypeFromData(string columnName, List<Dictionary<string, object>> rows)
     {
         foreach (var row in rows)
@@ -1361,16 +1279,14 @@ public class Interpreter : IAstVisitor<IValue>
             }
         }
         
-        // If all values are null, default to Text
         return SymbolType.Text;
     }
 
-    // Infer type from a single value
+    
     private SymbolType InferTypeFromValue(object value)
     {
         return value switch
         {
-            null => SymbolType.Unknown,
             long or int => SymbolType.Integer,
             double or float or decimal => SymbolType.Decimal,
             string => SymbolType.Text,
