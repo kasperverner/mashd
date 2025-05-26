@@ -1,12 +1,14 @@
 ﻿namespace Mashd.Test.Fixtures;
 
-public class CsvFixture : IAsyncLifetime
+public class SystemCsvFixture : IAsyncLifetime
 {
-    public string TemporaryFilePath { get; set; } = null!;
+    public string SourceFilePath { get; private set; } = null!;
+    public string DestinationFilePath { get; private set; } = null!;
 
     public Task InitializeAsync()
     {
-        TemporaryFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".csv");
+        SourceFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".csv");
+        DestinationFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".csv");
         
         const string csvContent = """
                                      ID,FirstName,LastName
@@ -22,16 +24,21 @@ public class CsvFixture : IAsyncLifetime
                                      10,Ivan,Gonzalez
                                   """;
             
-        File.WriteAllText(TemporaryFilePath, csvContent);
+        File.WriteAllText(SourceFilePath, csvContent);
         
         return Task.CompletedTask;
     }
 
     public Task DisposeAsync()
     {
-        if (File.Exists(TemporaryFilePath))
+        if (File.Exists(SourceFilePath))
         {
-            File.Delete(TemporaryFilePath);
+            File.Delete(SourceFilePath);
+        }
+        
+        if (File.Exists(DestinationFilePath))
+        {
+            File.Delete(DestinationFilePath);
         }
         
         return Task.CompletedTask;

@@ -3,7 +3,7 @@ using Testcontainers.PostgreSql;
 
 namespace Mashd.Test.Fixtures;
 
-public class PostgreSqlFixture : IAsyncLifetime
+public class IntegrationPostgreSqlFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _sqlContainer = new PostgreSqlBuilder()
         .WithImage("postgres:latest")
