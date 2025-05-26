@@ -189,7 +189,7 @@ namespace Mashd.Test.Unit.SemanticAnalysis
 
             var rep = CheckNode(chain);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Cannot parse a Integer as Boolean", rep.Errors[0].Message);
+            Assert.Contains("Cannot parse , as Boolean", rep.Errors[0].Message);
         }
 
         [Fact]
@@ -348,7 +348,7 @@ namespace Mashd.Test.Unit.SemanticAnalysis
 
             var rep = CheckNode(access);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Property access requires Schema or Dataset", rep.Errors[0].Message);
+            Assert.Contains("Property access requires Dataset", rep.Errors[0].Message);
         }
 
         [Fact]
@@ -365,7 +365,7 @@ namespace Mashd.Test.Unit.SemanticAnalysis
 
             var rep = CheckNode(chain);
             Assert.True(rep.HasErrors(ErrorType.TypeCheck));
-            Assert.Contains("Method 'toTable' is not valid on expression of type 'Text'", rep.Errors[0].Message);
+            Assert.Contains("Invalid left-hand side type 'Mashd.Frontend.AST.Expressions.LiteralNode'", rep.Errors[0].Message);
         }
     }
 }

@@ -94,7 +94,7 @@ public class DatasetIntegrationTests(CsvFixture csv, PostgreSqlFixture db, Mashd
 
         var content = File.ReadAllText(datasetFilePath);
 
-        Assert.Throws<ParseException>(() => TestPipeline.Run(content));
+        Assert.Throws<Exception>(() => TestPipeline.Run(content));
     }
     
     [Fact]
@@ -173,6 +173,6 @@ public class DatasetIntegrationTests(CsvFixture csv, PostgreSqlFixture db, Mashd
 
         var content = File.ReadAllText(datasetFilePath);
         
-        Assert.Throws<ParseException>(() => TestPipeline.Run(content));
+        Assert.Throws<Exception>(() => TestPipeline.Run(content));
     }
 }

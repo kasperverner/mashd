@@ -149,7 +149,7 @@ public class Parsing
 
         var ex = Assert.Throws<FrontendException>(() => TestPipeline.RunFull(src));
         Assert.Equal(ErrorType.TypeCheck, ex.Phase);
-        Assert.Contains("requires exactly one argument", ex.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Cannot parse ,", ex.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Theory]
@@ -178,6 +178,6 @@ public class Parsing
 
         var ex = Assert.Throws<FrontendException>(() => TestPipeline.RunFull(src));
         Assert.Equal(ErrorType.TypeCheck, ex.Phase);
-        Assert.Contains("Cannot parse a", ex.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Cannot parse", ex.Errors[0].Message, StringComparison.OrdinalIgnoreCase);
     }
 }

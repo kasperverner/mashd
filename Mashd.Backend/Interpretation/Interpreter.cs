@@ -176,7 +176,7 @@ public class Interpreter : IAstVisitor<IValue>
 
     public IValue VisitTypeLiteralNode(TypeLiteralNode node)
     {
-        return new TypeValue(node.InferredType);
+        return new TypeValue(node.ParsedType);
     }
 
     public IValue VisitUnaryNode(UnaryNode node)

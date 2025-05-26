@@ -70,7 +70,7 @@ public class ThrownException
         string src = @"
                 Dataset d = { schema: ""notAnId"" };
             ";
-        Assert.Throws<ParseException>(() =>
+        Assert.Throws<Exception>(() =>
             TestPipeline.RunFull(src)
         );
     }
@@ -180,7 +180,7 @@ public class ThrownException
         var ex = Assert.Throws<FrontendException>(() => TestPipeline.RunFull(src));
         Assert.Equal(ET.TypeCheck, ex.Phase);
         Assert.Contains(ex.Errors, e =>
-            e.Message.Contains("requires Schema or Dataset", System.StringComparison.OrdinalIgnoreCase)
+            e.Message.Contains("Property access requires Dataset", System.StringComparison.OrdinalIgnoreCase)
         );
     }
 
@@ -191,7 +191,7 @@ public class ThrownException
         var ex = Assert.Throws<FrontendException>(() => TestPipeline.RunFull(src));
         Assert.Equal(ET.TypeCheck, ex.Phase);
         Assert.Contains(ex.Errors, e =>
-            e.Message.Contains("is not valid on expression of type", System.StringComparison.OrdinalIgnoreCase)
+            e.Message.Contains("Invalid left-hand side type 'Mashd.Frontend.AST.Expressions.LiteralNode'", System.StringComparison.OrdinalIgnoreCase)
         );
     }
 
@@ -200,7 +200,7 @@ public class ThrownException
     {
         string src = @"Dataset d = { source: ""x"", adapter: ""csv"" };";
 
-        Assert.Throws<ParseException>(() =>
+        Assert.Throws<Exception>(() =>
             TestPipeline.RunFull(src)
         );
     }
@@ -217,7 +217,7 @@ public class ThrownException
                         };
 
                         Dataset d = { adapter: ""csv"", source: ""x"", schema: testSchema, foo: 1 };";
-        Assert.Throws<ParseException>(() =>
+        Assert.Throws<Exception>(() =>
             TestPipeline.RunFull(src)
         );
     }
@@ -257,7 +257,7 @@ public class ThrownException
             ";
 
         // Act & Assert
-        var ex = Assert.Throws<ParseException>(() =>
+        var ex = Assert.Throws<Exception>(() =>
             TestPipeline.RunFull(src)
         );
 

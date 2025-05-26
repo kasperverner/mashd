@@ -99,12 +99,37 @@ public static class TestPipeline
         throw new Exception($"Variable '{name}' is not a BooleanValue");
     }
     /// <summary>Get the schema Value for a named variable.</summary>
-    // public static SchemaValue GetSchema(Interpreter interpreter, ProgramNode ast, string name)
-    // {
-    //     var v = GetValue(interpreter, ast, name);
-    //     if (v is SchemaValue sv) return sv;
-    //     throw new Exception($"Variable '{name}' is not a SchemaValue");
-    // }
+    public static SchemaValue GetSchema(Interpreter interpreter, ProgramNode ast, string name)
+    {
+        var v = GetValue(interpreter, ast, name);
+        if (v is ObjectValue ov) return BuildSchemaFromObject(ov);
+        throw new Exception($"Variable '{name}' is not a SchemaValue");
+    }
+    
+    private static SchemaValue BuildSchemaFromObject(ObjectValue value)
+    {
+        var fields = new Dictionary<string, SchemaFieldValue>();
+
+        foreach (var (identifier, fieldValue) in value.Raw)
+        {
+            if (fieldValue is not ObjectValue fieldObjectValue) continue;
+
+            fields[identifier] = BuildSchemaFieldValueFromObject(fieldObjectValue);
+        }
+
+        return new SchemaValue(fields);
+    }
+
+    private static SchemaFieldValue BuildSchemaFieldValueFromObject(ObjectValue value)
+    {
+        var name = value.Raw.GetValueOrDefault("name");
+        var type = value.Raw.GetValueOrDefault("type");
+
+        if (name is not TextValue textValue || type is not TypeValue typeValue)
+            throw new ArgumentException("Invalid object value for schema field.");
+        
+        return new SchemaFieldValue(typeValue.Raw, textValue.Raw);
+    }
 
     /// <summary>Get the dataset Value for a named variable.</summary>
     public static DatasetValue GetDataset(Interpreter interpreter, ProgramNode ast, string name)
