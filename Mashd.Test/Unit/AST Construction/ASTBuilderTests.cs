@@ -1,14 +1,12 @@
 ﻿using Antlr4.Runtime;
+using Mashd.Frontend;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.AST.Definitions;
 using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Statements;
 using Moq;
-using System.Collections.Generic;
-using Mashd.Frontend;
-using Xunit;
 
-namespace Mashd.Tests.Frontend.AST
+namespace Mashd.Test.Unit.AST_Construction
 {
     public class AstBuilderTests
     {

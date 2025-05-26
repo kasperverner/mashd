@@ -1,17 +1,4 @@
-Schema peopleSchema = {
-  id: {
-    type: Integer,
-    name: "ID"
-  },
-  firstName: {
-    type: Text,
-    name: "FirstName"
-  },
-  lastName: {
-    type: Text,
-    name: "LastName"
-  }
-};
+
 
 /*
 Schema patientSchema = {

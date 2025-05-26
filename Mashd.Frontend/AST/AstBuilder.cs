@@ -110,11 +110,11 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
 
     public override ExpressionNode VisitMethodCallExpression(MashdParser.MethodCallExpressionContext context)
     {
-        var target = Visit(context.expression())! as ExpressionNode;
-        var methodChain = BuildMethodChain(context.methodChain());
+        var left = Visit(context.expression())! as ExpressionNode;
+        var methodChain = BuildMethodChain(left, context.methodChain());
 
         var (line, column, text) = ExtractNodeInfo(context);
-        return new MethodChainExpressionNode(target, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
+        return new MethodChainExpressionNode(left, methodChain.MethodName, methodChain.Arguments, methodChain.Next,
             line, column, text, _level);
     }
 
@@ -519,7 +519,7 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         return new BinaryNode(left, right, op, context.Start.Line, context.Start.Column, context.GetText(), _level);
     }
 
-    private MethodChainExpressionNode BuildMethodChain(MashdParser.MethodChainContext context)
+    private MethodChainExpressionNode BuildMethodChain(ExpressionNode left, MashdParser.MethodChainContext context)
     {
         var methodCall = context.functionCall();
         var methodName = methodCall.ID().GetText();
@@ -542,9 +542,9 @@ public class AstBuilder : MashdBaseVisitor<AstNode>
         MethodChainExpressionNode? next = null;
         if (context.methodChain() != null)
         {
-            next = BuildMethodChain(context.methodChain());
+            next = BuildMethodChain(left, context.methodChain());
         }
 
-        return new MethodChainExpressionNode(null!, methodName, arguments, next, line, column, text, _level);
+        return new MethodChainExpressionNode(left, methodName, arguments, next, line, column, text, _level);
     }
 }

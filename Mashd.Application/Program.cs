@@ -45,6 +45,5 @@ public static class Program
             Console.Error.WriteLine(ex);
             return 1;
         }
-
     }
 }

@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using Xunit;
-using Mashd.Frontend;
+﻿using Mashd.Frontend;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.SemanticAnalysis;
 
-namespace TestProject1.Unit.SemanticAnalysis;
+namespace Mashd.Test.Unit.SemanticAnalysis;
 
 public class SymbolTableTests
 {

@@ -4,7 +4,7 @@ public static class FuzzyMatchMethod
 {
     public static bool FuzzyMatch(string str1, string str2, double threshold)
     {
-        if (threshold < 0 || threshold > 1)
+        if (threshold is < 0 or > 1)
         {
             return false;
         }
@@ -46,5 +46,4 @@ public static class FuzzyMatchMethod
     
         return dp[s.Length, t.Length];
     }
-    
 }

@@ -1,15 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Xunit;
+﻿using Mashd.Frontend;
 using Mashd.Frontend.AST;
-using Mashd.Frontend.AST.Statements;
-using Mashd.Frontend.AST.Expressions;
 using Mashd.Frontend.AST.Definitions;
+using Mashd.Frontend.AST.Expressions;
+using Mashd.Frontend.AST.Statements;
 using Mashd.Frontend.SemanticAnalysis;
-using Mashd.Backend.Errors;
-using Mashd.Frontend;
 
-namespace TestProject1.Unit.SemanticAnalysis
+namespace Mashd.Test.Unit.SemanticAnalysis
 {
     public class TypeCheckerTests
     {

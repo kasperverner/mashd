@@ -1,6 +1,6 @@
 ﻿using Mashd.Backend.BuiltInMethods;
 
-namespace Mashd.Test;
+namespace Mashd.Test.Unit.Parsing;
 
 public class DateTests
 {

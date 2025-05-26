@@ -1,11 +1,56 @@
-﻿import "schemas.mashd";
+﻿Schema peopleSchema = {
+  id: {
+    type: Integer,
+    name: "ID"
+  },
+  firstName: {
+    type: Text,
+    name: "FirstName"
+  },
+  lastName: {
+    type: Text,
+    name: "LastName"
+  }
+};
 
-Dataset peopleData = {
+Dataset left = {
   adapter: "csv",
   schema: peopleSchema,
   source: "data.csv",
   delimiter: ";"
 };
+
+Dataset right = {
+  adapter: "csv",
+  schema: peopleSchema,
+  source: "data.csv",
+  delimiter: ";"
+};
+
+Mashd combined = left & right;
+
+Boolean compareNames(Text leftName, Text rightName) {
+  return leftName == rightName;
+}
+
+Text fullName(Text firstName, Text lastName) {
+  return firstName + " " + lastName;
+}
+
+combined
+  .match(left.id, right.id)
+  .fuzzyMatch(left.firstName, right.firstName, 0.85)
+  .functionMatch(compareNames, left.lastName, right.lastName)
+  .transform({
+    id: left.id,
+    fullName: fullName(left.firstName, left.lastName),
+    firstName: left.firstName ?? right.firstName,
+    lastName: left.lastName ?? right.lastName
+  });
+
+Dataset mergedData = combined.join();
+
+mergedData.toFile("merged_output.csv");
 
 /*
 Dataset operationData = {
@@ -52,7 +97,7 @@ Decimal threshold = 0.85;
 
 name
   .match(patientData.vaccinated, operationData.vaccinated)
-  .fuzzyMatch(combinedFullname(patientData.firstName, patientData.lastName), operationData.patientName, threshold)
+  .fuzzyMatch(patientData.lastName, operationData.patientName, threshold)
   .functionMatch(ageBirthYearMatch, patientData.birthYear, operationData.age)
   .transform({
     id: patientData.patientId,

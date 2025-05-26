@@ -13,12 +13,12 @@ public struct DummyVoid
 public class Resolver : IAstVisitor<DummyVoid>
 {
     private readonly ErrorReporter _errorReporter;
-    private SymbolTable currentScope; // global scope
+    private  SymbolTable _currentScope; // global scope
 
     public Resolver(ErrorReporter errorReporter)
     {
         this._errorReporter = errorReporter;
-        this.currentScope = new SymbolTable(errorReporter);
+        this._currentScope = new SymbolTable(errorReporter);
     }
     public DummyVoid VisitProgramNode(ProgramNode node)
     {
@@ -36,14 +36,14 @@ public class Resolver : IAstVisitor<DummyVoid>
             {
                 case FunctionDefinitionNode fn:
                     // 1) register function name
-                    currentScope.Add(fn.Identifier, fn);
+                    _currentScope.Add(fn.Identifier, fn);
                     // 2) resolve its body in a nested scope
                     Resolve(fn);
                     break;
 
                 case VariableDeclarationNode vd:
                     // 1) register variable name
-                    currentScope.Add(vd.Identifier, vd);
+                    _currentScope.Add(vd.Identifier, vd);
                     // 2) resolve initializer expression if any
                     Resolve(vd);
                     break;
@@ -65,26 +65,26 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitFunctionDefinitionNode(FunctionDefinitionNode node)
     {
-        if (!currentScope.IsGlobalScope)
+        if (!_currentScope.IsGlobalScope)
         {
             _errorReporter.Report.NameResolution(node, "Function cannot be declared inside a block.");
         }
         
         // Enter a new scope for the function
-        node.Symbols = new SymbolTable(_errorReporter, currentScope);
-        var outer = currentScope;
-        currentScope = node.Symbols;
+        node.Symbols = new SymbolTable(_errorReporter, _currentScope);
+        var outer = _currentScope;
+        _currentScope = node.Symbols;
 
         // Register parameters
         foreach (var param in node.ParameterList.Parameters)
         {
-            currentScope.Add(param.Identifier, param);
+            _currentScope.Add(param.Identifier, param);
         }
 
         Resolve(node.Body);
 
         // Exit the function scope
-        currentScope = outer;
+        _currentScope = outer;
 
         return DummyVoid.Null;
     }
@@ -92,14 +92,14 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitBlockNode(BlockNode node)
     {
         // Enter a new scope for the block
-        node.Symbols = new SymbolTable(_errorReporter, currentScope);
-        var outer = currentScope;
-        currentScope = node.Symbols;
+        node.Symbols = new SymbolTable(_errorReporter, _currentScope);
+        var outer = _currentScope;
+        _currentScope = node.Symbols;
 
         Resolve(node.Statements);
 
         // Exit the block scope
-        currentScope = currentScope.Parent;
+        _currentScope = _currentScope.Parent;
 
         return DummyVoid.Null;
     }
@@ -107,9 +107,9 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitVariableDeclarationNode(VariableDeclarationNode node)
     {
         // Add the variable to the current scope, if it wasn't already registered at the top-level
-        if (!currentScope.IsGlobalScope)
+        if (!_currentScope.IsGlobalScope)
         {
-            currentScope.Add(node.Identifier, node);
+            _currentScope.Add(node.Identifier, node);
         }
         
         if (node.Expression != null)
@@ -123,7 +123,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitAssignmentNode(AssignmentNode node)
     {
         // Ensure target was declared
-        if (!currentScope.TryLookup(node.Identifier, out var decl))
+        if (!_currentScope.TryLookup(node.Identifier, out var decl))
             _errorReporter.Report.NameResolution(node, $"Undefined symbol");
         node.Definition = decl;
 
@@ -134,7 +134,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     
     public DummyVoid VisitFunctionCallNode(FunctionCallNode node)
     {
-        if (!currentScope.TryLookup(node.FunctionName, out var decl))
+        if (!_currentScope.TryLookup(node.FunctionName, out var decl))
         {
             _errorReporter.Report.NameResolution(node, $"Undefined function '{node.FunctionName}'");
         }
@@ -151,7 +151,7 @@ public class Resolver : IAstVisitor<DummyVoid>
     public DummyVoid VisitIdentifierNode(IdentifierNode node)
     {
         // Check if the identifier is defined in the current scope
-        if (!currentScope.TryLookup(node.Name, out var decl))
+        if (!_currentScope.TryLookup(node.Name, out var decl))
             _errorReporter.Report.NameResolution(node, $"Undefined symbol '{node.Name}'");
         node.Definition = decl;
 
@@ -244,14 +244,16 @@ public class Resolver : IAstVisitor<DummyVoid>
 
     public DummyVoid VisitMethodChainExpressionNode(MethodChainExpressionNode node)
     {
-        if (node.Left is not null)
-        {
-            Resolve(node.Left);
-        }
-        
+        Resolve(node.Left);
+
         foreach (var method in node.Arguments)
         {
             Resolve(method);
+        }
+        
+        if (node.Next is not null)
+        {
+            Resolve(node.Next);
         }
         
         return DummyVoid.Null;
