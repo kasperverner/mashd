@@ -42,13 +42,13 @@ combined
   .fuzzyMatch(left.firstName, right.firstName, 0.85)
   .functionMatch(compareNames, left.lastName, right.lastName)
   .transform({
-    id: left.id,
-    fullName: fullName(left.firstName, left.lastName),
+    id: left.id ?? right.id,
+    fullName: fullName(left.firstName, left.lastName) ?? "test",
     firstName: left.firstName ?? right.firstName,
     lastName: left.lastName ?? right.lastName
   });
 
-Dataset mergedData = combined.join();
+Dataset mergedData = combined.union();
 
 mergedData.toFile("merged_output.csv");
 

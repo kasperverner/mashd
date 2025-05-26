@@ -233,8 +233,7 @@ public class Interpreter : IAstVisitor<IValue>
             ),
             
             // Assignment
-            OpType.NullishCoalescing => leftVal is NullValue ? rightVal : leftVal,
-            
+            OpType.NullishCoalescing => _expressionHandler.EvaluateNullishCoalescing(leftVal, rightVal),
             _ => throw new NotImplementedException($"Binary operator {node.Operator} not implemented.")
         };
 

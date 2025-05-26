@@ -563,7 +563,7 @@ public class MethodChainHandler(
                     if (rawValue is not null)
                         transformedRow[outputColumn] = rawValue;
                 }
-                catch
+                catch(Exception ex)
                 {
                     // If expression fails (e.g., accessing non-existent dataset), set null
                     transformedRow[outputColumn] = null;
