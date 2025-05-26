@@ -32,25 +32,6 @@ public class DatasetHandler
 
         return datasetValue;
     }
-    
-    public DatasetValue ExportDatasetToFile(DatasetValue dataset, List<ExpressionNode> arguments)
-    {
-        throw new NotImplementedException();
-        
-        // if (arguments.Count != 1)
-        //     throw new Exception("match() requires exactly one argument");
-        //
-        // var path = arguments
-        //                .Select(x => x.Accept(this))
-        //                .OfType<TextValue>()
-        //                .SingleOrDefault()?.Raw
-        //            ?? throw new Exception("toFile requires a path string");
-    }
-
-    public DatasetValue ExportDatasetToTable(DatasetValue dataset, List<ExpressionNode> arguments)
-    {
-        throw new NotImplementedException();
-    }
 
     private DatasetValue BuildDatasetFromObject(ObjectValue value)
     {

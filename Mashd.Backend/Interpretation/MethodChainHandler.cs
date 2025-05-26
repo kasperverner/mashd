@@ -133,8 +133,8 @@ public class MethodChainHandler(
     {
         return target switch
         {
-            DatasetValue ds when methodName == "toFile" => datasetHandler.ExportDatasetToFile(ds, arguments),
-            DatasetValue ds when methodName == "toTable" => datasetHandler.ExportDatasetToTable(ds, arguments),
+            DatasetValue ds when methodName == "toFile" => ExportDatasetToFile(ds, arguments),
+            DatasetValue ds when methodName == "toTable" => ExportDatasetToTable(ds, arguments),
             
             MashdValue mv when methodName == "match" => HandleMatch(mv, arguments),
             MashdValue mv when methodName == "fuzzyMatch" => HandleFuzzyMatch(mv, arguments),
@@ -145,6 +145,38 @@ public class MethodChainHandler(
             
             _ => throw new Exception("Invalid method call")
         };
+    }
+
+    private DatasetValue ExportDatasetToFile(DatasetValue dataset, List<ExpressionNode> arguments)
+    {
+        if (arguments.Count != 1)
+            throw new Exception("toFile() requires exactly one argument");
+        
+        var path = arguments
+                       .Select(x => x.Accept(visitor))
+                       .OfType<TextValue>()
+                       .SingleOrDefault()?.Raw
+                   ?? throw new Exception("toFile requires a path string");
+        
+        var dataList = dataset.Data;
+        if (dataList.Count == 0) 
+            return dataset;
+
+        var headers = dataList.First().Keys.ToList();
+        
+        using var writer = new StreamWriter(path);
+        
+        writer.WriteLine(string.Join(",", headers));
+        
+        foreach (var row in dataList)
+            writer.WriteLine(string.Join(",", headers.Select(h => row.GetValueOrDefault(h, ""))));
+        
+        return dataset;
+    }
+
+    private DatasetValue ExportDatasetToTable(DatasetValue dataset, List<ExpressionNode> arguments)
+    {
+        throw new NotImplementedException();
     }
     
     private IValue HandleMatch(MashdValue mashd, List<ExpressionNode> arguments)

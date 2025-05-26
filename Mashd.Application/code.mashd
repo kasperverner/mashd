@@ -50,6 +50,8 @@ combined
 
 Dataset mergedData = combined.join();
 
+mergedData.toFile("merged_output.csv");
+
 /*
 Dataset operationData = {
   adapter: "csv",
