@@ -27,11 +27,11 @@ public class MethodChainHandler(
         
         if (identifier.Name == context.LeftIdentifier)
         {
-            row = context.LeftRow;
+            row = new Dictionary<string, object>(context.LeftRow, StringComparer.OrdinalIgnoreCase);
         }
         else if (identifier.Name == context.RightIdentifier)
         {
-            row = context.RightRow;
+            row = new Dictionary<string, object>(context.RightRow, StringComparer.OrdinalIgnoreCase);
         }
         else
         {
@@ -45,6 +45,7 @@ public class MethodChainHandler(
             throw new Exception("Property access only valid on dataset variables.");
         
         var schema = datasetValue.Schema.Raw[node.Property];
+        
         
         if (!row.TryGetValue(schema.Name, out var rawValue))
         {
@@ -159,9 +160,7 @@ public class MethodChainHandler(
                    ?? throw new Exception("toFile requires a path string");
         
         var dataList = dataset.Data;
-        if (dataList.Count == 0) 
-            return dataset;
-
+        
         var headers = dataList.First().Keys.ToList();
         
         using var writer = new StreamWriter(path);
@@ -525,8 +524,7 @@ public class MethodChainHandler(
             
                 var rawValue = ConvertToRawValue(value);
                 
-                if (rawValue is not null)
-                    transformedRow[outputColumn] = rawValue;
+                transformedRow[outputColumn] = rawValue;
             }
         }
         finally
@@ -563,7 +561,7 @@ public class MethodChainHandler(
                     if (rawValue is not null)
                         transformedRow[outputColumn] = rawValue;
                 }
-                catch
+                catch(Exception ex)
                 {
                     // If expression fails (e.g., accessing non-existent dataset), set null
                     transformedRow[outputColumn] = null;
@@ -624,7 +622,7 @@ public class MethodChainHandler(
         if (columnRef is not PropertyAccessValue prop)
             throw new NotImplementedException($"Column reference {columnRef.GetType()} not implemented.");
 
-        return prop.Property;
+        return prop.FieldValue.Name;
     }
     
     private SchemaFieldValue GetColumnSchemaFieldValue(IValue columnRef)
@@ -637,18 +635,22 @@ public class MethodChainHandler(
     
     private object GetColumnValue(Dictionary<string, object> row, string columnName)
     {
-        return row.TryGetValue(columnName, out var value) ? value : new NullValue();
+        var searchDictionary = new Dictionary<string, object>(row, StringComparer.OrdinalIgnoreCase);
+        
+        return searchDictionary.TryGetValue(columnName, out var value) ? value : new NullValue();
     }
     
-    private bool ValuesEqual(object left, object right)
+    private bool ValuesEqual(object? left, object? right)
     {
-        return (left, right) switch
+        return left switch
         {
-            (IntegerValue l, IntegerValue r) => l.Raw == r.Raw,
-            (DecimalValue l, DecimalValue r) => Math.Abs(l.Raw - r.Raw) < 1e-10, // Allow small floating point tolerance
-            (TextValue l, TextValue r) => l.Raw == r.Raw,
-            (BooleanValue l, BooleanValue r) => l.Raw == r.Raw,
-            (NullValue, NullValue) => true,
+            int l when right is int r => l == r,
+            int l when right is string r => l.ToString() == r,
+            string l when right is int r => l == r.ToString(),
+            decimal l when right is decimal r => Math.Abs(l - r) < 1e-10M, // Allow small floating point tolerance
+            string l when right is string r => l == r,
+            bool l when right is bool r => l == r,
+            null when right is null => true,
             _ => false
         };
     }

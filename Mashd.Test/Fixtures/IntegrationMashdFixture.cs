@@ -1,6 +1,6 @@
 ﻿namespace Mashd.Test.Fixtures;
 
-public class MashdFixture : IAsyncLifetime
+public class IntegrationMashdFixture : IAsyncLifetime
 {
     public string? TemporaryFilePath { get; set; } = null!;
 

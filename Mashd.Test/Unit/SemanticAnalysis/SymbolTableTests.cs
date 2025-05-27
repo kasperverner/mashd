@@ -26,7 +26,7 @@ public class SymbolTableTests
 
         public override T Accept<T>(IAstVisitor<T> visitor)
         {
-            throw new System.NotSupportedException();
+            throw new NotSupportedException();
         }
     }
 

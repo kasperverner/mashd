@@ -1,11 +1,10 @@
 ﻿using Antlr4.Runtime;
-using Mashd.Backend;
 using Mashd.Backend.Interpretation;
 using Mashd.Frontend;
 using Mashd.Frontend.AST;
 using Mashd.Frontend.SemanticAnalysis;
 
-namespace Mashd.Test.Integration;
+namespace Mashd.Test.IntegrationTests;
 
 public class DateIntegration
 {

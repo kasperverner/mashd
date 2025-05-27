@@ -1,6 +1,6 @@
 ﻿using Mashd.Backend.Errors;
 
-namespace Mashd.Test.Integration;
+namespace Mashd.Test.IntegrationTests;
 
 public class Arithmetics
 {

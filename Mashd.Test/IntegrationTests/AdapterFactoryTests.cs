@@ -2,20 +2,20 @@
 using Mashd.Test.Fixtures;
 using Npgsql;
 
-namespace Mashd.Test.Integration;
+namespace Mashd.Test.IntegrationTests;
 
-public class AdapterFactoryTests(CsvFixture csv, PostgreSqlFixture db)
-    : IClassFixture<CsvFixture>, IClassFixture<PostgreSqlFixture>
+public class AdapterFactoryTests(IntegrationCsvFixture integrationCsv, IntegrationPostgreSqlFixture db)
+    : IClassFixture<IntegrationCsvFixture>, IClassFixture<IntegrationPostgreSqlFixture>
 {
-    private readonly CsvFixture _csv = csv;
-    private readonly PostgreSqlFixture _db = db;
+    private readonly IntegrationCsvFixture _integrationCsv = integrationCsv;
+    private readonly IntegrationPostgreSqlFixture _db = db;
 
     [Fact]
     public void CreateAdapter_CsvAdapter_Returns_CsvAdapter()
     {
         var config = new Dictionary<string, string>
         {
-            { "source", _csv.TemporaryFilePath },
+            { "source", _integrationCsv.TemporaryFilePath },
             { "delimiter", "," }
         };
 
@@ -29,7 +29,7 @@ public class AdapterFactoryTests(CsvFixture csv, PostgreSqlFixture db)
     {
         var config = new Dictionary<string, string>
         {
-            { "source", _csv.TemporaryFilePath },
+            { "source", _integrationCsv.TemporaryFilePath },
             { "delimiter", "," }
         };
 
@@ -46,7 +46,7 @@ public class AdapterFactoryTests(CsvFixture csv, PostgreSqlFixture db)
     {
         var config = new Dictionary<string, string>
         {
-            { "source", _csv.TemporaryFilePath }
+            { "source", _integrationCsv.TemporaryFilePath }
         };
 
         var adapter = AdapterFactory.CreateAdapter("csv", config);

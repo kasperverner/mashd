@@ -433,6 +433,11 @@ public class TypeChecker(ErrorReporter errorReporter) : IAstVisitor<SymbolType>
                 return node.InferredType = SymbolType.Unknown;
             }
             
+            foreach (var expressionNode in node.Arguments)
+            {
+                expressionNode.Accept(this);
+            }
+            
             var hasValidArguments = literalNode.Type switch
             {
                 SymbolType.Integer when node.Arguments.Count is 1 => node.Arguments[0].InferredType is SymbolType.Text or SymbolType.Decimal or SymbolType.Integer,

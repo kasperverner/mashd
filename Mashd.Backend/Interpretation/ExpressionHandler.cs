@@ -20,6 +20,10 @@ public class ExpressionHandler
                     return new DecimalValue(lf.Raw + rf.Raw);
                 if (leftVal is TextValue ls && rightVal is TextValue rs)
                     return new TextValue(ls.Raw + rs.Raw);
+                if (leftVal is TextValue lt && rightVal is NullValue)
+                    return lt;
+                if (leftVal is NullValue && rightVal is TextValue rt)
+                    return rt;
                 break;
             case OpType.Subtract:
                 if (leftVal is IntegerValue li2 && rightVal is IntegerValue ri2)
@@ -125,5 +129,20 @@ public class ExpressionHandler
 
         throw new NotImplementedException(
             $"Comparison {op} not implemented for types {leftVal.GetType()} and {rightVal.GetType()}.");
+    }
+    
+    public IValue EvaluateNullishCoalescing(IValue leftVal, IValue rightVal)
+    {
+        if (leftVal is TextValue tv && string.IsNullOrWhiteSpace(tv.Raw))
+        {
+            return rightVal;
+        }
+        
+        if (leftVal is NullValue)
+        {
+            return rightVal;
+        }
+
+        return leftVal;
     }
 }

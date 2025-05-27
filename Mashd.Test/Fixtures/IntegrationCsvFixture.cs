@@ -1,6 +1,6 @@
 ﻿namespace Mashd.Test.Fixtures;
 
-public class CsvFixture : IAsyncLifetime
+public class IntegrationCsvFixture : IAsyncLifetime
 {
     public string TemporaryFilePath { get; set; } = null!;
 

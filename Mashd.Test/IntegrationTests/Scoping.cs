@@ -1,7 +1,7 @@
 ﻿using Mashd.Frontend;
 using ET = Mashd.Frontend.ErrorType;
 
-namespace Mashd.Test.Integration;
+namespace Mashd.Test.IntegrationTests;
 
 public class Scoping
 {
