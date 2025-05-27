@@ -14,7 +14,7 @@ public class SystemPostgreSqlFixture : IAsyncLifetime
         .Build();
 
     public string ConnectionString => _sqlContainer.GetConnectionString();
-
+    
     public async Task InitializeAsync()
     {
         await _sqlContainer.StartAsync();
