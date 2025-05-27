@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using Bogus;
+using Npgsql;
 using Testcontainers.PostgreSql;
 
 namespace Mashd.Test.Fixtures;
@@ -30,44 +31,154 @@ public class SystemPostgreSqlFixture : IAsyncLifetime
         await using var connection = new NpgsqlConnection(ConnectionString);
         await connection.OpenAsync();
 
-        const string createTableSql = $"""
-                                           CREATE TABLE IF NOT EXISTS Test (
-                                               ID SERIAL PRIMARY KEY,
-                                               FirstName TEXT NOT NULL,
-                                               LastName TEXT NOT NULL
-                                           );
-                                       """;
-
-        const string checkDataSql = $"""
-                                         SELECT COUNT(*) FROM Test;
-                                     """;
+        await CreateTableAsync(connection);
         
-        const string insertDataSql = $"""
-                                          INSERT INTO Test (FirstName, LastName) VALUES
-                                          ('John', 'Doe'),
-                                          ('Jane', 'Smith'),
-                                          ('Alice', 'Johnson'),
-                                          ('Bob', 'Brown'),
-                                          ('Charlie', 'Davis'),
-                                          ('Eve', 'Wilson'),
-                                          ('Frank', 'Garcia'),
-                                          ('Grace', 'Martinez'),
-                                          ('Heidi', 'Lopez'),
-                                          ('Ivan', 'Gonzalez');
-                                      """;
-
-        await using var createTableCommand = new NpgsqlCommand(createTableSql, connection);
-        await createTableCommand.ExecuteNonQueryAsync();
-
-        await using var checkDataCommand = new NpgsqlCommand(checkDataSql, connection);
-        var rowCount = (long)(await checkDataCommand.ExecuteScalarAsync() ?? 0);
-        
-        if (rowCount == 0)
+        var existingCount = await GetPatientCountAsync(connection);
+        if (existingCount == 0)
         {
-            await using var insertDataCommand = new NpgsqlCommand(insertDataSql, connection);
-            await insertDataCommand.ExecuteNonQueryAsync();
+            var patients = GeneratePatients();
+            await InsertPatientsAsync(connection, patients);
         }
+    }
+
+    private static async Task CreateTableAsync(NpgsqlConnection connection)
+    {
+        const string createTableSql = """
+            CREATE TABLE IF NOT EXISTS Patients (
+                ID SERIAL PRIMARY KEY,
+                FirstName TEXT NOT NULL,
+                LastName TEXT NOT NULL,
+                DateOfBirth DATE NOT NULL,
+                Gender TEXT NOT NULL,
+                SocialSecurityNumber TEXT NOT NULL,
+                Email TEXT NULL,
+                PhoneNumber TEXT NULL,
+                EmergencyContactID INTEGER NULL,
+                
+                CONSTRAINT fk_emergency_contact 
+                    FOREIGN KEY (EmergencyContactID) 
+                    REFERENCES Patients(ID)
+                    ON DELETE SET NULL
+                    ON UPDATE CASCADE
+            );
+            """;
+
+        await using var command = new NpgsqlCommand(createTableSql, connection);
+        await command.ExecuteNonQueryAsync();
+    }
+
+    private static async Task<long> GetPatientCountAsync(NpgsqlConnection connection)
+    {
+        const string countSql = "SELECT COUNT(*) FROM Patients;";
+        await using var command = new NpgsqlCommand(countSql, connection);
+        return (long)(await command.ExecuteScalarAsync() ?? 0);
+    }
+
+    private static async Task InsertPatientsAsync(NpgsqlConnection connection, List<Patient> patients)
+    {
+        // First pass: Insert patients without emergency contact references
+        await using var transaction = await connection.BeginTransactionAsync();
         
-        await connection.CloseAsync();
+        try
+        {
+            const string insertSql = """
+                INSERT INTO Patients (FirstName, LastName, DateOfBirth, Gender, SocialSecurityNumber, Email, PhoneNumber) 
+                VALUES (@firstName, @lastName, @dateOfBirth, @gender, @socialSecurityNumber, @email, @phoneNumber)
+                """;
+
+            foreach (var patient in patients)
+            {
+                await using var command = new NpgsqlCommand(insertSql, connection, transaction);
+                command.Parameters.AddWithValue("firstName", patient.FirstName);
+                command.Parameters.AddWithValue("lastName", patient.LastName);
+                command.Parameters.AddWithValue("dateOfBirth", patient.DateOfBirth.ToDateTime(TimeOnly.MinValue));
+                command.Parameters.AddWithValue("gender", patient.Gender);
+                command.Parameters.AddWithValue("socialSecurityNumber", patient.SocialSecurityNumber);
+                command.Parameters.AddWithValue("email", (object?)patient.Email ?? DBNull.Value);
+                command.Parameters.AddWithValue("phoneNumber", (object?)patient.PhoneNumber ?? DBNull.Value);
+                
+                await command.ExecuteNonQueryAsync();
+            }
+
+            // Second pass: Update some patients with emergency contact references
+            var patientIds = await GetAllPatientIdsAsync(connection, transaction);
+            await UpdateEmergencyContactsAsync(connection, transaction, patientIds);
+            
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    private static async Task<List<int>> GetAllPatientIdsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction)
+    {
+        const string selectIdsSql = "SELECT ID FROM Patients ORDER BY ID;";
+        await using var command = new NpgsqlCommand(selectIdsSql, connection, transaction);
+        await using var reader = await command.ExecuteReaderAsync();
+        
+        var ids = new List<int>();
+        while (await reader.ReadAsync())
+        {
+            ids.Add(reader.GetInt32(0));
+        }
+        return ids;
+    }
+
+    private static async Task UpdateEmergencyContactsAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, List<int> patientIds)
+    {
+        var random = new Random();
+        const string updateSql = "UPDATE Patients SET EmergencyContactID = @emergencyContactId WHERE ID = @patientId;";
+
+        // Randomly assign about 70% of patients to have emergency contacts
+        foreach (var patientId in patientIds.Where(_ => random.NextDouble() < 0.7))
+        {
+            var emergencyContactId = patientIds.Where(id => id != patientId).OrderBy(_ => random.Next()).First();
+            
+            await using var command = new NpgsqlCommand(updateSql, connection, transaction);
+            command.Parameters.AddWithValue("emergencyContactId", emergencyContactId);
+            command.Parameters.AddWithValue("patientId", patientId);
+            
+            await command.ExecuteNonQueryAsync();
+        }
+    }
+
+    private static List<Patient> GeneratePatients()
+    {
+        var faker = new Faker<Patient>("da")
+            .RuleFor(p => p.FirstName, f => f.Name.FirstName())
+            .RuleFor(p => p.LastName, f => f.Name.LastName())
+            .RuleFor(p => p.DateOfBirth, f => DateOnly.FromDateTime(f.Date.Between(DateTime.Now.AddYears(-90), DateTime.Now.AddYears(-18))))
+            .RuleFor(p => p.Gender, f => f.PickRandom("M", "F"))
+            .RuleFor(p => p.SocialSecurityNumber, GenerateDanishCpr)
+            .RuleFor(p => p.Email, f => f.Internet.Email().OrNull(f, 0.1f))
+            .RuleFor(p => p.PhoneNumber, f => f.Phone.PhoneNumber("+45 ########").OrNull(f, 0.35f))
+            .RuleFor(p => p.EmergencyContactId, f => null);
+
+        return faker.Generate(100);
+    }
+
+    private static string GenerateDanishCpr(Faker faker)
+    {
+        var birthDate = faker.Date.Between(DateTime.Now.AddYears(-90), DateTime.Now.AddYears(-18));
+        var day = birthDate.Day.ToString("D2");
+        var month = birthDate.Month.ToString("D2");
+        var year = (birthDate.Year % 100).ToString("D2");
+        var sequence = faker.Random.Number(1000, 9999).ToString();
+        
+        return $"{day}{month}{year}{sequence}";
     }
 }
+
+internal record Patient(
+    string FirstName, 
+    string LastName, 
+    DateOnly DateOfBirth, 
+    string Gender, 
+    string SocialSecurityNumber, 
+    string? Email, 
+    string? PhoneNumber, 
+    int? EmergencyContactId
+);

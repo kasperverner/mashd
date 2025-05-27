@@ -21,7 +21,7 @@ public class SystemMashdFixture : IAsyncLifetime
     {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".mashd");
         
-        var csvContent = 
+        var mashdContent = 
             $$"""
             {{PatientSchema}}
 
@@ -40,7 +40,7 @@ public class SystemMashdFixture : IAsyncLifetime
             output.toFile("{{outputFilePath}}");
             """;
         
-        File.WriteAllText(path, csvContent);
+        File.WriteAllText(path, mashdContent);
         
         _sourceFilePaths.Add(path);
         
@@ -69,42 +69,45 @@ public class SystemMashdFixture : IAsyncLifetime
         };
         """;
 
-    private static readonly Func<string, string> PatientDataset = (string source) => $$"""
-                                                                                     Dataset patients = {
-                                                                                         schema: patient,
-                                                                                         source: "{{ source }}",
-                                                                                         adapter: "csv",
-                                                                                         delimiter: ","
-                                                                                     };
-                                                                                     """;
+    private static readonly Func<string, string> PatientDataset = (string source) => 
+        $$"""
+        Dataset patients = {
+            schema: patient,
+            source: "{{ source }}",
+            adapter: "csv",
+            delimiter: ","
+        };
+        """;
 
-    private const string OperationSchema = """
-                                           Schema operation = {
-                                               id: {
-                                                   type: Integer,
-                                                   name: "ID"
-                                               },
-                                               patientId: {
-                                                   type: Integer,
-                                                   name: "PatientID"
-                                               },
-                                               operationDate: {
-                                                   type: DateTime,
-                                                   name: "OperationDate"
-                                               },
-                                               description: {
-                                                   type: Text,
-                                                   name: "Description"
-                                               }
-                                           };
-                                           """;
+    private const string OperationSchema = 
+        """
+       Schema operation = {
+           id: {
+               type: Integer,
+               name: "ID"
+           },
+           patientId: {
+               type: Integer,
+               name: "PatientID"
+           },
+           operationDate: {
+               type: DateTime,
+               name: "OperationDate"
+           },
+           description: {
+               type: Text,
+               name: "Description"
+           }
+       };
+       """;
     
-    private static readonly Func<string, string> OperationDataset = (string source) => $$"""
-                                                                                         Dataset operations = {
-                                                                                             schema: operation,
-                                                                                             source: "{{ source }}",
-                                                                                             adapter: "csv",
-                                                                                             delimiter: ","
-                                                                                         };
-                                                                                         """;
+    private static readonly Func<string, string> OperationDataset = (string source) => 
+        $$"""
+        Dataset operations = {
+            schema: operation,
+            source: "{{ source }}",
+            adapter: "csv",
+            delimiter: ","
+        };
+        """;
 }
