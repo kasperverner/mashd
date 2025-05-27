@@ -6,12 +6,12 @@ namespace Mashd.Test.Fixtures;
 public class SystemCsvFixture : IAsyncLifetime
 {
     public string SourceFilePath { get; private set; } = null!;
-    public string DestinationFilePath { get; private set; } = null!;
+    public string OutputFilePath { get; private set; } = null!;
 
     public Task InitializeAsync()
     {
         SourceFilePath = CreateTempCsvFile();
-        DestinationFilePath = CreateTempCsvFile();
+        OutputFilePath = CreateTempCsvFile();
         
         var operations = GenerateOperations();
         WriteCsvFile(SourceFilePath, operations);
@@ -22,7 +22,7 @@ public class SystemCsvFixture : IAsyncLifetime
     public Task DisposeAsync()
     {
         DeleteFileIfExists(SourceFilePath);
-        DeleteFileIfExists(DestinationFilePath);
+        DeleteFileIfExists(OutputFilePath);
         return Task.CompletedTask;
     }
 
@@ -39,7 +39,7 @@ public class SystemCsvFixture : IAsyncLifetime
 
     private static List<Operation> GenerateOperations()
     {
-        var faker = new Faker<Operation>("da")
+        var faker = new Faker<Operation>()
             .RuleFor(o => o.OperationId, f => f.IndexFaker + 1) // Sequential IDs starting from 1
             .RuleFor(o => o.PatientId, f => f.Random.Int(1, 100))
             .RuleFor(o => o.OperationType, f => f.PickRandom(GetDanishOperationTypes()))
@@ -53,8 +53,8 @@ public class SystemCsvFixture : IAsyncLifetime
 
     private static string[] GetDanishOperationTypes()
     {
-        return new[]
-        {
+        return
+        [
             "Appendektomi",
             "Laparoskopisk kolecystektomi",
             "Herniereparation",
@@ -72,7 +72,7 @@ public class SystemCsvFixture : IAsyncLifetime
             "Rhinoplastik",
             "Cystoskopi",
             "Pacemaker implantation"
-        };
+        ];
     }
 
     private static string GetRealisticStatus(Faker faker, DateTime operationDate)
@@ -83,18 +83,16 @@ public class SystemCsvFixture : IAsyncLifetime
         return daysDifference switch
         {
             // Future operations (more than 1 day in future)
-            > 1 => faker.PickRandom("Planning", "Scheduled"),
+            > 1 => faker.PickRandom("Planning", "Scheduled", "Scheduled", "Cancelled"),
             
             // Today or yesterday (could be in progress or just completed)
             >= -1 and <= 1 => faker.PickRandom("Scheduled", "In Progress", "Completed"),
             
             // Recent past (1-7 days ago) - mostly completed, some cancelled
-            >= -7 and < -1 => faker.PickRandom(
-                new[] { "Completed", "Completed", "Completed", "Cancelled" }), // 75% completed, 25% cancelled
+            >= -7 and < -1 => faker.PickRandom("Completed", "Completed", "Completed", "Cancelled"),
             
             // Older past operations - completed or cancelled, rare postponed
-            _ => faker.PickRandom(
-                new[] { "Completed", "Completed", "Completed", "Completed", "Cancelled", "Postponed" }) // 67% completed, 17% cancelled, 17% postponed
+            _ => faker.PickRandom("Completed", "Completed", "Completed", "Completed", "Cancelled", "Postponed")
         };
     }
 
@@ -105,19 +103,20 @@ public class SystemCsvFixture : IAsyncLifetime
 
         foreach (var operation in operations)
         {
-            csv.AppendLine($"{operation.OperationId},{operation.PatientId},\"{operation.OperationType}\",{operation.OperationDate:yyyy-MM-dd},{operation.SurgeonId},{operation.Duration},{operation.Status}");
+            csv.AppendLine($"{operation.OperationId},{operation.PatientId},\"{operation.OperationType}\",{operation.OperationDate:yyyy-MM-dd},{operation.SurgeonId},{operation.Duration},\"{operation.Status}\"");
         }
 
         File.WriteAllText(filePath, csv.ToString(), Encoding.UTF8);
     }
 }
 
-record Operation(
-    int OperationId,
-    int PatientId,
-    string OperationType,
-    DateTime OperationDate,
-    int SurgeonId,
-    int Duration,
-    string Status
-);
+internal class Operation
+{
+    public int OperationId { get; set; }
+    public int PatientId { get; set; }
+    public string OperationType { get; set; } = string.Empty;
+    public DateTime OperationDate { get; set; }
+    public int SurgeonId { get; set; }
+    public int Duration { get; set; }
+    public string Status { get; set; } = string.Empty;
+}

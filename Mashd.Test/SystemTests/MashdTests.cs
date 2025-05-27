@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Mashd.Backend.Adapters;
 using Mashd.Test.Fixtures;
 using Mashd.Test.IntegrationTests;
 using Xunit.Abstractions;
@@ -9,140 +10,192 @@ public class MashdTests(ITestOutputHelper testOutputHelper, SystemCsvFixture csv
     : IClassFixture<SystemCsvFixture>, IClassFixture<SystemPostgreSqlFixture>, IClassFixture<SystemMashdFixture>
 {
     [Fact]
-    public void Join_Datasets_With_Match_Conditions()
+    public async Task Join_Datasets_With_Match_Conditions()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var operationSource = csv.SourceFilePath;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(patientSource, operationSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
+
         TestPipeline.Run(content);
         
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+
+        var firstRow = data.First();
+        
         // Assert
-        
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        Assert.NotEmpty(data);
+        Assert.Equal(16, firstRow.Count);
+
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Join_Datasets_With_Match_Conditions': {elapsedTime}ms");
     }
 
     [Fact]
-    public void Join_Datasets_With_Transform()
+    public async Task Join_Datasets_With_Transform()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var operationSource = csv.SourceFilePath;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateJoinMashdWithTransform(patientSource, operationSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
         TestPipeline.Run(content);
         
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+        
+        var firstRow = data.First();
+        
         // Assert
+        Assert.NotEmpty(data);
+        Assert.Equal(6, firstRow.Count);
         
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Join_Datasets_With_Transform': {elapsedTime}ms");
     }
 
     [Fact]
-    public void Join_Datasets_With_Match_Conditions_And_Transform()
+    public async Task Join_Datasets_With_Match_Conditions_And_Transform()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var operationSource = csv.SourceFilePath;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateJoinMashdWithMatchConditionsAndTransform(patientSource, operationSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
         TestPipeline.Run(content);
         
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+        
+        var firstRow = data.First();
+        
         // Assert
+        Assert.NotEmpty(data);
+        Assert.Equal(6, firstRow.Count);
         
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Join_Datasets_With_Match_Conditions_And_Transform': {elapsedTime}ms");
     }
     
     [Fact]
-    public void Union_Datasets_With_Match_Conditions()
+    public async Task Union_Datasets_With_Match_Conditions()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateUnionMashdWithMatchConditions(patientSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
         TestPipeline.Run(content);
         
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+        
+        var firstRow = data.First();
+        
         // Assert
+        Assert.NotEmpty(data);
+        Assert.Equal(9, firstRow.Count);
         
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Union_Datasets_With_Match_Conditions': {elapsedTime}ms");
     }
 
     [Fact]
-    public void Union_Datasets_With_Transform()
+    public async Task Union_Datasets_With_Transform()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateUnionMashdWithTransform(patientSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
         TestPipeline.Run(content);
         
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+        
+        var firstRow = data.First();
+        
         // Assert
+        Assert.NotEmpty(data);
+        Assert.Equal(3, firstRow.Count);
         
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Union_Datasets_With_Transform': {elapsedTime}ms");
     }
 
     [Fact]
-    public void Union_Datasets_With_Match_Conditions_And_Transform()
+    public async Task Union_Datasets_With_Match_Conditions_And_Transform()
     {
-        long sw = Stopwatch.GetTimestamp();
+        long start = Stopwatch.GetTimestamp();
         
         // Arrange
-        var leftSource = db.ConnectionString;
-        var rightSource = csv.SourceFilePath;
-        var outputSource = csv.DestinationFilePath;
-        var mashdSource = mashd.GenerateJoinMashdWithMatchConditions(leftSource, rightSource, outputSource);
+        var patientSource = db.ConnectionString;
+        var outputSource = csv.OutputFilePath;
+        var mashdSource = mashd.GenerateUnionMashdWithMatchConditionsAndTransform(patientSource, outputSource);
         
         // Act
-        var content = File.ReadAllText(mashdSource);
+        var content = await File.ReadAllTextAsync(mashdSource);
         TestPipeline.Run(content);
+
+        var data = (await AdapterFactory.CreateAdapter("csv", new Dictionary<string, string>
+        {
+            { "source", outputSource },
+            { "delimiter", "," }
+        }).ReadAsync()).ToArray();
+        
+        var firstRow = data.First();
         
         // Assert
+        Assert.NotEmpty(data);
+        Assert.Equal(4, firstRow.Count);
         
-        // TODO: Validate output file
-        
-        var elapsedTime = Stopwatch.GetTimestamp() - sw;
+        var ticks = Stopwatch.GetTimestamp() - start;
+        var elapsedTime = ticks/10000;
         testOutputHelper.WriteLine($"Elapsed time for 'Union_Datasets_With_Match_Conditions_And_Transform': {elapsedTime}ms");
     }
 }

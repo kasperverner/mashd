@@ -132,10 +132,9 @@ public class SystemPostgreSqlFixture : IAsyncLifetime
         var random = new Random();
         const string updateSql = "UPDATE Patients SET EmergencyContactID = @emergencyContactId WHERE ID = @patientId;";
 
-        // Randomly assign about 70% of patients to have emergency contacts
-        foreach (var patientId in patientIds.Where(_ => random.NextDouble() < 0.7))
+        foreach (var patientId in patientIds)
         {
-            var emergencyContactId = patientIds.Where(id => id != patientId).OrderBy(_ => random.Next()).First();
+            var emergencyContactId = patientIds.Where(id => id != patientId).MinBy(_ => random.Next());
             
             await using var command = new NpgsqlCommand(updateSql, connection, transaction);
             command.Parameters.AddWithValue("emergencyContactId", emergencyContactId);
@@ -147,14 +146,14 @@ public class SystemPostgreSqlFixture : IAsyncLifetime
 
     private static List<Patient> GeneratePatients()
     {
-        var faker = new Faker<Patient>("da")
+        var faker = new Faker<Patient>()
             .RuleFor(p => p.FirstName, f => f.Name.FirstName())
             .RuleFor(p => p.LastName, f => f.Name.LastName())
             .RuleFor(p => p.DateOfBirth, f => DateOnly.FromDateTime(f.Date.Between(DateTime.Now.AddYears(-90), DateTime.Now.AddYears(-18))))
             .RuleFor(p => p.Gender, f => f.PickRandom("M", "F"))
             .RuleFor(p => p.SocialSecurityNumber, GenerateDanishCpr)
-            .RuleFor(p => p.Email, f => f.Internet.Email().OrNull(f, 0.1f))
-            .RuleFor(p => p.PhoneNumber, f => f.Phone.PhoneNumber("+45 ########").OrNull(f, 0.35f))
+            .RuleFor(p => p.Email, f => f.Internet.Email())
+            .RuleFor(p => p.PhoneNumber, f => f.Phone.PhoneNumber("+45 ########"))
             .RuleFor(p => p.EmergencyContactId, f => null);
 
         return faker.Generate(100);
@@ -172,13 +171,14 @@ public class SystemPostgreSqlFixture : IAsyncLifetime
     }
 }
 
-internal record Patient(
-    string FirstName, 
-    string LastName, 
-    DateOnly DateOfBirth, 
-    string Gender, 
-    string SocialSecurityNumber, 
-    string? Email, 
-    string? PhoneNumber, 
-    int? EmergencyContactId
-);
+internal class Patient
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public DateOnly DateOfBirth { get; set; }
+    public string Gender { get; set; } = string.Empty;
+    public string SocialSecurityNumber { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public int? EmergencyContactId { get; set; }
+}
